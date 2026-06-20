@@ -24,6 +24,9 @@ export default function App() {
       {/* PARTICLE CANVAS BACKGROUND */}
       <ParticleCanvas />
 
+      {/* VIEWPORT GLOW BORDER EFFECT */}
+      <div className="fixed inset-0 pointer-events-none z-[9999] viewport-glow-border" />
+
       {/* DOT GRID OVERLAY */}
       <div className="absolute inset-0 dot-grid pointer-events-none z-0" />
 
