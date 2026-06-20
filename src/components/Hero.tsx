@@ -70,26 +70,28 @@ export default function Hero({ onOpenSignup }: HeroProps) {
 
   return (
     <div id="top-page" className="relative min-h-screen flex flex-col bg-[#0A0A0F]">
-      
+
       {/* HERO MAIN ROW */}
-      <div 
+      <div
         ref={containerRef}
-        className="relative flex-1 flex items-center justify-center px-4 md:px-8 pt-28 lg:pt-20 pb-16 overflow-hidden animate-fade-in"
+        className="relative flex-1 flex items-center justify-center px-4 md:px-8 pt-36 lg:pt-32 pb-16 overflow-hidden animate-fade-in"
       >
+
         {/* VIDEO BACKGROUND RESTRICTED TO RIGHT SIDE WITHOUT SHRINKING */}
-        <div className="absolute right-0 top-0 bottom-0 w-full lg:w-[50%] z-0 pointer-events-none select-none overflow-hidden">
+        <div className="absolute right-0 top-0 bottom-0 w-full lg:w-[60%] z-0 pointer-events-none select-none overflow-hidden">
           <video
             autoPlay
             muted
             loop
             playsInline
-            className="w-full h-full object-cover object-[85%_center] opacity-95"
+            className="w-full h-full object-cover object-[80%_center] translate-y-24 opacity-95"
           >
             <source src="/videos/animate_the_d_assets_in_place.mp4" type="video/mp4" />
           </video>
           {/* Subtle horizontal mask to blend video edges */}
           <div className="absolute inset-y-0 left-0 w-1/4 bg-gradient-to-r from-[#0A0A0F] to-transparent pointer-events-none" />
         </div>
+
 
         {/* READABILITY GRADIENT OVERLAY */}
         <div className="absolute inset-0 z-[1] pointer-events-none select-none bg-gradient-to-r from-[#0A0A0F] via-[#0A0A0F]/65 to-transparent" />
@@ -100,23 +102,11 @@ export default function Hero({ onOpenSignup }: HeroProps) {
         </div>
 
         <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center relative z-10">
-          
+
           {/* LEFT COLUMN: BRANDING, HEADLINE, CTAS */}
           <div className="lg:col-span-7 flex flex-col text-left items-start">
-            
-            {/* BADGE */}
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass text-xs font-semibold text-gray-300 mb-6 cursor-default select-none border border-white/10"
-            >
-              <span className="flex items-center gap-1.5 font-mono text-[10px] tracking-wider uppercase">
-                <span className="text-sm">🇰🇪</span>
-                <span>Kenya's #1 Enterprise Communications Platform</span>
-              </span>
-              <span className="w-1.5 h-1.5 rounded-full bg-brand-emerald animate-pulse" />
-            </motion.div>
+
+
 
             {/* HEADLINE */}
             <motion.h1
@@ -136,7 +126,7 @@ export default function Hero({ onOpenSignup }: HeroProps) {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="text-gray-300 text-base sm:text-lg md:text-xl font-medium max-w-xl mt-6 leading-relaxed text-balance"
             >
-              Broadcast campaigns to millions with AI-optimized copy, real-time smart routing, 
+              Broadcast campaigns to millions with AI-optimized copy, real-time smart routing,
               instant M-Pesa top-ups, and sub-second delivery verification.
             </motion.p>
 
@@ -177,7 +167,7 @@ export default function Hero({ onOpenSignup }: HeroProps) {
 
       {/* STATS SECTION AT THE BOTTOM */}
       <div className="w-full bg-slate-50 dark:bg-[#0B0B12] border-t border-slate-200/60 dark:border-white/5 py-12 px-4 md:px-8 relative z-20 transition-colors duration-300">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto -mt-24 relative z-30">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {stats.map((stat, index) => (
               <motion.div
@@ -191,7 +181,7 @@ export default function Hero({ onOpenSignup }: HeroProps) {
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-blue-500/10 text-blue-600 dark:bg-white/5 dark:text-gray-300">
                   {stat.icon}
                 </div>
-                
+
                 {/* VALUES & LABELS STACKED */}
                 <div className="flex flex-col gap-1.5">
                   <div className="font-display font-extrabold text-slate-900 dark:text-white text-3xl tracking-tight leading-none">
