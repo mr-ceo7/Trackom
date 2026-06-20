@@ -1,0 +1,6 @@
+{
+  "name": "Trackom B2B Landing Page",
+  "description": "An interactive, highly performant dark-mode first B2B SaaS landing page for Trackom with smooth framer-motion animations, stats counters, live terminal API displays, and a mockup generator.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
