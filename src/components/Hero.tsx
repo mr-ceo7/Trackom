@@ -42,28 +42,28 @@ export default function Hero({ onOpenSignup }: HeroProps) {
       value: `${deliverability.toFixed(2)}%`,
       label: 'Delivery Rate',
       description: 'Smart carrier routing avoids spam filters.',
-      icon: <CheckCircle className="w-4 h-4" />,
+      icon: <CheckCircle className="w-5 h-5" />,
       color: 'emerald',
     },
     {
       value: `${messages.toFixed(1)}M+`,
       label: 'SMS Sent',
       description: 'Powering campaigns across Kenya daily.',
-      icon: <Send className="w-4 h-4" />,
+      icon: <Send className="w-5 h-5" />,
       color: 'blue',
     },
     {
       value: `< ${latency}ms`,
       label: 'API Latency',
       description: 'Concurrent channels execute in parallel.',
-      icon: <Cpu className="w-4 h-4" />,
+      icon: <Cpu className="w-5 h-5" />,
       color: 'cyan',
     },
     {
       value: `${clients.toLocaleString()}+`,
       label: 'Enterprise Clients',
       description: 'Leading brands trust our infrastructure.',
-      icon: <Users className="w-4 h-4" />,
+      icon: <Users className="w-5 h-5" />,
       color: 'indigo',
     },
   ];
@@ -74,16 +74,16 @@ export default function Hero({ onOpenSignup }: HeroProps) {
       {/* HERO MAIN ROW */}
       <div 
         ref={containerRef}
-        className="relative flex-1 flex items-center justify-center px-4 md:px-8 pt-24 lg:pt-16 pb-12 overflow-hidden"
+        className="relative flex-1 flex items-center justify-center px-4 md:px-8 pt-28 lg:pt-20 pb-16 overflow-hidden animate-fade-in"
       >
-        {/* VIDEO BACKGROUND RESTRICTED TO RIGHT SIDE */}
+        {/* VIDEO BACKGROUND RESTRICTED TO RIGHT SIDE WITHOUT SHRINKING */}
         <div className="absolute right-0 top-0 bottom-0 w-full lg:w-[50%] z-0 pointer-events-none select-none overflow-hidden">
           <video
             autoPlay
             muted
             loop
             playsInline
-            className="w-full h-full object-cover object-[78%_center] opacity-95"
+            className="w-full h-full object-cover object-[85%_center] opacity-95"
           >
             <source src="/videos/animate_the_d_assets_in_place.mp4" type="video/mp4" />
           </video>
@@ -123,10 +123,10 @@ export default function Hero({ onOpenSignup }: HeroProps) {
               initial={{ opacity: 0, y: 25 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.1 }}
-              className="font-display font-extrabold text-white text-4xl sm:text-5xl md:text-6xl leading-[1.08] tracking-tight text-balance"
+              className="font-display font-extrabold text-white text-4xl sm:text-5xl lg:text-6xl xl:text-7xl leading-[1.05] tracking-tighter text-balance"
             >
-              The Ultimate <br />
-              <span className="gradient-text font-black">Bulk SMS Platform</span>
+              The Ultimate Bulk <br />
+              <span className="text-white">SMS Platform</span>
             </motion.h1>
 
             {/* SUBTITLE */}
@@ -134,7 +134,7 @@ export default function Hero({ onOpenSignup }: HeroProps) {
               initial={{ opacity: 0, y: 25 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="text-gray-300 text-base sm:text-lg md:text-xl font-medium max-w-xl mt-5 leading-relaxed text-balance"
+              className="text-gray-300 text-base sm:text-lg md:text-xl font-medium max-w-xl mt-6 leading-relaxed text-balance"
             >
               Broadcast campaigns to millions with AI-optimized copy, real-time smart routing, 
               instant M-Pesa top-ups, and sub-second delivery verification.
@@ -145,13 +145,13 @@ export default function Hero({ onOpenSignup }: HeroProps) {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.3 }}
-              className="flex flex-col sm:flex-row items-center gap-4 mt-8 w-full sm:w-auto"
+              className="flex flex-col sm:flex-row items-center gap-4 mt-8 w-full sm:w-auto font-sans"
             >
               <button
                 onClick={onOpenSignup}
-                className="w-full sm:w-auto px-8 py-3.5 rounded-xl text-sm font-semibold text-white bg-brand-primary hover:bg-brand-primary-hover cursor-pointer shadow-lg shadow-brand-primary/25 hover:shadow-brand-primary/45 hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none flex items-center justify-center gap-2.5 glow-primary"
+                className="w-full sm:w-auto px-8 py-3.5 rounded-full text-sm font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none flex items-center justify-center gap-2.5"
               >
-                <span>Get Started Free</span>
+                <span>Get Started</span>
                 <Rocket className="w-4 h-4" />
               </button>
 
@@ -161,10 +161,9 @@ export default function Hero({ onOpenSignup }: HeroProps) {
                   e.preventDefault();
                   document.getElementById('api-docs')?.scrollIntoView({ behavior: 'smooth' });
                 }}
-                className="w-full sm:w-auto px-8 py-3.5 rounded-xl text-sm font-semibold text-gray-300 hover:text-white bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 hover:scale-[1.01] active:scale-98 transition-all duration-300 flex items-center justify-center gap-2.5 focus:outline-none backdrop-blur-sm"
+                className="w-full sm:w-auto px-8 py-3.5 rounded-full text-sm font-semibold text-gray-300 hover:text-white bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 hover:scale-[1.01] active:scale-98 transition-all duration-300 flex items-center justify-center gap-2.5 focus:outline-none backdrop-blur-sm"
               >
-                <Play className="w-4 h-4 fill-current text-brand-accent" />
-                <span>View Developer API</span>
+                <span>Learn More</span>
               </a>
             </motion.div>
 
@@ -177,7 +176,7 @@ export default function Hero({ onOpenSignup }: HeroProps) {
       </div>
 
       {/* STATS SECTION AT THE BOTTOM */}
-      <div className="w-full bg-slate-50 dark:bg-[#0B0B12] border-t border-slate-200/60 dark:border-white/5 py-10 px-4 md:px-8 relative z-20 transition-colors duration-300">
+      <div className="w-full bg-slate-50 dark:bg-[#0B0B12] border-t border-slate-200/60 dark:border-white/5 py-12 px-4 md:px-8 relative z-20 transition-colors duration-300">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {stats.map((stat, index) => (
@@ -186,21 +185,22 @@ export default function Hero({ onOpenSignup }: HeroProps) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="bg-white dark:bg-white/5 rounded-2xl p-6 border border-slate-200/60 dark:border-white/5 shadow-sm hover:shadow-md dark:hover:border-brand-primary/20 flex flex-col gap-2 group transition-all duration-300"
+                className="bg-white dark:bg-white/5 rounded-2xl p-6 border border-slate-200/60 dark:border-white/5 shadow-sm hover:shadow-md dark:hover:border-brand-primary/20 flex flex-col items-start gap-4 transition-all duration-300"
               >
-                <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-brand-primary/10 text-brand-primary dark:bg-white/5 dark:text-gray-300`}>
-                    {stat.icon}
-                  </div>
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400">
-                    {stat.label}
-                  </span>
+                {/* ICON BOX - TOP LEFT */}
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-blue-500/10 text-blue-600 dark:bg-white/5 dark:text-gray-300">
+                  {stat.icon}
                 </div>
-                <div>
-                  <div className="font-display font-extrabold text-slate-900 dark:text-white text-2xl tracking-tight">
-                    <span>{stat.value}</span>
+                
+                {/* VALUES & LABELS STACKED */}
+                <div className="flex flex-col gap-1.5">
+                  <div className="font-display font-extrabold text-slate-900 dark:text-white text-3xl tracking-tight leading-none">
+                    {stat.value}
                   </div>
-                  <p className="text-xs text-slate-500 dark:text-gray-400 mt-1 leading-normal">
+                  <div className="text-xs font-bold text-slate-800 dark:text-gray-200 tracking-tight">
+                    {stat.label}
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-gray-400 leading-normal mt-0.5">
                     {stat.description}
                   </p>
                 </div>
