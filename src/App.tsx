@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Header from './components/Header';
 import Hero from './components/Hero';
+import FeatureShowcase from './components/FeatureShowcase';
 import PartnerLogos from './components/PartnerLogos';
 import Services from './components/Services';
 import Features from './components/Features';
@@ -37,6 +38,9 @@ export default function App() {
       <main className="flex-grow relative z-10">
         {/* Hero */}
         <Hero onOpenSignup={() => setIsSignupOpen(true)} />
+
+        {/* Feature Showcase */}
+        <FeatureShowcase onOpenSignup={() => setIsSignupOpen(true)} />
 
         {/* Partner Logos Marquee */}
         <PartnerLogos />
