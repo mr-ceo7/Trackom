@@ -1,29 +1,47 @@
 import { useRef, useState, useEffect } from 'react';
 import { motion, useScroll } from 'motion/react';
-import { CheckCircle, Wifi, ShieldCheck } from 'lucide-react';
+import { CheckCircle, Wifi, ShieldCheck, ArrowRight } from 'lucide-react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
 const funnelCards = [
   {
     src: '/images/screen/Gemini_Generated_Image_krr99ukrr99ukrr9 (Edited).png',
+    tag: 'CHANNEL SYNERGY',
     title: 'Unified Platform',
-    description: 'Break silos and consolidate data from SMS, email, web, and more.',
+    description: 'Break silos and consolidate data from SMS, email, web, and more. Trackom unifies your customer touchpoints into a single, cohesive dashboard.',
     bg: '#0f1523',
     border: 'border-blue-500/10',
+    bullets: [
+      'Consolidate SMS, Email, and Push notifications in one flow',
+      'Centralized customer interaction profiles and channel preferences',
+      'Unified delivery reporting and intelligent retry routing'
+    ]
   },
   {
     src: '/images/screen/Gemini_Generated_Image_krr99ukrr99ukrr9 (Edited 2).png',
+    tag: 'BEHAVIORAL TARGETING',
     title: 'Real-time Personalization',
-    description: 'Deliver the perfect message at the right moment based on live user data.',
+    description: 'Deliver the perfect message at the right moment based on live user data. Target customers dynamically based on actions they take in your app.',
     bg: '#181f2e',
     border: 'border-emerald-500/10',
+    bullets: [
+      'Real-time behavioral triggers and event-driven SMS rules',
+      'Dynamic metadata placeholders for personalized templates',
+      'Intelligent frequency capping to optimize customer experience'
+    ]
   },
   {
     src: '/images/screen/Gemini_Generated_Image_krr99ukrr99ukrr9 (Edited 3).png',
+    tag: 'ENTERPRISE INFRASTRUCTURE',
     title: 'Unmatched Scalability',
-    description: 'Handle millions of messages with robust, reliable infrastructure and high deliverability.',
+    description: 'Handle millions of messages with robust, reliable infrastructure and high deliverability. Built to support heavy enterprise loads with zero lag.',
     bg: '#0f1525',
     border: 'border-purple-500/10',
+    bullets: [
+      'High-throughput delivery engines (10,000+ messages per second)',
+      '99.99% uptime guarantee with multi-carrier fallback paths',
+      'Automated congestion queuing and deliverability guardrails'
+    ]
   },
 ];
 
@@ -149,40 +167,70 @@ function DeckCard({
 }
 
 /* ──────────────────────────────────
-   DESKTOP 3-COLUMN GRID
+   DESKTOP ALTERNATING ROWS
    ────────────────────────────────── */
-function DesktopGrid() {
-  const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({ threshold: 0.1 });
-
+function DesktopAlternatingRows() {
   return (
-    <div
-      ref={gridRef}
-      className={`hidden md:grid grid-cols-3 gap-6 lg:gap-10 mb-20 scroll-animate ${gridVisible ? 'is-visible' : ''}`}
-    >
-      {funnelCards.map((card, index) => (
-        <div
-          key={card.title}
-          className="flex flex-col items-center text-center group"
-          style={{ transitionDelay: `${index * 120}ms` }}
-        >
+    <div className="hidden md:flex flex-col gap-28 mb-24">
+      {funnelCards.map((card, index) => {
+        const { ref, isVisible } = useScrollAnimation({ threshold: 0.15 });
+        const isAssetFirst = index % 2 === 0;
+
+        return (
           <div
-            className={`relative w-full aspect-square max-w-[340px] mx-auto mb-6 rounded-2xl overflow-hidden shadow-lg shadow-black/20 border transition-transform duration-300 group-hover:scale-[1.02] ${card.border}`}
-            style={{ backgroundColor: card.bg }}
+            key={card.title}
+            ref={ref}
+            className={`grid grid-cols-12 gap-8 lg:gap-16 items-center scroll-animate ${isVisible ? 'is-visible' : ''}`}
           >
-            <img
-              src={card.src}
-              alt={card.title}
-              className="w-full h-full object-contain select-none pointer-events-none"
-            />
+            {/* Asset Container */}
+            <div
+              className={`col-span-12 md:col-span-6 flex justify-center ${
+                isAssetFirst ? 'md:order-1' : 'md:order-2'
+              }`}
+            >
+              <div
+                className={`relative w-full aspect-[4/3] rounded-2xl overflow-hidden shadow-xl shadow-black/10 border p-6 flex items-center justify-center hover:scale-[1.02] transition-transform duration-300 ${card.border}`}
+                style={{ backgroundColor: card.bg }}
+              >
+                <img
+                  src={card.src}
+                  alt={card.title}
+                  className="w-full h-full object-contain select-none pointer-events-none"
+                />
+              </div>
+            </div>
+
+            {/* Enlarged Caption Text Container */}
+            <div
+              className={`col-span-12 md:col-span-6 flex flex-col gap-5 ${
+                isAssetFirst ? 'md:order-2' : 'md:order-1'
+              }`}
+            >
+              <div className="flex flex-col gap-2">
+                <span className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400 tracking-wider">
+                  {card.tag}
+                </span>
+                <h3 className="font-display font-bold text-slate-900 dark:text-white text-3xl lg:text-4xl leading-tight">
+                  {card.title}
+                </h3>
+              </div>
+              <p className="text-slate-600 dark:text-gray-300 text-base leading-relaxed">
+                {card.description}
+              </p>
+
+              {/* Bullet checklist */}
+              <ul className="flex flex-col gap-3 mt-2">
+                {card.bullets.map((bullet) => (
+                  <li key={bullet} className="flex items-start gap-2.5 text-sm text-slate-600 dark:text-gray-400">
+                    <CheckCircle className="w-5 h-5 shrink-0 text-emerald-500 mt-0.5" />
+                    <span>{bullet}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
-          <h3 className="font-display font-bold text-slate-900 dark:text-white text-lg md:text-xl mb-2 leading-tight">
-            {card.title}
-          </h3>
-          <p className="text-slate-500 dark:text-gray-400 text-sm leading-relaxed max-w-[280px]">
-            {card.description}
-          </p>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -206,7 +254,7 @@ export default function MarketingFunnel({ onOpenSignup }: MarketingFunnelProps) 
         {/* HEADER (DESKTOP / GENERAL) */}
         <div
           ref={headerRef}
-          className={`hidden md:flex flex-col gap-4 text-center max-w-3xl mx-auto mb-12 md:mb-16 scroll-animate ${headerVisible ? 'is-visible' : ''}`}
+          className={`hidden md:flex flex-col gap-4 text-center max-w-3xl mx-auto mb-20 scroll-animate ${headerVisible ? 'is-visible' : ''}`}
         >
           <h2 className="font-display font-bold text-slate-900 dark:text-white text-3xl sm:text-4xl md:text-5xl lg:text-[3.25rem] leading-[1.1] tracking-tight text-balance">
             Your Entire Marketing Funnel, Optimized
@@ -216,8 +264,8 @@ export default function MarketingFunnel({ onOpenSignup }: MarketingFunnelProps) 
           </p>
         </div>
 
-        {/* 1. Desktop Funnel Grid */}
-        <DesktopGrid />
+        {/* 1. Desktop Funnel Alternating Rows */}
+        <DesktopAlternatingRows />
 
         {/* 2. Mobile Funnel Deck */}
         <MobileDeck />
