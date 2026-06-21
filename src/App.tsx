@@ -6,6 +6,7 @@ import PartnerLogos from './components/PartnerLogos';
 import BulkSMSControl from './components/BulkSMSControl';
 import MarketingFunnel from './components/MarketingFunnel';
 import PlatformCapabilities from './components/PlatformCapabilities';
+import APIIntegration from './components/APIIntegration';
 import Services from './components/Services';
 import Features from './components/Features';
 import HowItWorks from './components/HowItWorks';
@@ -56,6 +57,9 @@ export default function App() {
 
         {/* Detailed Platform Capabilities Section */}
         <PlatformCapabilities onOpenSignup={() => setIsSignupOpen(true)} />
+
+        {/* API Integration Section */}
+        <APIIntegration onOpenSignup={() => setIsSignupOpen(true)} />
 
         {/* Services Grid */}
         <Services />
