@@ -1,5 +1,5 @@
-import { useRef } from 'react';
-import { motion, useScroll, useTransform } from 'motion/react';
+import { useRef, useState, useEffect } from 'react';
+import { motion, useScroll, AnimatePresence } from 'motion/react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
 const features = [
@@ -32,10 +32,26 @@ interface FeatureShowcaseProps {
    ────────────────────────────────── */
 function MobileDeck({ onOpenSignup }: { onOpenSignup: () => void }) {
   const deckRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+
   const { scrollYProgress } = useScroll({
     target: deckRef,
     offset: ['start start', 'end end'],
   });
+
+  // Track active index based on scroll position milestones to trigger constant-speed transitions
+  useEffect(() => {
+    const unsubscribe = scrollYProgress.on('change', (latest) => {
+      if (latest < 0.46) {
+        setActiveIndex(0);
+      } else if (latest < 0.96) {
+        setActiveIndex(1);
+      } else {
+        setActiveIndex(2);
+      }
+    });
+    return () => unsubscribe();
+  }, [scrollYProgress]);
 
   return (
     <div ref={deckRef} className="md:hidden" style={{ height: '170vh' }}>
@@ -58,7 +74,7 @@ function MobileDeck({ onOpenSignup }: { onOpenSignup: () => void }) {
               feature={feature}
               index={index}
               total={features.length}
-              scrollYProgress={scrollYProgress}
+              activeIndex={activeIndex}
             />
           ))}
         </div>
@@ -79,101 +95,38 @@ function DeckCard({
   feature,
   index,
   total,
-  scrollYProgress,
+  activeIndex,
 }: {
   feature: (typeof features)[number];
   index: number;
   total: number;
-  scrollYProgress: ReturnType<typeof useScroll>['scrollYProgress'];
+  activeIndex: number;
 }) {
-  // Card 0: deals off at [0.42, 0.50]
-  // Card 1: deals off at [0.92, 1.00]
-  // Card 2: never deals off (stays visible)
-  
-  const x = useTransform(
-    scrollYProgress,
-    index === 0 
-      ? [0.0, 0.42, 0.50] 
-      : index === 1 
-        ? [0.0, 0.50, 0.92, 1.0] 
-        : [0.0, 1.0],
-    index === 0 
-      ? [0, 0, -350] 
-      : index === 1 
-        ? [0, 0, 0, -350] 
-        : [0, 0]
-  );
+  const isDealt = index < activeIndex;
+  const isActive = index === activeIndex;
+  const positionInStack = index - activeIndex;
 
-  const rotate = useTransform(
-    scrollYProgress,
-    index === 0 
-      ? [0.0, 0.42, 0.50] 
-      : index === 1 
-        ? [0.0, 0.50, 0.92, 1.0] 
-        : [0.0, 1.0],
-    index === 0 
-      ? [0, 0, -10] 
-      : index === 1 
-        ? [0, 0, 0, -10] 
-        : [0, 0]
-  );
-
-  const cardOpacity = useTransform(
-    scrollYProgress,
-    index === 0 
-      ? [0.0, 0.42, 0.50] 
-      : index === 1 
-        ? [0.0, 0.50, 0.92, 1.0] 
-        : [0.0, 1.0],
-    index === 0 
-      ? [1, 1, 0] 
-      : index === 1 
-        ? [1, 1, 1, 0] 
-        : [1, 1]
-  );
-
-  // Stack positions & Scale transitions
-  const y = useTransform(
-    scrollYProgress,
-    index === 0
-      ? [0.0, 1.0]
-      : index === 1
-        ? [0.42, 0.50]
-        : [0.42, 0.50, 0.92, 1.0],
-    index === 0
-      ? [0, 0]
-      : index === 1
-        ? [6, 0]
-        : [12, 6, 6, 0]
-  );
-
-  const scale = useTransform(
-    scrollYProgress,
-    index === 0
-      ? [0.0, 1.0]
-      : index === 1
-        ? [0.42, 0.50]
-        : [0.42, 0.50, 0.92, 1.0],
-    index === 0
-      ? [1.0, 1.0]
-      : index === 1
-        ? [0.97, 1.0]
-        : [0.94, 0.97, 0.97, 1.0]
-  );
+  // Animate values based on state to ensure a constant-speed, premium transition independent of scroll velocity
+  const animateState = isDealt
+    ? { x: -350, rotate: -10, opacity: 0, y: 0, scale: 1 }
+    : isActive
+      ? { x: 0, rotate: 0, opacity: 1, y: 0, scale: 1 }
+      : {
+          x: 0,
+          rotate: 0,
+          opacity: 1,
+          y: positionInStack * 6,
+          scale: 1 - positionInStack * 0.03,
+        };
 
   const zIndex = total - index;
 
   return (
     <motion.div
       className="absolute inset-0 rounded-2xl overflow-hidden bg-[#0e1422] shadow-xl shadow-black/30 flex flex-col justify-between p-3.5 border border-white/5"
-      style={{
-        x,
-        rotate,
-        opacity: cardOpacity,
-        zIndex,
-        y,
-        scale,
-      }}
+      animate={animateState}
+      transition={{ duration: 0.45, ease: 'easeOut' }}
+      style={{ zIndex }}
     >
       {/* Visual Asset Container */}
       <div className="relative flex-1 w-full overflow-hidden rounded-xl bg-black/10 flex items-center justify-center">

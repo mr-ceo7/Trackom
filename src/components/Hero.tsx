@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
-import { motion, useInView, useScroll, useTransform, useMotionValueEvent } from 'motion/react';
-import { Rocket, ChevronDown, Play, CheckCircle, Send, Cpu, Users } from 'lucide-react';
+import { motion, useInView, useScroll, useMotionValueEvent } from 'motion/react';
+import { Rocket, CheckCircle, Send, Cpu, Users } from 'lucide-react';
 
 interface HeroProps {
   onOpenSignup: () => void;
@@ -13,16 +13,11 @@ export default function Hero({ onOpenSignup }: HeroProps) {
 
   const { scrollY } = useScroll();
 
-  const opacity1 = useTransform(scrollY, [0, 200], [1, 0]);
-  const y1 = useTransform(scrollY, [0, 200], [0, -30]);
-
-  const opacity2 = useTransform(scrollY, [150, 350], [0, 1]);
-  const y2 = useTransform(scrollY, [150, 350], [30, 0]);
-
   const [showFirst, setShowFirst] = useState(true);
 
+  // snappier scroll threshold (100px) triggers the transition instantly
   useMotionValueEvent(scrollY, "change", (latest) => {
-    setShowFirst(latest < 180);
+    setShowFirst(latest < 100);
   });
 
   const [deliverability, setDeliverability] = useState(0);
@@ -142,7 +137,7 @@ export default function Hero({ onOpenSignup }: HeroProps) {
   );
 
   return (
-    <div ref={heroSectionRef} id="top-page" className="relative h-[180vh] bg-[#0A0A0F]">
+    <div ref={heroSectionRef} id="top-page" className="relative h-[140vh] bg-[#0A0A0F]">
       <div className="sticky top-0 h-screen w-full flex flex-col justify-between overflow-hidden">
         {renderVideoAndOverlay()}
 
@@ -155,7 +150,12 @@ export default function Hero({ onOpenSignup }: HeroProps) {
               
               {/* SCREEN 1: BRAND LOGO INITIAL VIEW */}
               <motion.div
-                style={{ opacity: opacity1, y: y1 }}
+                initial={{ opacity: 1, y: 0 }}
+                animate={{
+                  opacity: showFirst ? 1 : 0,
+                  y: showFirst ? 0 : -30,
+                }}
+                transition={{ duration: 0.45, ease: 'easeOut' }}
                 className={`absolute inset-0 flex flex-col text-left items-start justify-center ${
                   showFirst ? 'pointer-events-auto' : 'pointer-events-none'
                 }`}
@@ -191,7 +191,12 @@ export default function Hero({ onOpenSignup }: HeroProps) {
 
               {/* SCREEN 2: CURRENT HERO WITH DETAILED LIVE TEXT */}
               <motion.div
-                style={{ opacity: opacity2, y: y2 }}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{
+                  opacity: !showFirst ? 1 : 0,
+                  y: !showFirst ? 0 : 30,
+                }}
+                transition={{ duration: 0.45, ease: 'easeOut' }}
                 className={`absolute inset-0 flex flex-col text-left items-start justify-center ${
                   !showFirst ? 'pointer-events-auto' : 'pointer-events-none'
                 }`}
