@@ -1,62 +1,56 @@
-import { CheckCircle2, Code2, Blocks, Webhook } from 'lucide-react';
+import { CheckCircle2, UserPlus, DollarSign, Briefcase } from 'lucide-react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
-const integrationCards = [
+const resellerCards = [
   {
-    icon: Code2,
+    icon: UserPlus,
     iconColor: 'text-blue-400',
     iconBg: 'bg-blue-500/10',
-    title: 'FULL PLATFORM ACCESS VIA REST API',
-    description: 'Comprehensive set of RESTful endpoints',
-    src: '/images/scrennn/Gemini_Generated_Image_grjfr7grjfr7grjf (Edited).png',
-    type: 'image',
-    bg: '#18252d',
+    title: 'SIMPLE RESELLER ONBOARDING',
+    src: '/images/screennnn/Gemini_Generated_Image_z6efx3z6efx3z6ef (Edited).png',
+    bg: '#161a26',
     bullets: [
-      'Comprehensive set of RESTful endpoints',
-      'Manage contacts & audience segments',
-      'Trigger multi-channel campaigns',
-      'Access detailed analytics data',
+      'Quick & easy sign-up process.',
+      'Rapid reseller account approval.',
+      'Dedicated reseller portal access.',
+      'Instant account setup.',
     ],
   },
   {
-    icon: Blocks,
+    icon: DollarSign,
     iconColor: 'text-amber-400',
     iconBg: 'bg-amber-500/10',
-    title: 'MODERN DEVELOPER TOOLS & SDKs',
-    description: 'Officially supported SDKs',
-    src: '/images/scrennn/add_micro_animations_and_gener.mp4',
-    type: 'video',
-    bg: '#141e2a',
+    title: 'WHOLESALE BULK SMS PRICING',
+    src: '/images/screennnn/Gemini_Generated_Image_z6efx3z6efx3z6ef (Edited 2).png',
+    bg: '#192134',
     bullets: [
-      'Officially supported SDKs',
-      'Live interactive API documentation (OpenAPI/Swagger)',
-      'Sandbox environments for testing',
-      'Real-time API usage and performance metrics',
+      'Deeply discounted wholesale rates.',
+      'Volume-based tiered pricing model.',
+      'Purchase credits in bulk.',
+      'Real-time credit balance monitoring.',
     ],
   },
   {
-    icon: Webhook,
+    icon: Briefcase,
     iconColor: 'text-emerald-400',
     iconBg: 'bg-emerald-500/10',
-    title: 'WEBHOOKS & CUSTOM EVENT HANDLING',
-    description: 'Configurable webhook endpoints',
-    src: '/images/scrennn/add_micro_animations_and_gener (1).mp4',
-    type: 'video',
-    bg: '#131c28',
+    title: 'WHITE-LABEL CLIENT MANAGEMENT',
+    src: '/images/screennnn/Gemini_Generated_Image_z6efx3z6efx3z6ef (Edited 3).png',
+    bg: '#282e3e',
     bullets: [
-      'Configurable webhook endpoints',
-      'Event-driven integration',
-      'Customize data payloads',
-      'Secure authentication for outbound data',
+      'White-label customization with your brand.',
+      'Branded client login interface.',
+      'Manage client pricing and credits.',
+      'Integrated billing and reporting.',
     ],
   },
 ];
 
-interface APIIntegrationProps {
+interface ResellerSectionProps {
   onOpenSignup: () => void;
 }
 
-export default function APIIntegration({ onOpenSignup }: APIIntegrationProps) {
+export default function ResellerSection({ onOpenSignup }: ResellerSectionProps) {
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
   const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({ threshold: 0.1 });
   const { ref: ctaRef, isVisible: ctaVisible } = useScrollAnimation();
@@ -65,7 +59,7 @@ export default function APIIntegration({ onOpenSignup }: APIIntegrationProps) {
     <section className="relative bg-white dark:bg-[#07070C] py-20 md:py-28 transition-colors duration-300 border-t border-slate-200/50 dark:border-white/5 overflow-hidden">
       {/* Background ambient glow orbs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden hidden dark:block">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-blue-500/[0.02] blur-[130px]" />
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full bg-emerald-500/[0.015] blur-[150px]" />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 md:px-8">
@@ -75,10 +69,10 @@ export default function APIIntegration({ onOpenSignup }: APIIntegrationProps) {
           className={`flex flex-col gap-4 text-center max-w-3xl mx-auto mb-14 md:mb-20 scroll-animate ${headerVisible ? 'is-visible' : ''}`}
         >
           <h2 className="font-display font-bold text-slate-900 dark:text-white text-3xl sm:text-4xl md:text-5xl lg:text-[3.25rem] leading-[1.1] tracking-wide uppercase">
-            Robust & Customizable API Integration
+            Become a Bulk SMS Reseller
           </h2>
           <p className="text-slate-600 dark:text-gray-400 text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
-            Extend Trackom's power to your specific infrastructure.
+            Register, buy wholesale bulk SMS, and manage your own clients to build a profitable business.
           </p>
         </div>
 
@@ -87,7 +81,7 @@ export default function APIIntegration({ onOpenSignup }: APIIntegrationProps) {
           ref={gridRef}
           className={`grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-20 scroll-animate ${gridVisible ? 'is-visible' : ''}`}
         >
-          {integrationCards.map((card, index) => {
+          {resellerCards.map((card, index) => {
             const Icon = card.icon;
             return (
               <div
@@ -100,23 +94,11 @@ export default function APIIntegration({ onOpenSignup }: APIIntegrationProps) {
               >
                 {/* Visual Area */}
                 <div className="relative w-full aspect-[16/10] overflow-hidden bg-black/10 flex items-center justify-center">
-                  {card.type === 'video' ? (
-                    <video
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      className="w-full h-full object-contain select-none pointer-events-none group-hover:scale-[1.02] transition-transform duration-500"
-                    >
-                      <source src={card.src} type="video/mp4" />
-                    </video>
-                  ) : (
-                    <img
-                      src={card.src}
-                      alt={card.title}
-                      className="w-full h-full object-contain select-none pointer-events-none group-hover:scale-[1.02] transition-transform duration-500"
-                    />
-                  )}
+                  <img
+                    src={card.src}
+                    alt={card.title}
+                    className="w-full h-full object-contain select-none pointer-events-none group-hover:scale-[1.02] transition-transform duration-500"
+                  />
                 </div>
 
                 {/* Text Content */}
