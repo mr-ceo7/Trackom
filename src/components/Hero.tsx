@@ -109,33 +109,30 @@ export default function Hero({ onOpenSignup }: HeroProps) {
   );
 
   const renderStats = () => (
-    <div className="w-full bg-slate-50 dark:bg-[#0B0B12] border-t border-slate-200/60 dark:border-white/5 py-12 px-4 md:px-8 relative z-20 transition-colors duration-300">
-      <div className="max-w-7xl mx-auto -mt-24 relative z-30">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="w-full bg-slate-50 dark:bg-[#0B0B12] border-t border-slate-200/60 dark:border-white/5 py-4 px-4 md:px-8 relative z-20 transition-colors duration-300">
+      <div className="max-w-7xl mx-auto relative z-30">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {stats.map((stat, index) => (
             <motion.div
               key={stat.label}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="bg-white dark:bg-surface-card rounded-2xl p-6 border border-slate-200/60 dark:border-white/5 shadow-sm hover:shadow-md dark:hover:border-brand-primary/20 flex flex-col items-start gap-4 transition-all duration-300"
+              className="bg-white dark:bg-surface-card rounded-xl p-4 border border-slate-200/60 dark:border-white/5 shadow-sm hover:shadow-md dark:hover:border-brand-primary/20 flex items-center gap-3 transition-all duration-300"
             >
-              {/* ICON BOX - TOP LEFT */}
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-blue-500/10 text-blue-600 dark:bg-white/5 dark:text-gray-300">
+              {/* ICON */}
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-blue-500/10 text-blue-600 dark:bg-white/5 dark:text-gray-300">
                 {stat.icon}
               </div>
 
-              {/* VALUES & LABELS STACKED */}
-              <div className="flex flex-col gap-1.5">
-                <div className="font-display font-extrabold text-slate-900 dark:text-white text-3xl tracking-tight leading-none">
+              {/* VALUE & LABEL */}
+              <div className="flex flex-col min-w-0">
+                <div className="font-display font-extrabold text-slate-900 dark:text-white text-xl tracking-tight leading-none">
                   {stat.value}
                 </div>
-                <div className="text-xs font-bold text-slate-800 dark:text-gray-200 tracking-tight">
+                <div className="text-[10px] font-bold text-slate-600 dark:text-gray-400 tracking-tight mt-0.5 truncate">
                   {stat.label}
                 </div>
-                <p className="text-xs text-slate-500 dark:text-gray-400 leading-normal mt-0.5">
-                  {stat.description}
-                </p>
               </div>
             </motion.div>
           ))}
@@ -150,11 +147,11 @@ export default function Hero({ onOpenSignup }: HeroProps) {
         {renderVideoAndOverlay()}
 
         {/* MAIN CONTENT ROW */}
-        <div className="relative flex-grow flex items-center justify-center px-4 md:px-8 pt-36 lg:pt-32 pb-16 overflow-hidden">
+        <div className="relative flex-grow flex items-start justify-center px-4 md:px-8 pt-28 pb-8">
           <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center relative z-10">
             
             {/* LEFT COLUMN: TRANSITIONS CONTENT IN-PLACE */}
-            <div className="lg:col-span-7 relative h-[320px] sm:h-[380px] lg:h-[480px] w-full">
+            <div className="lg:col-span-7 relative h-[280px] sm:h-[320px] lg:h-[380px] w-full">
               
               {/* SCREEN 1: BRAND LOGO INITIAL VIEW */}
               <motion.div
