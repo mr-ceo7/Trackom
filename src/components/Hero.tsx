@@ -163,7 +163,7 @@ export default function Hero({ onOpenSignup }: HeroProps) {
                 <img
                   src="/Gemini_Generated_Image_8ab5bh8ab5bh8ab5.png"
                   alt="Trackom - The Ultimate Bulk SMS Platform"
-                  className="max-w-full h-auto max-h-[160px] lg:max-h-[200px] object-contain -ml-4"
+                  className="max-w-full h-auto max-h-[180px] lg:max-h-[240px] object-contain -ml-4"
                 />
 
                 {/* CTA BUTTONS SCREEN 1 */}
