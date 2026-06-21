@@ -31,12 +31,9 @@ export default function FeatureShowcase({ onOpenSignup }: FeatureShowcaseProps) 
   const { ref: ctaRef, isVisible: ctaVisible } = useScrollAnimation();
 
   return (
-    <section className="relative py-24 md:py-32 overflow-hidden">
-      {/* BACKGROUND — matches hero dark + ambient glow */}
-      <div className="absolute inset-0 bg-[#0A0A0F] pointer-events-none" />
-
-      {/* Ambient glow orbs */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+    <section className="relative pt-10 md:pt-14 pb-24 md:pb-32 bg-slate-50 dark:bg-[#0A0A0F] transition-colors duration-300 overflow-hidden">
+      {/* Ambient glow orbs (dark mode only) */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden hidden dark:block">
         <div className="absolute top-1/3 left-1/4 w-[500px] h-[500px] rounded-full bg-brand-primary/[0.04] blur-[120px]" />
         <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-brand-accent/[0.03] blur-[100px]" />
       </div>
@@ -48,12 +45,12 @@ export default function FeatureShowcase({ onOpenSignup }: FeatureShowcaseProps) 
           ref={headerRef}
           className={`flex flex-col gap-4 text-center max-w-3xl mx-auto mb-16 md:mb-20 scroll-animate ${headerVisible ? 'is-visible' : ''}`}
         >
-          <h2 className="font-display font-bold text-white text-3xl sm:text-4xl md:text-5xl lg:text-[3.25rem] leading-[1.1] tracking-tight text-balance">
+          <h2 className="font-display font-bold text-slate-900 dark:text-white text-3xl sm:text-4xl md:text-5xl lg:text-[3.25rem] leading-[1.1] tracking-tight text-balance">
             Effortless Automation and{' '}
             <br className="hidden sm:block" />
             Personalized Engagement
           </h2>
-          <p className="text-gray-400 text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
+          <p className="text-slate-600 dark:text-gray-400 text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
             Scale your reach and boost conversions with sophisticated, data-driven features.
           </p>
         </div>
@@ -69,19 +66,15 @@ export default function FeatureShowcase({ onOpenSignup }: FeatureShowcaseProps) 
               className="flex flex-col items-center text-center group"
               style={{ transitionDelay: `${index * 120}ms` }}
             >
-              {/* ASSET CONTAINER */}
-              <div className="relative w-full aspect-square max-w-[340px] mx-auto mb-6 flex items-center justify-center">
-                {/* Glow behind asset */}
-                <div className="absolute inset-[15%] rounded-full bg-brand-primary/[0.06] blur-[60px] group-hover:bg-brand-primary/[0.1] transition-all duration-700" />
-
-                {/* Asset */}
+              {/* ASSET CARD — dark bg matching the asset backgrounds */}
+              <div className="relative w-full aspect-square max-w-[340px] mx-auto mb-6 rounded-2xl overflow-hidden bg-[#0e1422] shadow-lg shadow-black/20">
                 {feature.type === 'video' ? (
                   <video
                     autoPlay
                     muted
                     loop
                     playsInline
-                    className="relative w-full h-full object-contain select-none pointer-events-none mix-blend-lighten"
+                    className="w-full h-full object-contain select-none pointer-events-none"
                   >
                     <source src={feature.src} type="video/mp4" />
                   </video>
@@ -89,16 +82,16 @@ export default function FeatureShowcase({ onOpenSignup }: FeatureShowcaseProps) 
                   <img
                     src={feature.src}
                     alt={feature.title}
-                    className="relative w-full h-full object-contain select-none pointer-events-none mix-blend-lighten"
+                    className="w-full h-full object-contain select-none pointer-events-none"
                   />
                 )}
               </div>
 
               {/* TEXT */}
-              <h3 className="font-display font-bold text-white text-lg md:text-xl mb-2 leading-tight">
+              <h3 className="font-display font-bold text-slate-900 dark:text-white text-lg md:text-xl mb-2 leading-tight">
                 {feature.title}
               </h3>
-              <p className="text-gray-400 text-sm leading-relaxed max-w-[280px]">
+              <p className="text-slate-500 dark:text-gray-400 text-sm leading-relaxed max-w-[280px]">
                 {feature.description}
               </p>
             </div>
@@ -118,9 +111,6 @@ export default function FeatureShowcase({ onOpenSignup }: FeatureShowcaseProps) 
           </button>
         </div>
       </div>
-
-      {/* BOTTOM FADE into next section */}
-      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-b from-transparent to-[#0A0A0F] pointer-events-none z-10" />
     </section>
   );
 }
