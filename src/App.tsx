@@ -4,6 +4,7 @@ import Hero from './components/Hero';
 import FeatureShowcase from './components/FeatureShowcase';
 import PartnerLogos from './components/PartnerLogos';
 import BulkSMSControl from './components/BulkSMSControl';
+import MarketingFunnel from './components/MarketingFunnel';
 import Services from './components/Services';
 import Features from './components/Features';
 import HowItWorks from './components/HowItWorks';
@@ -48,6 +49,9 @@ export default function App() {
 
         {/* Bulk SMS Control Section */}
         <BulkSMSControl onOpenSignup={() => setIsSignupOpen(true)} />
+
+        {/* Marketing Funnel Section */}
+        <MarketingFunnel onOpenSignup={() => setIsSignupOpen(true)} />
 
         {/* Services Grid */}
         <Services />
