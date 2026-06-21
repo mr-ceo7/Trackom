@@ -34,7 +34,7 @@ export default defineConfig(() => {
       // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
       // Allow ngrok's hostname (and any other tunneling host) to proxy requests.
-      allowedHosts: isNgrok ? [ngrokHost!] : undefined,
+      allowedHosts: true as const,
       // Ensure CORS headers are sent so ngrok's browser interstitial doesn't block assets.
       cors: true,
     },

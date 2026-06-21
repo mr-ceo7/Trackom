@@ -3,6 +3,7 @@ import Header from './components/Header';
 import Hero from './components/Hero';
 import FeatureShowcase from './components/FeatureShowcase';
 import PartnerLogos from './components/PartnerLogos';
+import BulkSMSControl from './components/BulkSMSControl';
 import Services from './components/Services';
 import Features from './components/Features';
 import HowItWorks from './components/HowItWorks';
@@ -44,6 +45,9 @@ export default function App() {
 
         {/* Partner Logos Marquee */}
         <PartnerLogos />
+
+        {/* Bulk SMS Control Section */}
+        <BulkSMSControl onOpenSignup={() => setIsSignupOpen(true)} />
 
         {/* Services Grid */}
         <Services />
