@@ -33,11 +33,7 @@
 /* ===== BASE RESET & DEFAULTS ===== */
 html {
   scroll-behavior: smooth;
-  scroll-snap-type: y proximity;
-}
-
-section {
-  scroll-snap-align: start;
+  overflow-x: hidden;
 }
 
 body {

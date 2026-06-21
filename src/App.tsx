@@ -19,7 +19,7 @@ export default function App() {
   const [isSignupOpen, setIsSignupOpen] = useState(false);
 
   return (
-    <div className="min-h-screen text-slate-800 bg-slate-50 dark:text-gray-200 dark:bg-surface-dark selection:bg-brand-primary/30 transition-colors duration-300 relative overflow-hidden flex flex-col justify-between font-sans">
+    <div className="min-h-screen text-slate-800 bg-slate-50 dark:text-gray-200 dark:bg-surface-dark selection:bg-brand-primary/30 transition-colors duration-300 relative flex flex-col justify-between font-sans">
       
       {/* PARTICLE CANVAS BACKGROUND */}
       <ParticleCanvas />
