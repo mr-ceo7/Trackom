@@ -17,7 +17,7 @@ export default function Hero({ onOpenSignup }: HeroProps) {
 
   // snappier scroll threshold (100px) triggers the transition instantly
   useMotionValueEvent(scrollY, "change", (latest) => {
-    setShowFirst(latest < 100);
+    setShowFirst(latest < 500);
   });
 
   const [deliverability, setDeliverability] = useState(0);
@@ -137,17 +137,17 @@ export default function Hero({ onOpenSignup }: HeroProps) {
   );
 
   return (
-    <div ref={heroSectionRef} id="top-page" className="relative h-[140vh] bg-[#0A0A0F] transition-colors duration-300">
+    <div ref={heroSectionRef} id="top-page" className="relative h-[240vh] bg-[#0A0A0F] transition-colors duration-300">
       <div className="sticky top-0 h-screen w-full flex flex-col justify-between overflow-hidden">
         {renderVideoAndOverlay()}
 
         {/* MAIN CONTENT ROW */}
         <div className="relative flex-grow flex items-start justify-center px-4 md:px-8 pt-28 pb-8">
           <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center relative z-10">
-            
+
             {/* LEFT COLUMN: TRANSITIONS CONTENT IN-PLACE */}
             <div className="lg:col-span-7 relative h-[280px] sm:h-[320px] lg:h-[380px] w-full">
-              
+
               {/* SCREEN 1: BRAND LOGO INITIAL VIEW */}
               <motion.div
                 initial={{ opacity: 1, y: 0 }}
@@ -156,9 +156,8 @@ export default function Hero({ onOpenSignup }: HeroProps) {
                   y: showFirst ? 0 : -30,
                 }}
                 transition={{ duration: 0.45, ease: 'easeOut' }}
-                className={`absolute inset-0 flex flex-col text-left items-start justify-center ${
-                  showFirst ? 'pointer-events-auto' : 'pointer-events-none'
-                }`}
+                className={`absolute inset-0 flex flex-col text-left items-start justify-center ${showFirst ? 'pointer-events-auto' : 'pointer-events-none'
+                  }`}
               >
                 <img
                   src="/Gemini_Generated_Image_8ab5bh8ab5bh8ab5.png"
@@ -197,9 +196,8 @@ export default function Hero({ onOpenSignup }: HeroProps) {
                   y: !showFirst ? 0 : 30,
                 }}
                 transition={{ duration: 0.45, ease: 'easeOut' }}
-                className={`absolute inset-0 flex flex-col text-left items-start justify-center ${
-                  !showFirst ? 'pointer-events-auto' : 'pointer-events-none'
-                }`}
+                className={`absolute inset-0 flex flex-col text-left items-start justify-center ${!showFirst ? 'pointer-events-auto' : 'pointer-events-none'
+                  }`}
               >
                 {/* HEADLINE */}
                 <h1 className="font-display font-extrabold text-white text-4xl sm:text-5xl lg:text-6xl xl:text-7xl leading-[1.05] tracking-tighter text-balance">
