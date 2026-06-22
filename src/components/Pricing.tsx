@@ -75,17 +75,17 @@ export default function Pricing() {
         <div className="text-xs uppercase tracking-widest text-brand-primary font-mono font-semibold">
           Transparent Pricing
         </div>
-        <h2 className="font-display font-bold text-white text-3xl md:text-5xl leading-tight">
+        <h2 className="font-display font-bold text-slate-900 dark:text-white text-3xl md:text-5xl leading-tight">
           Simple pricing,{' '}
           <span className="gradient-text">powerful results.</span>
         </h2>
-        <p className="text-gray-400 text-base md:text-lg">
+        <p className="text-slate-600 dark:text-gray-400 text-base md:text-lg">
           Volume-based discounts applied automatically. Pay via M-Pesa, no hidden fees.
         </p>
 
         {/* Currency toggle */}
         <div className="flex items-center justify-center gap-3 mt-4">
-          <span className={`text-sm font-medium ${showKES ? 'text-white' : 'text-gray-500'}`}>KES</span>
+          <span className={`text-sm font-medium ${showKES ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-gray-500'}`}>KES</span>
           <button
             onClick={() => setShowKES(!showKES)}
             className={`relative w-12 h-6 rounded-full transition-colors duration-300 cursor-pointer ${
@@ -96,7 +96,7 @@ export default function Pricing() {
               showKES ? 'left-0.5' : 'left-6'
             }`} />
           </button>
-          <span className={`text-sm font-medium ${!showKES ? 'text-white' : 'text-gray-500'}`}>USD</span>
+          <span className={`text-sm font-medium ${!showKES ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-gray-500'}`}>USD</span>
         </div>
       </div>
 
@@ -132,27 +132,27 @@ export default function Pricing() {
                 {/* Icon + name */}
                 <div className="flex items-center gap-3 mb-4">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                    tier.popular ? 'bg-brand-primary/15 text-brand-primary-light' : 'bg-white/5 text-gray-400'
+                    tier.popular ? 'bg-brand-primary/15 text-brand-primary-light' : 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-gray-400'
                   }`}>
                     {tier.icon}
                   </div>
-                  <h3 className="font-display font-semibold text-white text-xl">{tier.name}</h3>
+                  <h3 className="font-display font-semibold text-slate-900 dark:text-white text-xl">{tier.name}</h3>
                 </div>
 
                 {/* Price */}
                 <div className="mb-2">
-                  <span className="font-display font-bold text-4xl text-white">{displayPrice}</span>
+                  <span className="font-display font-bold text-4xl text-slate-900 dark:text-white">{displayPrice}</span>
                   {tier.price !== 'Custom' && (
-                    <span className="text-gray-500 text-sm ml-1">/SMS</span>
+                    <span className="text-slate-500 dark:text-gray-500 text-sm ml-1">/SMS</span>
                   )}
                 </div>
-                <p className="text-gray-500 text-xs mb-1 font-medium">{tier.volume}</p>
-                <p className="text-gray-400 text-sm mb-6">{tier.description}</p>
+                <p className="text-slate-500 dark:text-gray-500 text-xs mb-1 font-medium">{tier.volume}</p>
+                <p className="text-slate-600 dark:text-gray-400 text-sm mb-6">{tier.description}</p>
 
                 {/* Features */}
                 <ul className="space-y-3 mb-8 flex-grow">
                   {tier.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2.5 text-sm text-gray-300">
+                    <li key={feature} className="flex items-start gap-2.5 text-sm text-slate-700 dark:text-gray-300">
                       <Check className={`w-4 h-4 mt-0.5 shrink-0 ${
                         tier.popular ? 'text-brand-primary-light' : 'text-brand-emerald'
                       }`} />
@@ -166,7 +166,7 @@ export default function Pricing() {
                   className={`w-full py-3.5 rounded-xl text-sm font-semibold transition-all duration-300 cursor-pointer ${
                     tier.popular
                       ? 'bg-brand-primary hover:bg-brand-primary-hover text-white shadow-lg shadow-brand-primary/20'
-                      : 'bg-white/5 hover:bg-white/10 text-white border border-white/10 hover:border-white/20'
+                      : 'bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-800 dark:text-white border border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20'
                   }`}
                 >
                   {tier.cta}
@@ -185,8 +185,8 @@ export default function Pricing() {
               <Users className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="font-display font-semibold text-white text-xl mb-1">Become a Trackom Reseller</h3>
-              <p className="text-gray-400 text-sm leading-relaxed">
+              <h3 className="font-display font-semibold text-slate-900 dark:text-white text-xl mb-1">Become a Trackom Reseller</h3>
+              <p className="text-slate-600 dark:text-gray-400 text-sm leading-relaxed">
                 Purchase wholesale bulk SMS at discounted rates and sell to your own clients. 
                 Get your own branded portal, flexible pricing, and dedicated support.
               </p>

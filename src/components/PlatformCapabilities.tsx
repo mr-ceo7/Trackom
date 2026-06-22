@@ -8,8 +8,8 @@ const capabilityCards = [
     src: '/images/screenn/Gemini_Generated_Image_o3oecqo3oecqo3oe (Edited).png',
     title: 'VISUAL JOURNEY BUILDER',
     description: 'Visually construct and automate personalized customer paths.',
-    bg: '#0f1523',
-    border: 'border-blue-500/10',
+    bgClass: 'bg-white dark:bg-[#0f1523]',
+    borderClass: 'border-slate-200 dark:border-blue-500/10',
     checkmarks: [
       'Multi-stage conditional logic',
       'Cross-channel triggers (Email, Push, SMS)',
@@ -21,8 +21,8 @@ const capabilityCards = [
     src: '/images/screenn/Gemini_Generated_Image_o3oecqo3oecqo3oe (Edited 2).png',
     title: 'ADVANCED AUDIENCE INTELLIGENCE',
     description: 'Power segmentation with deep data analysis.',
-    bg: '#181f2e',
-    border: 'border-emerald-500/10',
+    bgClass: 'bg-white dark:bg-[#181f2e]',
+    borderClass: 'border-slate-200 dark:border-emerald-500/10',
     checkmarks: [
       'SQL-level query power',
       'Behavioral event tracking',
@@ -34,8 +34,8 @@ const capabilityCards = [
     src: '/images/screenn/Gemini_Generated_Image_o3oecqo3oecqo3oe (Edited 3).png',
     title: 'REAL-TIME ANALYTICS & REPORTING',
     description: 'Monitor and optimize campaign performance instantly.',
-    bg: '#0f1525',
-    border: 'border-purple-500/10',
+    bgClass: 'bg-white dark:bg-[#0f1525]',
+    borderClass: 'border-slate-200 dark:border-purple-500/10',
     checkmarks: [
       'Customizable dashboards',
       'Cohort & funnel analysis',
@@ -136,9 +136,8 @@ function DeckCard({
 
   return (
     <motion.div
-      className={`absolute inset-0 rounded-2xl overflow-hidden shadow-xl shadow-black/35 flex flex-col justify-between p-4 border ${card.border}`}
+      className={`absolute inset-0 rounded-2xl overflow-hidden shadow-xl shadow-slate-200/50 dark:shadow-black/35 flex flex-col justify-between p-4 border ${card.bgClass} ${card.borderClass}`}
       style={{
-        backgroundColor: card.bg,
         zIndex,
       }}
       animate={animateState}
@@ -155,12 +154,12 @@ function DeckCard({
 
       {/* Card Info */}
       <div className="pt-3.5 pb-1 flex flex-col gap-2">
-        <h3 className="font-display font-bold text-white text-sm tracking-wide uppercase leading-tight">
+        <h3 className="font-display font-bold text-slate-900 dark:text-white text-sm tracking-wide uppercase leading-tight">
           {card.title}
         </h3>
         
         {/* Checklist inside the mobile card */}
-        <ul className="flex flex-col gap-1.5 text-[11px] text-gray-300 text-left px-1">
+        <ul className="flex flex-col gap-1.5 text-[11px] text-slate-600 dark:text-gray-300 text-left px-1">
           {card.checkmarks.map((check) => (
             <li key={check} className="flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-500" />
@@ -187,9 +186,8 @@ function DesktopGrid() {
       {capabilityCards.map((card, index) => (
         <div
           key={card.title}
-          className="flex flex-col rounded-2xl overflow-hidden border border-slate-200/50 dark:border-white/5 shadow-md p-5 group transition-transform duration-300 hover:scale-[1.02]"
+          className={`flex flex-col rounded-2xl overflow-hidden border shadow-md p-5 group transition-transform duration-300 hover:scale-[1.02] ${card.bgClass} ${card.borderClass}`}
           style={{
-            backgroundColor: card.bg,
             transitionDelay: `${index * 120}ms`
           }}
         >
@@ -203,19 +201,19 @@ function DesktopGrid() {
           </div>
 
           {/* Heading */}
-          <h3 className="font-display font-bold text-white text-base lg:text-lg mb-2 leading-snug uppercase tracking-wide">
+          <h3 className="font-display font-bold text-slate-900 dark:text-white text-base lg:text-lg mb-2 leading-snug uppercase tracking-wide">
             {card.title}
           </h3>
 
           {/* Description */}
-          <p className="text-gray-400 text-xs md:text-sm leading-relaxed mb-4">
+          <p className="text-slate-600 dark:text-gray-400 text-xs md:text-sm leading-relaxed mb-4">
             {card.description}
           </p>
 
           {/* Checklist */}
-          <ul className="flex flex-col gap-2.5 mt-auto pt-4 border-t border-white/5">
+          <ul className="flex flex-col gap-2.5 mt-auto pt-4 border-t border-slate-200 dark:border-white/5">
             {card.checkmarks.map((check) => (
-              <li key={check} className="flex items-start gap-2.5 text-xs text-gray-300">
+              <li key={check} className="flex items-start gap-2.5 text-xs text-slate-600 dark:text-gray-300">
                 <CheckCircle2 className="w-4.5 h-4.5 shrink-0 text-emerald-500 mt-0.5" />
                 <span>{check}</span>
               </li>
@@ -235,7 +233,7 @@ export default function PlatformCapabilities({ onOpenSignup }: PlatformCapabilit
   const { ref: ctaRef, isVisible: ctaVisible } = useScrollAnimation();
 
   return (
-    <section className="relative bg-slate-50 dark:bg-[#0A0A0F] py-20 md:py-28 transition-colors duration-300 border-t border-slate-200/50 dark:border-white/5">
+    <section className="relative bg-[#E8ECF9] dark:bg-[#0A0A0F] py-20 md:py-28 transition-colors duration-300 border-t border-slate-200/50 dark:border-white/5">
       {/* Background ambient glow orbs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden hidden dark:block">
         <div className="absolute top-1/4 left-1/3 w-[450px] h-[450px] rounded-full bg-blue-500/[0.02] blur-[110px]" />

@@ -67,11 +67,11 @@ export default function FAQSection() {
         <div className="text-xs uppercase tracking-widest text-brand-primary font-mono font-semibold">
           Frequently Asked Questions
         </div>
-        <h2 className="font-display font-bold text-white text-3xl md:text-5xl leading-tight">
+        <h2 className="font-display font-bold text-slate-900 dark:text-white text-3xl md:text-5xl leading-tight">
           Got questions?{' '}
           <span className="gradient-text">We've got answers.</span>
         </h2>
-        <p className="text-gray-400 text-sm md:text-base">
+        <p className="text-slate-600 dark:text-gray-400 text-sm md:text-base">
           Everything you need to know about Trackom's platform, pricing, and API.
         </p>
 
@@ -85,9 +85,9 @@ export default function FAQSection() {
               setOpenIndex(null); // Close active when filtering
             }}
             placeholder="Search FAQs (e.g. M-Pesa, reseller)..."
-            className="w-full pl-11 pr-4 py-3 rounded-xl border border-white/10 bg-white/[0.03] text-white text-sm focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all placeholder:text-gray-500"
+            className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/[0.03] text-slate-900 dark:text-white text-sm focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all placeholder:text-slate-400 dark:placeholder:text-gray-500"
           />
-          <Search className="absolute left-4 top-3.5 w-4 h-4 text-gray-500" />
+          <Search className="absolute left-4 top-3.5 w-4 h-4 text-slate-400 dark:text-gray-500" />
         </div>
       </div>
 
@@ -116,16 +116,16 @@ export default function FAQSection() {
                     <div className="flex items-center gap-4 pr-4">
                       <span className="shrink-0">{faq.icon}</span>
                       <div className="space-y-0.5">
-                        <span className="block text-[9px] font-mono font-bold uppercase tracking-widest text-gray-500">
+                        <span className="block text-[9px] font-mono font-bold uppercase tracking-widest text-slate-400 dark:text-gray-500">
                           {faq.category}
                         </span>
-                        <span className="block font-display font-semibold text-sm md:text-base text-white leading-normal">
+                        <span className="block font-display font-semibold text-sm md:text-base text-slate-900 dark:text-white leading-normal">
                           {faq.question}
                         </span>
                       </div>
                     </div>
 
-                    <div className={`size-8 flex items-center justify-center rounded-lg bg-white/5 text-gray-500 transition-transform duration-300 shrink-0 ${
+                    <div className={`size-8 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-gray-500 transition-transform duration-300 shrink-0 ${
                       isOpen ? 'rotate-180 bg-brand-primary/10 text-brand-primary-light' : ''
                     }`}>
                       <ChevronDown className="w-4 h-4" />
@@ -141,8 +141,8 @@ export default function FAQSection() {
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ height: { duration: 0.3, ease: 'easeInOut' }, opacity: { duration: 0.2 } }}
                       >
-                        <div className="px-5 pb-6 pt-1 md:px-6 border-t border-white/5">
-                          <p className="text-gray-400 text-sm leading-relaxed max-w-3xl">
+                        <div className="px-5 pb-6 pt-1 md:px-6 border-t border-slate-200 dark:border-white/5">
+                          <p className="text-slate-600 dark:text-gray-400 text-sm leading-relaxed max-w-3xl">
                             {faq.answer}
                           </p>
                         </div>
@@ -156,9 +156,9 @@ export default function FAQSection() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-center py-12 border border-dashed border-white/10 rounded-xl"
+              className="text-center py-12 border border-dashed border-slate-300 dark:border-white/10 rounded-xl"
             >
-              <p className="text-gray-500 text-sm">No matching FAQs found for "{searchQuery}"</p>
+              <p className="text-slate-500 dark:text-gray-500 text-sm">No matching FAQs found for "{searchQuery}"</p>
             </motion.div>
           )}
         </AnimatePresence>

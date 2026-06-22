@@ -7,7 +7,7 @@ export default function ResellerSection({ onOpenSignup }: { onOpenSignup: () => 
   const { ref: ctaRef, isVisible: ctaVisible } = useScrollAnimation();
 
   return (
-    <section className="relative bg-white dark:bg-[#07070C] py-20 md:py-28 transition-colors duration-300 border-t border-slate-200/50 dark:border-white/5 overflow-hidden">
+    <section className="relative bg-[#F3F4FD] dark:bg-[#07070C] py-20 md:py-28 transition-colors duration-300 border-t border-slate-200/50 dark:border-white/5 overflow-hidden">
       {/* Background ambient glow orbs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden hidden dark:block">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full bg-emerald-500/[0.015] blur-[150px]" />
@@ -34,8 +34,7 @@ export default function ResellerSection({ onOpenSignup }: { onOpenSignup: () => 
         >
           {/* Card 1: SIMPLE RESELLER ONBOARDING (Vertical, 1 Column span) */}
           <div
-            className="flex flex-col rounded-2xl overflow-hidden border border-slate-200/50 dark:border-white/5 shadow-md group transition-transform duration-300 hover:scale-[1.02] md:col-span-1"
-            style={{ backgroundColor: '#161a26' }}
+            className="flex flex-col rounded-2xl overflow-hidden border border-slate-200 dark:border-white/5 shadow-md bg-white dark:bg-[#161a26] group transition-transform duration-300 hover:scale-[1.02] md:col-span-1"
           >
             {/* Visual Area */}
             <div className="relative w-full aspect-[16/10] overflow-hidden bg-black/10 flex items-center justify-center">
@@ -50,21 +49,21 @@ export default function ResellerSection({ onOpenSignup }: { onOpenSignup: () => 
             <div className="p-6 flex flex-col gap-4 flex-1">
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                  <UserPlus className="w-4.5 h-4.5 text-blue-400" />
+                  <UserPlus className="w-4.5 h-4.5 text-blue-500 dark:text-blue-400" />
                 </div>
-                <h3 className="font-display font-bold text-white text-sm lg:text-base leading-snug uppercase tracking-wide">
+                <h3 className="font-display font-bold text-slate-900 dark:text-white text-sm lg:text-base leading-snug uppercase tracking-wide">
                   Simple Reseller Onboarding
                 </h3>
               </div>
 
-              <ul className="flex flex-col gap-2.5 mt-auto pt-3 border-t border-white/5">
+              <ul className="flex flex-col gap-2.5 mt-auto pt-3 border-t border-slate-200 dark:border-white/5">
                 {[
                   'Quick & easy sign-up process.',
                   'Rapid reseller account approval.',
                   'Dedicated reseller portal access.',
                   'Instant account setup.',
                 ].map((bullet) => (
-                  <li key={bullet} className="flex items-start gap-2.5 text-xs text-gray-300">
+                  <li key={bullet} className="flex items-start gap-2.5 text-xs text-slate-600 dark:text-gray-300">
                     <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500 mt-0.5" />
                     <span>{bullet}</span>
                   </li>
@@ -75,28 +74,27 @@ export default function ResellerSection({ onOpenSignup }: { onOpenSignup: () => 
 
           {/* Card 2: WHITE-LABEL CLIENT MANAGEMENT (Horizontal on desktop, 2 Columns span) */}
           <div
-            className="flex flex-col md:flex-row rounded-2xl overflow-hidden border border-slate-200/50 dark:border-white/5 shadow-md group transition-transform duration-300 hover:scale-[1.02] md:col-span-2"
-            style={{ backgroundColor: '#282e3e' }}
+            className="flex flex-col md:flex-row rounded-2xl overflow-hidden border border-slate-200 dark:border-white/5 shadow-md bg-white dark:bg-[#282e3e] group transition-transform duration-300 hover:scale-[1.02] md:col-span-2"
           >
             {/* Text Content */}
             <div className="p-6 flex flex-col gap-4 flex-1 justify-center">
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                  <Briefcase className="w-4.5 h-4.5 text-emerald-400" />
+                  <Briefcase className="w-4.5 h-4.5 text-emerald-500 dark:text-emerald-400" />
                 </div>
-                <h3 className="font-display font-bold text-white text-sm lg:text-base leading-snug uppercase tracking-wide">
+                <h3 className="font-display font-bold text-slate-900 dark:text-white text-sm lg:text-base leading-snug uppercase tracking-wide">
                   White-Label Client Management
                 </h3>
               </div>
 
-              <ul className="flex flex-col gap-2.5 mt-4 pt-3 border-t border-white/5">
+              <ul className="flex flex-col gap-2.5 mt-4 pt-3 border-t border-slate-200 dark:border-white/5">
                 {[
                   'White-label customization with your brand.',
                   'Branded client login interface.',
                   'Manage client pricing and credits.',
                   'Integrated billing and reporting.',
                 ].map((bullet) => (
-                  <li key={bullet} className="flex items-start gap-2.5 text-xs text-gray-300">
+                  <li key={bullet} className="flex items-start gap-2.5 text-xs text-slate-600 dark:text-gray-300">
                     <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500 mt-0.5" />
                     <span>{bullet}</span>
                   </li>
@@ -116,8 +114,7 @@ export default function ResellerSection({ onOpenSignup }: { onOpenSignup: () => 
 
           {/* Card 3: WHOLESALE BULK SMS PRICING (Horizontal full-width card, 3 Columns span) */}
           <div
-            className="flex flex-col md:flex-row rounded-2xl overflow-hidden border border-slate-200/50 dark:border-white/5 shadow-md group transition-transform duration-300 hover:scale-[1.02] md:col-span-3"
-            style={{ backgroundColor: '#192134' }}
+            className="flex flex-col md:flex-row rounded-2xl overflow-hidden border border-slate-200 dark:border-white/5 shadow-md bg-white dark:bg-[#192134] group transition-transform duration-300 hover:scale-[1.02] md:col-span-3"
           >
             {/* Visual Area */}
             <div className="relative w-full md:w-1/2 aspect-[16/10] md:aspect-auto overflow-hidden bg-black/10 flex items-center justify-center shrink-0">
@@ -132,21 +129,21 @@ export default function ResellerSection({ onOpenSignup }: { onOpenSignup: () => 
             <div className="p-6 flex flex-col gap-4 flex-1 justify-center">
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                  <DollarSign className="w-4.5 h-4.5 text-amber-400" />
+                  <DollarSign className="w-4.5 h-4.5 text-amber-500 dark:text-amber-400" />
                 </div>
-                <h3 className="font-display font-bold text-white text-sm lg:text-base leading-snug uppercase tracking-wide">
+                <h3 className="font-display font-bold text-slate-900 dark:text-white text-sm lg:text-base leading-snug uppercase tracking-wide">
                   Wholesale Bulk SMS Pricing
                 </h3>
               </div>
 
-              <ul className="flex flex-col gap-2.5 mt-4 pt-3 border-t border-white/5">
+              <ul className="flex flex-col gap-2.5 mt-4 pt-3 border-t border-slate-200 dark:border-white/5">
                 {[
                   'Deeply discounted wholesale rates.',
                   'Volume-based tiered pricing model.',
                   'Purchase credits in bulk.',
                   'Real-time credit balance monitoring.',
                 ].map((bullet) => (
-                  <li key={bullet} className="flex items-start gap-2.5 text-xs text-gray-300">
+                  <li key={bullet} className="flex items-start gap-2.5 text-xs text-slate-600 dark:text-gray-300">
                     <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500 mt-0.5" />
                     <span>{bullet}</span>
                   </li>

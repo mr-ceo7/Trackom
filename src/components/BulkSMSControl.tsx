@@ -8,24 +8,24 @@ const controlFeatures = [
     src: '/images/ass1.png',
     title: 'Smart Audience Segments',
     description: 'Harness real-time data and behavior to build precise, high-conversion audience groups.',
-    bg: '#0f1524',
-    border: 'border-emerald-500/10',
+    bgClass: 'bg-white dark:bg-[#0f1524]',
+    borderClass: 'border-slate-200 dark:border-emerald-500/10',
   },
   {
     type: 'image' as const,
     src: '/images/Gemini_Generated_Image_jac908jac908jac9 (Edited 2).png',
     title: 'Integrated Automated Workflows',
     description: 'Create conditional logic flows, trigger SMS from CRM actions, and personalize user journeys.',
-    bg: '#161d29',
-    border: 'border-blue-500/10',
+    bgClass: 'bg-white dark:bg-[#161d29]',
+    borderClass: 'border-slate-200 dark:border-blue-500/10',
   },
   {
     type: 'image' as const,
     src: '/images/Gemini_Generated_Image_jac908jac908jac9 (Edited).png',
     title: 'Deep Analytics & Insights Dashboard',
     description: 'Go beyond delivery stats; track ROI, analyze heatmaps, and optimize message content.',
-    bg: '#1a2433',
-    border: 'border-violet-500/10',
+    bgClass: 'bg-white dark:bg-[#1a2433]',
+    borderClass: 'border-slate-200 dark:border-violet-500/10',
   },
 ];
 
@@ -128,9 +128,8 @@ function DeckCard({
 
   return (
     <motion.div
-      className={`absolute inset-0 rounded-2xl overflow-hidden shadow-xl shadow-black/35 flex flex-col justify-between p-3.5 border ${feature.border}`}
+      className={`absolute inset-0 rounded-2xl overflow-hidden shadow-xl shadow-slate-200/50 dark:shadow-black/35 flex flex-col justify-between p-3.5 border ${feature.bgClass} ${feature.borderClass}`}
       style={{
-        backgroundColor: feature.bg,
         zIndex,
       }}
       animate={animateState}
@@ -147,10 +146,10 @@ function DeckCard({
 
       {/* Feature Text Info inside the Card */}
       <div className="pt-3 pb-1 text-center">
-        <h3 className="font-display font-bold text-white text-base mb-0.5 leading-tight">
+        <h3 className="font-display font-bold text-slate-900 dark:text-white text-base mb-0.5 leading-tight">
           {feature.title}
         </h3>
-        <p className="text-gray-400 text-xs leading-relaxed px-1">
+        <p className="text-slate-600 dark:text-gray-400 text-xs leading-relaxed px-1">
           {feature.description}
         </p>
       </div>
@@ -176,8 +175,7 @@ function DesktopGrid() {
           style={{ transitionDelay: `${index * 120}ms` }}
         >
           <div
-            className={`relative w-full aspect-square max-w-[340px] mx-auto mb-6 rounded-2xl overflow-hidden shadow-lg shadow-black/20 border transition-transform duration-300 group-hover:scale-[1.02] ${feature.border}`}
-            style={{ backgroundColor: feature.bg }}
+            className={`relative w-full aspect-square max-w-[340px] mx-auto mb-6 rounded-2xl overflow-hidden shadow-lg shadow-slate-200/50 dark:shadow-black/20 border transition-transform duration-300 group-hover:scale-[1.02] ${feature.bgClass} ${feature.borderClass}`}
           >
             <img
               src={feature.src}
@@ -205,7 +203,7 @@ export default function BulkSMSControl({ onOpenSignup }: BulkSMSControlProps) {
   const { ref: ctaRef, isVisible: ctaVisible } = useScrollAnimation();
 
   return (
-    <section className="relative bg-slate-50 dark:bg-[#0A0A0F] py-20 md:py-28 transition-colors duration-300 border-t border-slate-200/50 dark:border-white/5">
+    <section className="relative bg-[#E8ECF9] dark:bg-[#0A0A0F] py-20 md:py-28 transition-colors duration-300 border-t border-slate-200/50 dark:border-white/5">
       {/* Ambient glow orbs (dark mode only) */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden hidden dark:block">
         <div className="absolute top-1/4 right-1/4 w-[450px] h-[450px] rounded-full bg-brand-primary/[0.03] blur-[110px]" />

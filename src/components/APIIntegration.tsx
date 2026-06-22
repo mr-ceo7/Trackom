@@ -4,13 +4,14 @@ import { useScrollAnimation } from '../hooks/useScrollAnimation';
 const integrationCards = [
   {
     icon: Code2,
-    iconColor: 'text-blue-400',
+    iconColor: 'text-blue-500 dark:text-blue-400',
     iconBg: 'bg-blue-500/10',
     title: 'FULL PLATFORM ACCESS VIA REST API',
     description: 'Comprehensive set of RESTful endpoints',
     src: '/images/scrennn/Gemini_Generated_Image_grjfr7grjfr7grjf (Edited).png',
     type: 'image',
-    bg: '#18252d',
+    bgClass: 'bg-white dark:bg-[#18252d]',
+    borderClass: 'border-slate-200 dark:border-blue-500/10',
     bullets: [
       'Comprehensive set of RESTful endpoints',
       'Manage contacts & audience segments',
@@ -20,13 +21,14 @@ const integrationCards = [
   },
   {
     icon: Blocks,
-    iconColor: 'text-amber-400',
+    iconColor: 'text-amber-600 dark:text-amber-400',
     iconBg: 'bg-amber-500/10',
     title: 'MODERN DEVELOPER TOOLS & SDKs',
     description: 'Officially supported SDKs',
     src: '/images/scrennn/add_micro_animations_and_gener.mp4',
     type: 'video',
-    bg: '#141e2a',
+    bgClass: 'bg-white dark:bg-[#141e2a]',
+    borderClass: 'border-slate-200 dark:border-amber-500/10',
     bullets: [
       'Officially supported SDKs',
       'Live interactive API documentation (OpenAPI/Swagger)',
@@ -36,13 +38,14 @@ const integrationCards = [
   },
   {
     icon: Webhook,
-    iconColor: 'text-emerald-400',
+    iconColor: 'text-emerald-600 dark:text-emerald-400',
     iconBg: 'bg-emerald-500/10',
     title: 'WEBHOOKS & CUSTOM EVENT HANDLING',
     description: 'Configurable webhook endpoints',
     src: '/images/scrennn/add_micro_animations_and_gener (1).mp4',
     type: 'video',
-    bg: '#131c28',
+    bgClass: 'bg-white dark:bg-[#131c28]',
+    borderClass: 'border-slate-200 dark:border-emerald-500/10',
     bullets: [
       'Configurable webhook endpoints',
       'Event-driven integration',
@@ -62,7 +65,7 @@ export default function APIIntegration({ onOpenSignup }: APIIntegrationProps) {
   const { ref: ctaRef, isVisible: ctaVisible } = useScrollAnimation();
 
   return (
-    <section className="relative bg-white dark:bg-[#07070C] py-20 md:py-28 transition-colors duration-300 border-t border-slate-200/50 dark:border-white/5 overflow-hidden">
+    <section className="relative bg-[#F3F4FD] dark:bg-[#07070C] py-20 md:py-28 transition-colors duration-300 border-t border-slate-200/50 dark:border-white/5 overflow-hidden">
       {/* Background ambient glow orbs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden hidden dark:block">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-blue-500/[0.02] blur-[130px]" />
@@ -92,9 +95,8 @@ export default function APIIntegration({ onOpenSignup }: APIIntegrationProps) {
             return (
               <div
                 key={card.title}
-                className="flex flex-col rounded-2xl overflow-hidden border border-slate-200/50 dark:border-white/5 shadow-md group transition-transform duration-300 hover:scale-[1.02]"
+                className={`flex flex-col rounded-2xl overflow-hidden border shadow-md group transition-transform duration-300 hover:scale-[1.02] ${card.bgClass} ${card.borderClass}`}
                 style={{
-                  backgroundColor: card.bg,
                   transitionDelay: `${index * 120}ms`,
                 }}
               >
@@ -126,15 +128,15 @@ export default function APIIntegration({ onOpenSignup }: APIIntegrationProps) {
                     <div className={`w-8 h-8 rounded-lg ${card.iconBg} flex items-center justify-center shrink-0 mt-0.5`}>
                       <Icon className={`w-4.5 h-4.5 ${card.iconColor}`} />
                     </div>
-                    <h3 className="font-display font-bold text-white text-sm lg:text-base leading-snug uppercase tracking-wide">
+                    <h3 className="font-display font-bold text-slate-900 dark:text-white text-sm lg:text-base leading-snug uppercase tracking-wide">
                       {card.title}
                     </h3>
                   </div>
 
                   {/* Checklist */}
-                  <ul className="flex flex-col gap-2.5 mt-auto pt-3 border-t border-white/5">
+                  <ul className="flex flex-col gap-2.5 mt-auto pt-3 border-t border-slate-200 dark:border-white/5">
                     {card.bullets.map((bullet) => (
-                      <li key={bullet} className="flex items-start gap-2.5 text-xs text-gray-300">
+                      <li key={bullet} className="flex items-start gap-2.5 text-xs text-slate-600 dark:text-gray-300">
                         <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500 mt-0.5" />
                         <span>{bullet}</span>
                       </li>

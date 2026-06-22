@@ -85,7 +85,7 @@ export default function Hero({ onOpenSignup }: HeroProps) {
           muted
           loop
           playsInline
-          className="w-full h-full object-cover object-[80%_center] translate-y-24 opacity-95"
+          className="w-full h-full object-cover object-[80%_center] translate-y-24 opacity-85"
         >
           <source src="/videos/animate_the_d_assets_in_place.mp4" type="video/mp4" />
         </video>
@@ -98,13 +98,13 @@ export default function Hero({ onOpenSignup }: HeroProps) {
 
       {/* AMBIENT GLOWS BEHIND TEXT */}
       <div className="absolute inset-0 pointer-events-none z-[1]">
-        <div className="absolute top-1/4 left-1/4 w-[350px] h-[350px] rounded-full bg-brand-primary/10 blur-[100px] animate-pulse" />
+        <div className="absolute top-1/4 left-1/4 w-[350px] h-[350px] rounded-full bg-brand-primary/5 blur-[100px] animate-pulse" />
       </div>
     </>
   );
 
   const renderStats = () => (
-    <div className="w-full bg-slate-50 dark:bg-[#0B0B12] border-t border-slate-200/60 dark:border-white/5 py-4 px-4 md:px-8 relative z-20 transition-colors duration-300">
+    <div className="w-full bg-[#0B0B12] border-t border-white/5 py-4 px-4 md:px-8 relative z-20 transition-colors duration-300">
       <div className="max-w-7xl mx-auto relative z-30">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {stats.map((stat, index) => (
@@ -113,19 +113,19 @@ export default function Hero({ onOpenSignup }: HeroProps) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="bg-white dark:bg-surface-card rounded-xl p-4 border border-slate-200/60 dark:border-white/5 shadow-sm hover:shadow-md dark:hover:border-brand-primary/20 flex items-center gap-3 transition-all duration-300"
+              className="bg-surface-card rounded-xl p-4 border border-white/5 shadow-sm hover:shadow-md dark:hover:border-brand-primary/20 flex items-center gap-3 transition-all duration-300"
             >
               {/* ICON */}
-              <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-blue-500/10 text-blue-600 dark:bg-white/5 dark:text-gray-300">
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-white/5 text-gray-300">
                 {stat.icon}
               </div>
 
               {/* VALUE & LABEL */}
               <div className="flex flex-col min-w-0">
-                <div className="font-display font-extrabold text-slate-900 dark:text-white text-xl tracking-tight leading-none">
+                <div className="font-display font-extrabold text-white text-xl tracking-tight leading-none">
                   {stat.value}
                 </div>
-                <div className="text-[10px] font-bold text-slate-600 dark:text-gray-400 tracking-tight mt-0.5 truncate">
+                <div className="text-[10px] font-bold text-gray-400 tracking-tight mt-0.5 truncate">
                   {stat.label}
                 </div>
               </div>
@@ -137,7 +137,7 @@ export default function Hero({ onOpenSignup }: HeroProps) {
   );
 
   return (
-    <div ref={heroSectionRef} id="top-page" className="relative h-[140vh] bg-[#0A0A0F]">
+    <div ref={heroSectionRef} id="top-page" className="relative h-[140vh] bg-[#0A0A0F] transition-colors duration-300">
       <div className="sticky top-0 h-screen w-full flex flex-col justify-between overflow-hidden">
         {renderVideoAndOverlay()}
 
@@ -182,7 +182,7 @@ export default function Hero({ onOpenSignup }: HeroProps) {
                       e.preventDefault();
                       document.getElementById('api-docs')?.scrollIntoView({ behavior: 'smooth' });
                     }}
-                    className="w-full sm:w-auto px-8 py-3.5 rounded-full text-sm font-semibold text-gray-300 hover:text-white bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 hover:scale-[1.01] active:scale-98 transition-all duration-300 flex items-center justify-center gap-2.5 focus:outline-none backdrop-blur-sm"
+                    className="w-full sm:w-auto px-8 py-3.5 rounded-full text-sm font-semibold text-gray-300 hover:text-white bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 hover:scale-[1.01] active:scale-98 transition-all duration-300 flex items-center justify-center gap-2.5 focus:outline-none backdrop-blur-sm shadow-sm"
                   >
                     <span>Book a Demo</span>
                   </a>
@@ -229,7 +229,7 @@ export default function Hero({ onOpenSignup }: HeroProps) {
                       e.preventDefault();
                       document.getElementById('api-docs')?.scrollIntoView({ behavior: 'smooth' });
                     }}
-                    className="w-full sm:w-auto px-8 py-3.5 rounded-full text-sm font-semibold text-gray-300 hover:text-white bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 hover:scale-[1.01] active:scale-98 transition-all duration-300 flex items-center justify-center gap-2.5 focus:outline-none backdrop-blur-sm"
+                    className="w-full sm:w-auto px-8 py-3.5 rounded-full text-sm font-semibold text-gray-300 hover:text-white bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 hover:scale-[1.01] active:scale-98 transition-all duration-300 flex items-center justify-center gap-2.5 focus:outline-none backdrop-blur-sm shadow-sm"
                   >
                     <span>Learn More</span>
                   </a>

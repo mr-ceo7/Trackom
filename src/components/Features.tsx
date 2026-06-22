@@ -142,11 +142,11 @@ export default function Features() {
         <div className="text-xs uppercase tracking-widest text-brand-primary font-mono font-semibold">
           Powerful Features
         </div>
-        <h2 className="font-display font-bold text-white text-3xl md:text-5xl leading-tight">
+        <h2 className="font-display font-bold text-slate-900 dark:text-white text-3xl md:text-5xl leading-tight">
           Tools that give you{' '}
           <span className="gradient-text">unfair advantages.</span>
         </h2>
-        <p className="text-gray-400 text-base md:text-lg">
+        <p className="text-slate-600 dark:text-gray-400 text-base md:text-lg">
           AI-powered copywriting, intelligent carrier routing, real-time analytics, and seamless contact management.
         </p>
       </div>
@@ -160,13 +160,13 @@ export default function Features() {
             <div className="p-3 rounded-xl bg-brand-primary/10 text-brand-primary w-fit mb-6 transition-transform group-hover:scale-110">
               <Shuffle className="w-6 h-6 stroke-[2]" />
             </div>
-            <h3 className="font-display font-semibold text-white text-2xl mb-3">Smart Route Shuffler</h3>
-            <p className="text-gray-400 text-sm leading-relaxed">
+            <h3 className="font-display font-semibold text-slate-900 dark:text-white text-2xl mb-3">Smart Route Shuffler</h3>
+            <p className="text-slate-600 dark:text-gray-400 text-sm leading-relaxed">
               Automatically splits SMS across multiple carrier routes for maximum deliverability. Sub-second failover when any route degrades.
             </p>
           </div>
 
-          <div className="mt-8 border border-white/6 bg-surface-dark/60 rounded-xl overflow-hidden relative h-64 flex items-center justify-center">
+          <div className="mt-8 border border-slate-200 dark:border-white/6 bg-slate-50 dark:bg-surface-dark/60 rounded-xl overflow-hidden relative h-64 flex items-center justify-center">
             <span className="absolute top-3 left-4 flex items-center gap-1.5 text-[10px] font-semibold text-gray-500 font-mono tracking-widest">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-primary opacity-75" />
@@ -186,15 +186,15 @@ export default function Features() {
               <div className="p-3 rounded-xl bg-brand-accent/10 text-brand-accent w-fit mb-6 transition-transform group-hover:scale-110">
                 <Cpu className="w-6 h-6 stroke-[2]" />
               </div>
-              <h3 className="font-display font-semibold text-white text-xl mb-2">AI SMS Copywriter</h3>
-              <p className="text-gray-400 text-sm leading-relaxed mb-6">
+              <h3 className="font-display font-semibold text-slate-900 dark:text-white text-xl mb-2">AI SMS Copywriter</h3>
+              <p className="text-slate-600 dark:text-gray-400 text-sm leading-relaxed mb-6">
                 Generate high-converting SMS copy tailored to your brand. Avoid spam filters, boost CTR by up to 34%.
               </p>
             </div>
 
             {/* Terminal */}
-            <div className="bg-surface-dark border border-white/6 rounded-xl p-5">
-              <div className="flex items-center justify-between border-b border-white/5 pb-2.5 mb-4">
+            <div className="bg-slate-50 dark:bg-surface-dark border border-slate-200 dark:border-white/6 rounded-xl p-5">
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-2.5 mb-4">
                 <div className="flex gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
                   <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" />
@@ -206,7 +206,7 @@ export default function Features() {
                 </div>
               </div>
 
-              <div className="font-mono text-xs md:text-sm text-gray-300 min-h-14 flex items-start leading-relaxed">
+              <div className="font-mono text-xs md:text-sm text-slate-700 dark:text-gray-300 min-h-14 flex items-start leading-relaxed">
                 <span className="text-brand-accent mr-2 shrink-0 select-none">&gt;</span>
                 <div>
                   <span>{aiText}</span>
@@ -221,8 +221,8 @@ export default function Features() {
             <div className="p-3 rounded-xl bg-brand-emerald/10 text-brand-emerald w-fit mb-6 transition-transform group-hover:scale-110">
               <BarChart2 className="w-6 h-6 stroke-[2]" />
             </div>
-            <h3 className="font-display font-semibold text-white text-xl mb-2">Campaign Analytics</h3>
-            <p className="text-gray-400 text-sm leading-relaxed mb-4">
+            <h3 className="font-display font-semibold text-slate-900 dark:text-white text-xl mb-2">Campaign Analytics</h3>
+            <p className="text-slate-600 dark:text-gray-400 text-sm leading-relaxed mb-4">
               Real-time delivery tracking, open rate insights, and conversion analytics. Know exactly how your campaigns perform.
             </p>
 

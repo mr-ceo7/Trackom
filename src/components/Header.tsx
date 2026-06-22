@@ -59,7 +59,11 @@ export default function Header({ onOpenSignup }: HeaderProps) {
           onClick={(e) => scrollToSection('top-page', e)}
           className="group focus:outline-none relative z-10"
         >
-          <TrackomLogo size={28} glowing={scrolled} />
+          <TrackomLogo
+            size={28}
+            glowing={scrolled}
+            textColorClass={scrolled ? 'text-slate-900 dark:text-white' : 'text-white'}
+          />
         </a>
 
         {/* DESKTOP NAV */}
@@ -69,7 +73,11 @@ export default function Header({ onOpenSignup }: HeaderProps) {
               key={link.id}
               href={`#${link.id}`}
               onClick={(e) => scrollToSection(link.id, e)}
-              className="text-sm font-medium text-gray-400 hover:text-white transition-colors duration-300 relative group"
+              className={`text-sm font-medium transition-colors duration-300 relative group ${
+                scrolled
+                  ? 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
+                  : 'text-gray-300 hover:text-white'
+              }`}
             >
               {link.label}
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-brand-primary to-brand-accent group-hover:w-full transition-all duration-300 rounded-full" />
@@ -79,7 +87,13 @@ export default function Header({ onOpenSignup }: HeaderProps) {
 
         {/* RIGHT ACTIONS */}
         <div className="flex items-center gap-4">
-          <ThemeToggle />
+          <ThemeToggle
+            className={
+              scrolled
+                ? 'border border-slate-200 dark:border-white/10 text-slate-500 dark:text-gray-400 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 dark:hover:text-white'
+                : 'border border-white/10 text-gray-400 bg-white/5 hover:bg-white/10 hover:text-white'
+            }
+          />
 
           <button
             onClick={onOpenSignup}
@@ -92,7 +106,11 @@ export default function Header({ onOpenSignup }: HeaderProps) {
           {/* HAMBURGER */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden flex items-center justify-center p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 border border-white/10 transition-all duration-200 cursor-pointer"
+            className={`md:hidden flex items-center justify-center p-2 rounded-lg transition-all duration-200 cursor-pointer border ${
+              scrolled
+                ? 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 border-slate-200 dark:border-white/10'
+                : 'text-gray-300 hover:text-white hover:bg-white/5 border-white/10'
+            }`}
             aria-label="Toggle navigation menu"
             aria-expanded={isOpen}
           >
@@ -117,14 +135,14 @@ export default function Header({ onOpenSignup }: HeaderProps) {
                   key={link.id}
                   href={`#${link.id}`}
                   onClick={(e) => scrollToSection(link.id, e)}
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 text-gray-300 hover:text-white transition-all duration-200"
+                  className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white transition-all duration-200"
                 >
                   {link.icon}
                   <span className="font-medium text-base">{link.label}</span>
                 </a>
               ))}
 
-              <hr className="border-white/5 my-2" />
+              <hr className="border-slate-200 dark:border-white/5 my-2" />
 
               <button
                 onClick={() => {

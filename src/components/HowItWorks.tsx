@@ -38,11 +38,11 @@ export default function HowItWorks() {
         <div className="text-xs uppercase tracking-widest text-brand-primary font-mono font-semibold">
           Get Started in Minutes
         </div>
-        <h2 className="font-display font-bold text-white text-3xl md:text-5xl leading-tight">
+        <h2 className="font-display font-bold text-slate-900 dark:text-white text-3xl md:text-5xl leading-tight">
           Three steps to{' '}
           <span className="gradient-text">launch.</span>
         </h2>
-        <p className="text-gray-400 text-base md:text-lg">
+        <p className="text-slate-600 dark:text-gray-400 text-base md:text-lg">
           From signup to your first broadcast in under 5 minutes.
         </p>
       </div>
@@ -66,7 +66,7 @@ export default function HowItWorks() {
             >
               {/* Number circle */}
               <div className="relative mb-6">
-                <div className={`w-[120px] h-[120px] rounded-2xl bg-surface-card border border-white/6 flex items-center justify-center relative group`}>
+                <div className={`w-[120px] h-[120px] rounded-2xl bg-white dark:bg-surface-card border border-slate-200 dark:border-white/6 flex items-center justify-center relative group`}>
                   {/* Glow */}
                   <div className={`absolute inset-0 rounded-2xl bg-${step.color}/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
                   
@@ -74,16 +74,16 @@ export default function HowItWorks() {
                   <span className="font-display font-bold text-4xl gradient-text">{step.number}</span>
                   
                   {/* Icon badge */}
-                  <div className={`absolute -bottom-3 -right-3 w-10 h-10 rounded-xl bg-surface-elevated border border-white/10 flex items-center justify-center text-${step.color}`}>
+                  <div className={`absolute -bottom-3 -right-3 w-10 h-10 rounded-xl bg-white dark:bg-surface-elevated border border-slate-200 dark:border-white/10 flex items-center justify-center text-${step.color}`}>
                     {step.icon}
                   </div>
                 </div>
               </div>
 
-              <h3 className="font-display font-semibold text-white text-xl mb-2">
+              <h3 className="font-display font-semibold text-slate-900 dark:text-white text-xl mb-2">
                 {step.title}
               </h3>
-              <p className="text-gray-400 text-sm leading-relaxed max-w-xs">
+              <p className="text-slate-600 dark:text-gray-400 text-sm leading-relaxed max-w-xs">
                 {step.description}
               </p>
             </div>

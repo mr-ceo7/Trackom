@@ -153,8 +153,8 @@ export default function PartnerLogos() {
       {/* MARQUEE */}
       <div className="relative w-full overflow-hidden py-3">
         {/* Soft edge masking */}
-        <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-slate-50/80 dark:from-[#07070C] to-transparent z-10 pointer-events-none" />
-        <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-slate-50/80 dark:from-[#07070C] to-transparent z-10 pointer-events-none" />
+        <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-slate-100 dark:from-[#07070C] to-transparent z-10 pointer-events-none" />
+        <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-slate-100 dark:from-[#07070C] to-transparent z-10 pointer-events-none" />
 
         <div className="flex w-full">
           <div className="animate-marquee flex gap-6 items-center whitespace-nowrap">

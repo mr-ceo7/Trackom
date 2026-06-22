@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Sun, Moon } from 'lucide-react';
 
-export default function ThemeToggle() {
+interface ThemeToggleProps {
+  className?: string;
+}
+
+export default function ThemeToggle({ className = '' }: ThemeToggleProps) {
   const [isDark, setIsDark] = useState(() => {
     // Check system preference on first load
     if (typeof window !== 'undefined') {
@@ -30,7 +34,7 @@ export default function ThemeToggle() {
     <button
       id="theme-toggle"
       onClick={() => setIsDark(!isDark)}
-      className="flex items-center justify-center w-9 h-9 rounded-lg border border-white/10 dark:border-white/10 text-gray-400 bg-white/5 hover:bg-white/10 dark:hover:text-white transition-all duration-300 transform hover:scale-105 active:scale-95 relative overflow-hidden cursor-pointer"
+      className={`flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95 relative overflow-hidden cursor-pointer ${className}`}
       aria-label="Toggle visual theme"
     >
       <div className="relative w-4.5 h-4.5 flex items-center justify-center">

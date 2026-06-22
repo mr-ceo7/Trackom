@@ -124,7 +124,7 @@ function DeckCard({
 
   return (
     <motion.div
-      className="absolute inset-0 rounded-2xl overflow-hidden bg-[#0e1422] shadow-xl shadow-black/30 flex flex-col justify-between p-3.5 border border-white/5"
+      className="absolute inset-0 rounded-2xl overflow-hidden bg-white dark:bg-[#0e1422] shadow-xl shadow-slate-200/50 dark:shadow-black/30 flex flex-col justify-between p-3.5 border border-slate-200 dark:border-white/5"
       animate={animateState}
       transition={{ duration: 0.45, ease: 'easeOut' }}
       style={{ zIndex }}
@@ -152,10 +152,10 @@ function DeckCard({
 
       {/* Feature Text Info inside the Card */}
       <div className="pt-3 pb-1 text-center">
-        <h3 className="font-display font-bold text-white text-base mb-0.5 leading-tight">
+        <h3 className="font-display font-bold text-slate-900 dark:text-white text-base mb-0.5 leading-tight">
           {feature.title}
         </h3>
-        <p className="text-gray-400 text-xs leading-relaxed px-1">
+        <p className="text-slate-600 dark:text-gray-400 text-xs leading-relaxed px-1">
           {feature.description}
         </p>
       </div>
@@ -180,7 +180,7 @@ function DesktopGrid() {
           className="flex flex-col items-center text-center group"
           style={{ transitionDelay: `${index * 120}ms` }}
         >
-          <div className="relative w-full aspect-square max-w-[340px] mx-auto mb-6 rounded-2xl overflow-hidden bg-[#0e1422] shadow-lg shadow-black/20">
+          <div className="relative w-full aspect-square max-w-[340px] mx-auto mb-6 rounded-2xl overflow-hidden bg-white dark:bg-[#0e1422] border border-slate-200 dark:border-none shadow-lg shadow-slate-200/50 dark:shadow-black/20">
             {feature.type === 'video' ? (
               <video
                 autoPlay
@@ -219,7 +219,7 @@ export default function FeatureShowcase({ onOpenSignup }: FeatureShowcaseProps) 
   const { ref: ctaRef, isVisible: ctaVisible } = useScrollAnimation();
 
   return (
-    <section className="relative bg-slate-50 dark:bg-[#0A0A0F] transition-colors duration-300">
+    <section className="relative bg-[#E8ECF9] dark:bg-[#0A0A0F] transition-colors duration-300">
       {/* Ambient glow orbs (dark mode only) */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden hidden dark:block">
         <div className="absolute top-1/3 left-1/4 w-[500px] h-[500px] rounded-full bg-brand-primary/[0.04] blur-[120px]" />

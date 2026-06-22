@@ -25,7 +25,7 @@ export default function App() {
   const [isSignupOpen, setIsSignupOpen] = useState(false);
 
   return (
-    <div className="min-h-screen text-slate-800 bg-slate-50 dark:text-gray-200 dark:bg-surface-dark selection:bg-brand-primary/30 transition-colors duration-300 relative flex flex-col justify-between font-sans">
+    <div className="min-h-screen text-slate-800 bg-[#F3F4FD] dark:text-gray-200 dark:bg-surface-dark selection:bg-brand-primary/30 transition-colors duration-300 relative flex flex-col justify-between font-sans">
       
       {/* PARTICLE CANVAS BACKGROUND */}
       <ParticleCanvas />
@@ -87,22 +87,22 @@ export default function App() {
         <FAQSection />
 
         {/* Compliance Trust Banner */}
-        <section className="py-16 px-4 md:px-8 max-w-7xl mx-auto border-t border-white/6">
+        <section className="py-16 px-4 md:px-8 max-w-7xl mx-auto border-t border-slate-200 dark:border-white/6">
           <div className="glass-card rounded-2xl p-8 md:p-10 flex flex-col lg:flex-row items-center justify-between gap-8 text-left">
             <div className="space-y-3 max-w-xl">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-semibold bg-brand-emerald/10 text-brand-emerald font-mono">
                 <Shield className="w-4 h-4" />
                 <span>CA Kenya Compliant • Secure Platform</span>
               </div>
-              <h3 className="font-display font-bold text-xl text-white leading-tight">
+              <h3 className="font-display font-bold text-xl text-slate-900 dark:text-white leading-tight">
                 Enterprise-grade security. Verified deliverability.
               </h3>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-slate-600 dark:text-gray-400">
                 Your data is protected with TLS 1.3 encryption, automated DND list compliance, and real-time fraud prevention.
               </p>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 shrink-0 w-full lg:w-auto font-mono text-xs font-semibold text-gray-400">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 shrink-0 w-full lg:w-auto font-mono text-xs font-semibold text-slate-500 dark:text-gray-400">
               {['2FA Protected', 'TLS 1.3 Encryption', 'DND Compliant'].map((item) => (
                 <div key={item} className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-brand-emerald" />
@@ -118,18 +118,18 @@ export default function App() {
       </main>
 
       {/* FOOTER */}
-      <footer className="bg-surface-dark border-t border-white/6 py-16 px-4 md:px-8 relative z-10">
+      <footer className="bg-white dark:bg-surface-dark border-t border-slate-200 dark:border-white/6 py-16 px-4 md:px-8 relative z-10">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 text-left">
           {/* Brand */}
           <div className="flex flex-col gap-4">
             <TrackomLogo size={24} />
-            <p className="text-xs text-gray-500 leading-relaxed max-w-xs">
+            <p className="text-xs text-slate-500 dark:text-gray-500 leading-relaxed max-w-xs">
               Kenya's leading enterprise communications platform. Bulk SMS, USSD, WhatsApp Business API, OTP, and more.
             </p>
             <div className="flex items-center gap-3 mt-2">
               {/* Social icons */}
               {['X', 'in', 'GH'].map((icon) => (
-                <a key={icon} href="#" className="w-8 h-8 rounded-lg bg-white/5 border border-white/6 flex items-center justify-center text-gray-500 hover:text-white hover:bg-white/10 transition-all text-xs font-bold">
+                <a key={icon} href="#" className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/6 flex items-center justify-center text-slate-500 dark:text-gray-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-all text-xs font-bold">
                   {icon}
                 </a>
               ))}
@@ -138,8 +138,8 @@ export default function App() {
 
           {/* Products */}
           <div>
-            <h5 className="font-display font-semibold text-xs uppercase text-gray-300 tracking-wider mb-4">Products</h5>
-            <ul className="space-y-2.5 text-xs text-gray-500 font-medium">
+            <h5 className="font-display font-semibold text-xs uppercase text-slate-700 dark:text-gray-300 tracking-wider mb-4">Products</h5>
+            <ul className="space-y-2.5 text-xs text-slate-500 dark:text-gray-500 font-medium">
               {['Bulk SMS', 'USSD Services', 'WhatsApp API', 'OTP Verification', 'Shortcodes', 'Reseller Platform'].map((item) => (
                 <li key={item}><a href="#services" className="hover:text-brand-primary-light transition-colors">{item}</a></li>
               ))}
@@ -148,8 +148,8 @@ export default function App() {
 
           {/* Developers */}
           <div>
-            <h5 className="font-display font-semibold text-xs uppercase text-gray-300 tracking-wider mb-4">Developers</h5>
-            <ul className="space-y-2.5 text-xs text-gray-500 font-medium">
+            <h5 className="font-display font-semibold text-xs uppercase text-slate-700 dark:text-gray-300 tracking-wider mb-4">Developers</h5>
+            <ul className="space-y-2.5 text-xs text-slate-500 dark:text-gray-500 font-medium">
               {['REST API Docs', 'Node.js SDK', 'Python SDK', 'PHP SDK', 'Webhooks', 'Sandbox'].map((item) => (
                 <li key={item}><a href="#api-docs" className="hover:text-brand-primary-light transition-colors">{item}</a></li>
               ))}
@@ -158,9 +158,9 @@ export default function App() {
 
           {/* Status */}
           <div className="flex flex-col gap-4">
-            <h5 className="font-display font-semibold text-xs uppercase text-gray-300 tracking-wider">Platform Status</h5>
+            <h5 className="font-display font-semibold text-xs uppercase text-slate-700 dark:text-gray-300 tracking-wider">Platform Status</h5>
             
-            <div className="flex items-center gap-2 p-3 rounded-xl border border-white/6 bg-white/[0.01] w-fit font-mono text-[10px] font-semibold text-brand-emerald">
+            <div className="flex items-center gap-2 p-3 rounded-xl border border-slate-200 dark:border-white/6 bg-slate-50 dark:bg-white/[0.01] w-fit font-mono text-[10px] font-semibold text-brand-emerald">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-emerald opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-emerald" />
@@ -168,10 +168,10 @@ export default function App() {
               <span>ALL SYSTEMS OPERATIONAL</span>
             </div>
             
-            <span className="text-[10px] text-gray-500 leading-normal font-medium uppercase tracking-widest font-display">
+            <span className="text-[10px] text-slate-500 dark:text-gray-500 leading-normal font-medium uppercase tracking-widest font-display">
               © 2026 Trackom Group. All rights reserved.
             </span>
-            <span className="text-[10px] text-gray-600">
+            <span className="text-[10px] text-slate-400 dark:text-gray-600">
               trackomgroup.com
             </span>
           </div>

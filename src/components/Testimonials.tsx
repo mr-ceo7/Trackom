@@ -65,11 +65,11 @@ export default function Testimonials() {
         <div className="text-xs uppercase tracking-widest text-brand-accent font-mono font-semibold">
           Trusted by Enterprises
         </div>
-        <h2 className="font-display font-bold text-white text-3xl md:text-5xl leading-tight">
+        <h2 className="font-display font-bold text-slate-900 dark:text-white text-3xl md:text-5xl leading-tight">
           Loved by teams{' '}
           <span className="gradient-text">across Kenya.</span>
         </h2>
-        <p className="text-gray-400 text-base md:text-lg">
+        <p className="text-slate-600 dark:text-gray-400 text-base md:text-lg">
           From banks to hospitals, e-commerce to SACCOs — see why enterprises choose Trackom.
         </p>
       </div>
@@ -77,8 +77,8 @@ export default function Testimonials() {
       {/* SCROLLING TESTIMONIALS MARQUEE */}
       <div className="relative animate-marquee-hover-pause">
         {/* Fade edges */}
-        <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-surface-dark to-transparent z-10 pointer-events-none" />
-        <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-surface-dark to-transparent z-10 pointer-events-none" />
+        <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-slate-50 dark:from-surface-dark to-transparent z-10 pointer-events-none" />
+        <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-slate-50 dark:from-surface-dark to-transparent z-10 pointer-events-none" />
 
         <div className="flex">
           <div className="animate-marquee flex gap-6 items-stretch" style={{ animationDuration: '40s' }}>
@@ -95,18 +95,18 @@ export default function Testimonials() {
                 </div>
 
                 {/* Quote */}
-                <p className="text-gray-300 text-sm leading-relaxed flex-grow">
+                <p className="text-slate-700 dark:text-gray-300 text-sm leading-relaxed flex-grow">
                   "{t.quote}"
                 </p>
 
                 {/* Author */}
-                <div className="flex items-center gap-3 pt-3 border-t border-white/5">
+                <div className="flex items-center gap-3 pt-3 border-t border-slate-200 dark:border-white/5">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-primary to-brand-accent flex items-center justify-center text-white text-xs font-bold">
                     {t.initials}
                   </div>
                   <div>
-                    <div className="text-white text-sm font-semibold">{t.name}</div>
-                    <div className="text-gray-500 text-xs">{t.role}, {t.company}</div>
+                    <div className="text-slate-900 dark:text-white text-sm font-semibold">{t.name}</div>
+                    <div className="text-slate-500 dark:text-gray-500 text-xs">{t.role}, {t.company}</div>
                   </div>
                 </div>
               </div>

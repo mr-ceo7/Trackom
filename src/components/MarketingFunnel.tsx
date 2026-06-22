@@ -9,8 +9,8 @@ const funnelCards = [
     tag: 'CHANNEL SYNERGY',
     title: 'Unified Platform',
     description: 'Break silos and consolidate data from SMS, email, web, and more. Trackom unifies your customer touchpoints into a single, cohesive dashboard.',
-    bg: '#0f1523',
-    border: 'border-blue-500/10',
+    bgClass: 'bg-white dark:bg-[#0f1523]',
+    borderClass: 'border-slate-200 dark:border-blue-500/10',
     bullets: [
       'Consolidate SMS, Email, and Push notifications in one flow',
       'Centralized customer interaction profiles and channel preferences',
@@ -22,8 +22,8 @@ const funnelCards = [
     tag: 'BEHAVIORAL TARGETING',
     title: 'Real-time Personalization',
     description: 'Deliver the perfect message at the right moment based on live user data. Target customers dynamically based on actions they take in your app.',
-    bg: '#181f2e',
-    border: 'border-emerald-500/10',
+    bgClass: 'bg-white dark:bg-[#181f2e]',
+    borderClass: 'border-slate-200 dark:border-emerald-500/10',
     bullets: [
       'Real-time behavioral triggers and event-driven SMS rules',
       'Dynamic metadata placeholders for personalized templates',
@@ -35,8 +35,8 @@ const funnelCards = [
     tag: 'ENTERPRISE INFRASTRUCTURE',
     title: 'Unmatched Scalability',
     description: 'Handle millions of messages with robust, reliable infrastructure and high deliverability. Built to support heavy enterprise loads with zero lag.',
-    bg: '#0f1525',
-    border: 'border-purple-500/10',
+    bgClass: 'bg-white dark:bg-[#0f1525]',
+    borderClass: 'border-slate-200 dark:border-purple-500/10',
     bullets: [
       'High-throughput delivery engines (10,000+ messages per second)',
       '99.99% uptime guarantee with multi-carrier fallback paths',
@@ -136,9 +136,8 @@ function DeckCard({
 
   return (
     <motion.div
-      className={`absolute inset-0 rounded-2xl overflow-hidden shadow-xl shadow-black/35 flex flex-col justify-between p-3.5 border ${card.border}`}
+      className={`absolute inset-0 rounded-2xl overflow-hidden shadow-xl shadow-slate-200/50 dark:shadow-black/35 flex flex-col justify-between p-3.5 border ${card.bgClass} ${card.borderClass}`}
       style={{
-        backgroundColor: card.bg,
         zIndex,
       }}
       animate={animateState}
@@ -155,10 +154,10 @@ function DeckCard({
 
       {/* Card Info */}
       <div className="pt-3 pb-1 text-center">
-        <h3 className="font-display font-bold text-white text-base mb-0.5 leading-tight">
+        <h3 className="font-display font-bold text-slate-900 dark:text-white text-base mb-0.5 leading-tight">
           {card.title}
         </h3>
-        <p className="text-gray-400 text-xs leading-relaxed px-1">
+        <p className="text-slate-600 dark:text-gray-400 text-xs leading-relaxed px-1">
           {card.description}
         </p>
       </div>
@@ -189,8 +188,7 @@ function DesktopAlternatingRows() {
               }`}
             >
               <div
-                className={`relative w-full aspect-[4/3] rounded-2xl overflow-hidden shadow-xl shadow-black/10 border p-6 flex items-center justify-center hover:scale-[1.02] transition-transform duration-300 ${card.border}`}
-                style={{ backgroundColor: card.bg }}
+                className={`relative w-full aspect-[4/3] rounded-2xl overflow-hidden shadow-xl shadow-slate-200/50 dark:shadow-black/10 border p-6 flex items-center justify-center hover:scale-[1.02] transition-transform duration-300 ${card.bgClass} ${card.borderClass}`}
               >
                 <img
                   src={card.src}
@@ -243,7 +241,7 @@ export default function MarketingFunnel({ onOpenSignup }: MarketingFunnelProps) 
   const { ref: stackSectionRef, isVisible: stackSectionVisible } = useScrollAnimation({ threshold: 0.15 });
 
   return (
-    <section className="relative bg-white dark:bg-[#07070C] py-20 md:py-28 transition-colors duration-300 border-t border-slate-200/50 dark:border-white/5 overflow-hidden">
+    <section className="relative bg-[#F3F4FD] dark:bg-[#07070C] py-20 md:py-28 transition-colors duration-300 border-t border-slate-200/50 dark:border-white/5 overflow-hidden">
       {/* Background glow effects */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden hidden dark:block">
         <div className="absolute top-1/3 left-1/4 w-[500px] h-[500px] rounded-full bg-blue-500/[0.02] blur-[120px]" />
@@ -293,7 +291,7 @@ export default function MarketingFunnel({ onOpenSignup }: MarketingFunnelProps) 
             </div>
 
             {/* Integration Diagram */}
-            <div className="relative w-full rounded-2xl overflow-hidden border border-slate-200/50 dark:border-white/5 shadow-lg bg-[#101624] p-4 flex items-center justify-center group">
+            <div className="relative w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-white/5 shadow-lg shadow-slate-100 dark:shadow-none bg-white dark:bg-[#101624] p-4 flex items-center justify-center group">
               <img
                 src="/images/screen/Gemini_Generated_Image_krr99ukrr99ukrr9 (Edited 4).png"
                 alt="Tech Stack Integration diagram"
@@ -306,20 +304,19 @@ export default function MarketingFunnel({ onOpenSignup }: MarketingFunnelProps) 
           <div className="lg:col-span-6 flex flex-col gap-6">
             {/* Case Study 1 */}
             <div
-              className="relative w-full rounded-2xl overflow-hidden border border-slate-200/50 dark:border-white/5 shadow-md flex flex-col sm:flex-row items-center justify-between p-5 gap-5 hover:scale-[1.01] transition-all duration-300"
-              style={{ backgroundColor: '#111723' }}
+              className="relative w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-white/5 shadow-md flex flex-col sm:flex-row items-center justify-between p-5 gap-5 hover:scale-[1.01] transition-all duration-300 bg-white dark:bg-[#111723]"
             >
               <div className="flex-1 flex flex-col gap-3.5">
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 rounded bg-pink-500/10 flex items-center justify-center text-[10px] font-bold text-pink-400 border border-pink-500/20">
                     SH
                   </div>
-                  <span className="text-[11px] font-mono font-semibold text-gray-400">StyleHub</span>
+                  <span className="text-[11px] font-mono font-semibold text-slate-500 dark:text-gray-400">StyleHub</span>
                 </div>
-                <h4 className="font-display font-bold text-white text-lg sm:text-xl leading-snug">
+                <h4 className="font-display font-bold text-slate-900 dark:text-white text-lg sm:text-xl leading-snug">
                   StyleHub Boosts Conversions by 22%
                 </h4>
-                <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-mono bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-md w-max">
+                <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 text-xs font-mono bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-md w-max">
                   <CheckCircle className="w-3.5 h-3.5" />
                   <span>Success</span>
                 </div>
@@ -335,20 +332,19 @@ export default function MarketingFunnel({ onOpenSignup }: MarketingFunnelProps) 
 
             {/* Case Study 2 */}
             <div
-              className="relative w-full rounded-2xl overflow-hidden border border-slate-200/50 dark:border-white/5 shadow-md flex flex-col sm:flex-row items-center justify-between p-5 gap-5 hover:scale-[1.01] transition-all duration-300"
-              style={{ backgroundColor: '#0f1523' }}
+              className="relative w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-white/5 shadow-md flex flex-col sm:flex-row items-center justify-between p-5 gap-5 hover:scale-[1.01] transition-all duration-300 bg-white dark:bg-[#0f1523]"
             >
               <div className="flex-1 flex flex-col gap-3.5">
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 rounded bg-blue-500/10 flex items-center justify-center text-[10px] font-bold text-blue-400 border border-blue-500/20">
                     TS
                   </div>
-                  <span className="text-[11px] font-mono font-semibold text-gray-400">TechSolutions</span>
+                  <span className="text-[11px] font-mono font-semibold text-slate-500 dark:text-gray-400">TechSolutions</span>
                 </div>
-                <h4 className="font-display font-bold text-white text-lg sm:text-xl leading-snug">
+                <h4 className="font-display font-bold text-slate-900 dark:text-white text-lg sm:text-xl leading-snug">
                   TechSolutions Achieves 18% Higher ROI
                 </h4>
-                <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-mono bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-md w-max">
+                <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 text-xs font-mono bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-md w-max">
                   <CheckCircle className="w-3.5 h-3.5" />
                   <span>Success</span>
                 </div>

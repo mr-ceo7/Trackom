@@ -91,7 +91,7 @@ echo "Campaign {$campaign->id}: {$campaign->status}";`,
   const tabs: LanguageType[] = ['curl', 'nodejs', 'python', 'php'];
 
   return (
-    <section id="api-docs" className="py-24 px-4 md:px-8 max-w-7xl mx-auto border-t border-white/6 scroll-mt-24">
+    <section id="api-docs" className="py-24 px-4 md:px-8 max-w-7xl mx-auto border-t border-slate-200 dark:border-white/6 scroll-mt-24">
       <div
         ref={ref}
         className={`grid grid-cols-1 lg:grid-cols-[1fr_520px] gap-16 items-center scroll-animate ${isVisible ? 'is-visible' : ''}`}
@@ -102,17 +102,17 @@ echo "Campaign {$campaign->id}: {$campaign->status}";`,
             <div className="text-xs uppercase tracking-widest text-brand-accent font-mono font-semibold">
               Developer-First API
             </div>
-            <h2 className="font-display font-bold text-white text-3xl sm:text-4xl md:text-5xl leading-tight">
+            <h2 className="font-display font-bold text-slate-900 dark:text-white text-3xl sm:text-4xl md:text-5xl leading-tight">
               Integrate in minutes.{' '}
               <br />
               <span className="gradient-text">Scale to millions.</span>
             </h2>
-            <p className="text-gray-400 text-base md:text-lg leading-relaxed max-w-lg">
+            <p className="text-slate-600 dark:text-gray-400 text-base md:text-lg leading-relaxed max-w-lg">
               Clean REST API, official SDKs for Node.js, Python, and PHP, plus real-time webhooks. Built for Kenyan developers.
             </p>
           </div>
 
-          <ul className="space-y-4 font-medium text-gray-200">
+          <ul className="space-y-4 font-medium text-slate-700 dark:text-gray-200">
             {[
               { text: 'RESTful API with comprehensive docs', color: 'brand-accent' },
               { text: 'Official SDKs: Node.js, Python, PHP', color: 'brand-primary' },
@@ -141,9 +141,9 @@ echo "Campaign {$campaign->id}: {$campaign->status}";`,
         </div>
 
         {/* RIGHT: CODE BLOCK */}
-        <div className="shadow-2xl rounded-2xl border border-white/6 overflow-hidden bg-surface-card relative">
+        <div className="shadow-2xl rounded-2xl border border-slate-200 dark:border-white/6 overflow-hidden bg-white dark:bg-surface-card relative">
           {/* Tabs */}
-          <div className="flex items-center justify-between px-4 md:px-6 h-12 border-b border-white/6 bg-white/[0.02]">
+          <div className="flex items-center justify-between px-4 md:px-6 h-12 border-b border-slate-200 dark:border-white/6 bg-slate-50 dark:bg-white/[0.02]">
             <div className="flex gap-1.5">
               {tabs.map((tab) => (
                 <button
@@ -152,7 +152,7 @@ echo "Campaign {$campaign->id}: {$campaign->status}";`,
                   className={`px-3 py-1 rounded-lg text-xs font-mono font-semibold transition-all duration-300 cursor-pointer ${
                     activeTab === tab
                       ? 'bg-brand-primary text-white shadow-sm'
-                      : 'text-gray-500 hover:text-white'
+                      : 'text-slate-500 dark:text-gray-500 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   {tab === 'nodejs' ? 'Node.js' : tab === 'curl' ? 'cURL' : tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -165,10 +165,10 @@ echo "Campaign {$campaign->id}: {$campaign->status}";`,
           </div>
 
           {/* Code */}
-          <div className="p-6 md:p-8 bg-surface-dark text-left font-mono text-xs sm:text-[13px] leading-relaxed relative overflow-hidden">
+          <div className="p-6 md:p-8 bg-slate-50 dark:bg-surface-dark text-left font-mono text-xs sm:text-[13px] leading-relaxed relative overflow-hidden">
             <button
               onClick={handleCopyCode}
-              className="absolute top-4 right-4 p-2.5 rounded-lg border border-white/10 bg-white/[0.03] text-gray-500 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-all duration-300 active:scale-95 group"
+              className="absolute top-4 right-4 p-2.5 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-500 dark:text-gray-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.08] cursor-pointer transition-all duration-300 active:scale-95 group"
               aria-label="Copy to clipboard"
             >
               {copied ? <Check className="w-4 h-4 text-brand-emerald" /> : <Copy className="w-4 h-4" />}
@@ -186,7 +186,7 @@ echo "Campaign {$campaign->id}: {$campaign->status}";`,
               </AnimatePresence>
             </button>
 
-            <pre className="text-gray-300 whitespace-pre overflow-x-auto select-all max-h-80 md:max-h-none py-1.5">
+            <pre className="text-slate-700 dark:text-gray-300 whitespace-pre overflow-x-auto select-all max-h-80 md:max-h-none py-1.5">
               <code>{codeSnippets[activeTab].code}</code>
             </pre>
           </div>

@@ -47,7 +47,7 @@ body {
 
 .light body,
 :root:not(.dark) body {
-  background-color: #F4F7FC;
+  background-color: #F3F4FD;
   color: #0F172A;
 }
 
