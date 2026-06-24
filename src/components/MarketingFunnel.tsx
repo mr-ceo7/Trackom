@@ -80,10 +80,10 @@ function MobileDeck() {
         {/* Header */}
         <div className="text-center px-2 mb-6">
           <h2 className="font-display font-bold text-slate-900 dark:text-white text-2xl leading-[1.15] tracking-tight text-balance mb-2">
-            Your Entire Marketing Funnel, Optimized
+            Your Complete Customer Journey — Automated
           </h2>
           <p className="text-slate-600 dark:text-gray-400 text-xs leading-relaxed max-w-[280px] mx-auto">
-            Deliver high-impact multi-channel messaging and automate client interactions at scale.
+            From first contact to repeat purchase — orchestrate SMS, WhatsApp, USSD, and voice campaigns that drive results.
           </p>
         </div>
 
@@ -241,7 +241,7 @@ export default function MarketingFunnel({ onOpenSignup }: MarketingFunnelProps) 
   const { ref: stackSectionRef, isVisible: stackSectionVisible } = useScrollAnimation({ threshold: 0.15 });
 
   return (
-    <section className="relative bg-[#F3F4FD] dark:bg-[#07070C] py-20 md:py-28 transition-colors duration-300 border-t border-slate-200/50 dark:border-white/5 overflow-hidden">
+    <section className="relative bg-[#F3F4FD] dark:bg-[#07070C] py-10 md:py-14 transition-colors duration-300 border-t border-slate-200/50 dark:border-white/5 overflow-hidden">
       {/* Background glow effects */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden hidden dark:block">
         <div className="absolute top-1/3 left-1/4 w-[500px] h-[500px] rounded-full bg-blue-500/[0.02] blur-[120px]" />
@@ -255,10 +255,10 @@ export default function MarketingFunnel({ onOpenSignup }: MarketingFunnelProps) 
           className={`hidden md:flex flex-col gap-4 text-center max-w-3xl mx-auto mb-20 scroll-animate ${headerVisible ? 'is-visible' : ''}`}
         >
           <h2 className="font-display font-bold text-slate-900 dark:text-white text-3xl sm:text-4xl md:text-5xl lg:text-[3.25rem] leading-[1.1] tracking-tight text-balance">
-            Your Entire Marketing Funnel, Optimized
+            Your Complete Customer Journey — Automated
           </h2>
           <p className="text-slate-600 dark:text-gray-400 text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
-            Deliver high-impact multi-channel messaging and automate client interactions at scale.
+            Deliver high-impact multi-channel messaging and automate client interactions across Kenya's mobile-first economy.
           </p>
         </div>
 
@@ -311,10 +311,10 @@ export default function MarketingFunnel({ onOpenSignup }: MarketingFunnelProps) 
                   <div className="w-6 h-6 rounded bg-pink-500/10 flex items-center justify-center text-[10px] font-bold text-pink-400 border border-pink-500/20">
                     SH
                   </div>
-                  <span className="text-[11px] font-mono font-semibold text-slate-500 dark:text-gray-400">StyleHub</span>
+                  <span className="text-[11px] font-mono font-semibold text-slate-500 dark:text-gray-400">Nairobi StyleHub</span>
                 </div>
                 <h4 className="font-display font-bold text-slate-900 dark:text-white text-lg sm:text-xl leading-snug">
-                  StyleHub Boosts Conversions by 22%
+                  Nairobi StyleHub Boosts Conversions by 22%
                 </h4>
                 <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 text-xs font-mono bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-md w-max">
                   <CheckCircle className="w-3.5 h-3.5" />
@@ -339,10 +339,10 @@ export default function MarketingFunnel({ onOpenSignup }: MarketingFunnelProps) 
                   <div className="w-6 h-6 rounded bg-blue-500/10 flex items-center justify-center text-[10px] font-bold text-blue-400 border border-blue-500/20">
                     TS
                   </div>
-                  <span className="text-[11px] font-mono font-semibold text-slate-500 dark:text-gray-400">TechSolutions</span>
+                  <span className="text-[11px] font-mono font-semibold text-slate-500 dark:text-gray-400">Mombasa TechSolutions</span>
                 </div>
                 <h4 className="font-display font-bold text-slate-900 dark:text-white text-lg sm:text-xl leading-snug">
-                  TechSolutions Achieves 18% Higher ROI
+                  Mombasa TechSolutions Achieves 18% Higher ROI
                 </h4>
                 <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 text-xs font-mono bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-md w-max">
                   <CheckCircle className="w-3.5 h-3.5" />
@@ -372,7 +372,7 @@ export default function MarketingFunnel({ onOpenSignup }: MarketingFunnelProps) 
             onClick={onOpenSignup}
             className="w-full sm:w-auto px-8 py-3.5 rounded-full text-sm font-semibold text-slate-800 dark:text-white border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 cursor-pointer hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none text-center"
           >
-            Talk to a Strategist
+            Talk to Our Kenya Team
           </button>
         </div>
       </div>

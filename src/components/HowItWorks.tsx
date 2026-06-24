@@ -6,14 +6,14 @@ const steps = [
     number: '01',
     icon: <UserPlus className="w-7 h-7" />,
     title: 'Create Your Account',
-    description: 'Sign up in 30 seconds. No credit card required. Get 10,000 free SMS credits instantly.',
+    description: 'Create your account in 30 seconds. No credit card needed. Get 10,000 free SMS credits loaded instantly.',
     color: 'brand-primary',
   },
   {
     number: '02',
     icon: <CreditCard className="w-7 h-7" />,
     title: 'Load SMS Credits',
-    description: 'Top up via M-Pesa, credit card, or bank transfer. Volume discounts applied automatically.',
+    description: 'Top up instantly via M-Pesa (Lipa Na M-Pesa), credit card, or bank transfer. Bulk discounts applied automatically.',
     color: 'brand-accent',
   },
   {
@@ -29,7 +29,7 @@ export default function HowItWorks() {
   const { ref, isVisible } = useScrollAnimation();
 
   return (
-    <section id="how-it-works" className="py-24 px-4 md:px-8 max-w-7xl mx-auto scroll-mt-24">
+    <section id="how-it-works" className="py-10 md:py-14 px-4 md:px-8 max-w-7xl mx-auto scroll-mt-24">
       {/* HEADER */}
       <div
         ref={ref}
@@ -39,11 +39,11 @@ export default function HowItWorks() {
           Get Started in Minutes
         </div>
         <h2 className="font-display font-bold text-slate-900 dark:text-white text-3xl md:text-5xl leading-tight">
-          Three steps to{' '}
-          <span className="gradient-text">launch.</span>
+          Three minutes to{' '}
+          <span className="gradient-text">go live.</span>
         </h2>
         <p className="text-slate-600 dark:text-gray-400 text-base md:text-lg">
-          From signup to your first broadcast in under 5 minutes.
+          Sign up, load credits via M-Pesa, and send your first campaign — no technical setup required.
         </p>
       </div>
 

@@ -133,7 +133,7 @@ export default function Features() {
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
 
   return (
-    <section id="features" className="py-24 px-4 md:px-8 max-w-7xl mx-auto scroll-mt-24">
+    <section id="features" className="py-10 md:py-14 px-4 md:px-8 max-w-7xl mx-auto scroll-mt-24">
       {/* HEADER */}
       <div
         ref={headerRef}
@@ -144,10 +144,10 @@ export default function Features() {
         </div>
         <h2 className="font-display font-bold text-slate-900 dark:text-white text-3xl md:text-5xl leading-tight">
           Tools that give you{' '}
-          <span className="gradient-text">unfair advantages.</span>
+          <span className="gradient-text">the edge.</span>
         </h2>
         <p className="text-slate-600 dark:text-gray-400 text-base md:text-lg">
-          AI-powered copywriting, intelligent carrier routing, real-time analytics, and seamless contact management.
+          AI-powered SMS copywriting, smart carrier routing across Safaricom, Airtel & Telkom, real-time campaign analytics, and seamless M-Pesa payment tracking.
         </p>
       </div>
 

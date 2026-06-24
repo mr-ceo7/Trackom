@@ -95,10 +95,10 @@ export default function App() {
                 <span>CA Kenya Compliant • Secure Platform</span>
               </div>
               <h3 className="font-display font-bold text-xl text-slate-900 dark:text-white leading-tight">
-                Enterprise-grade security. Verified deliverability.
+                Enterprise-Grade Security. CA Kenya Certified.
               </h3>
               <p className="text-sm text-slate-600 dark:text-gray-400">
-                Your data is protected with TLS 1.3 encryption, automated DND list compliance, and real-time fraud prevention.
+                Your data is protected with TLS 1.3 encryption, automated DND compliance per CA Kenya regulations, and real-time fraud prevention across all carrier routes.
               </p>
             </div>
 

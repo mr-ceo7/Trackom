@@ -312,7 +312,7 @@ export default function Services() {
   const activeCategory = categories[activeIndex];
 
   return (
-    <section id="services" className="py-24 px-4 md:px-8 max-w-7xl mx-auto scroll-mt-24">
+    <section id="services" className="py-10 md:py-14 px-4 md:px-8 max-w-7xl mx-auto scroll-mt-24">
       {/* SECTION HEADER */}
       <div
         ref={headerRef}
@@ -322,11 +322,11 @@ export default function Services() {
           Complete Communications Suite
         </div>
         <h2 className="font-display font-bold text-slate-900 dark:text-white text-3xl md:text-5xl leading-tight">
-          Everything you need to{' '}
-          <span className="gradient-text">connect & convert.</span>
+          Every Channel. One Platform.{' '}
+          <span className="gradient-text">Maximum Impact.</span>
         </h2>
         <p className="text-slate-600 dark:text-gray-400 text-base md:text-lg">
-          From bulk SMS to WhatsApp, USSD to voice — one platform for all your enterprise communication needs.
+          Bulk SMS, WhatsApp Business, USSD menus, voice calls, OTP, and airtime rewards — reach every Kenyan customer on their preferred channel.
         </p>
       </div>
 

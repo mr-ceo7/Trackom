@@ -55,8 +55,8 @@ export default function Hero({ onOpenSignup }: HeroProps) {
     },
     {
       value: `${messages.toFixed(1)}M+`,
-      label: 'SMS Sent',
-      description: 'Powering campaigns across Kenya daily.',
+      label: 'SMS Delivered Monthly',
+      description: 'Trusted by Kenya\'s top enterprises.',
       icon: <Send className="w-5 h-5" />,
       color: 'blue',
     },
@@ -171,7 +171,7 @@ export default function Hero({ onOpenSignup }: HeroProps) {
                     onClick={onOpenSignup}
                     className="w-full sm:w-auto px-8 py-3.5 rounded-full text-sm font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none flex items-center justify-center gap-2.5"
                   >
-                    <span>Create Account</span>
+                    <span>Get Started Free</span>
                     <Rocket className="w-4 h-4" />
                   </button>
 
@@ -201,14 +201,13 @@ export default function Hero({ onOpenSignup }: HeroProps) {
               >
                 {/* HEADLINE */}
                 <h1 className="font-display font-extrabold text-white text-4xl sm:text-5xl lg:text-6xl xl:text-7xl leading-[1.05] tracking-tighter text-balance">
-                  The Ultimate Bulk <br />
-                  <span className="text-white">SMS Platform</span>
+                  Kenya's #1 Bulk <br />
+                  <span className="text-white">SMS & Messaging Platform</span>
                 </h1>
 
                 {/* SUBTITLE */}
                 <p className="text-gray-300 text-base sm:text-lg md:text-xl font-medium max-w-xl mt-6 leading-relaxed text-balance">
-                  Broadcast campaigns to millions with AI-optimized copy, real-time smart routing,
-                  instant M-Pesa top-ups, and sub-second delivery verification.
+                  Reach millions across Safaricom, Airtel & Telkom with AI-optimized campaigns, instant M-Pesa payments, and 99.99% delivery rates.
                 </p>
 
                 {/* CTA BUTTONS SCREEN 2 */}
@@ -217,7 +216,7 @@ export default function Hero({ onOpenSignup }: HeroProps) {
                     onClick={onOpenSignup}
                     className="w-full sm:w-auto px-8 py-3.5 rounded-full text-sm font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none flex items-center justify-center gap-2.5"
                   >
-                    <span>Get Started</span>
+                    <span>Start Sending — It's Free</span>
                     <Rocket className="w-4 h-4" />
                   </button>
 
@@ -229,7 +228,7 @@ export default function Hero({ onOpenSignup }: HeroProps) {
                     }}
                     className="w-full sm:w-auto px-8 py-3.5 rounded-full text-sm font-semibold text-gray-300 hover:text-white bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 hover:scale-[1.01] active:scale-98 transition-all duration-300 flex items-center justify-center gap-2.5 focus:outline-none backdrop-blur-sm shadow-sm"
                   >
-                    <span>Learn More</span>
+                    <span>See How It Works</span>
                   </a>
                 </div>
               </motion.div>

@@ -58,7 +58,7 @@ export default function FAQSection() {
   const filteredFaqs = filterFAQByQuery(faqs, searchQuery);
 
   return (
-    <section id="faq" className="py-24 px-4 md:px-8 max-w-4xl mx-auto scroll-mt-24">
+    <section id="faq" className="py-10 md:py-14 px-4 md:px-8 max-w-4xl mx-auto scroll-mt-24">
       {/* HEADER */}
       <div
         ref={ref}
@@ -68,11 +68,11 @@ export default function FAQSection() {
           Frequently Asked Questions
         </div>
         <h2 className="font-display font-bold text-slate-900 dark:text-white text-3xl md:text-5xl leading-tight">
-          Got questions?{' '}
-          <span className="gradient-text">We've got answers.</span>
+          Questions?{' '}
+          <span className="gradient-text">We've got you covered.</span>
         </h2>
         <p className="text-slate-600 dark:text-gray-400 text-sm md:text-base">
-          Everything you need to know about Trackom's platform, pricing, and API.
+          Everything Kenyan businesses ask about Trackom — from M-Pesa payments to carrier coverage and API limits.
         </p>
 
         {/* SEARCH BAR */}

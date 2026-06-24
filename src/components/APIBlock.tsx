@@ -91,7 +91,7 @@ echo "Campaign {$campaign->id}: {$campaign->status}";`,
   const tabs: LanguageType[] = ['curl', 'nodejs', 'python', 'php'];
 
   return (
-    <section id="api-docs" className="py-24 px-4 md:px-8 max-w-7xl mx-auto border-t border-slate-200 dark:border-white/6 scroll-mt-24">
+    <section id="api-docs" className="py-10 md:py-14 px-4 md:px-8 max-w-7xl mx-auto border-t border-slate-200 dark:border-white/6 scroll-mt-24">
       <div
         ref={ref}
         className={`grid grid-cols-1 lg:grid-cols-[1fr_520px] gap-16 items-center scroll-animate ${isVisible ? 'is-visible' : ''}`}
@@ -103,12 +103,12 @@ echo "Campaign {$campaign->id}: {$campaign->status}";`,
               Developer-First API
             </div>
             <h2 className="font-display font-bold text-slate-900 dark:text-white text-3xl sm:text-4xl md:text-5xl leading-tight">
-              Integrate in minutes.{' '}
+              Ship your integration today.{' '}
               <br />
-              <span className="gradient-text">Scale to millions.</span>
+              <span className="gradient-text">Scale to millions tomorrow.</span>
             </h2>
             <p className="text-slate-600 dark:text-gray-400 text-base md:text-lg leading-relaxed max-w-lg">
-              Clean REST API, official SDKs for Node.js, Python, and PHP, plus real-time webhooks. Built for Kenyan developers.
+              Production-ready REST API, official SDKs for Node.js, Python & PHP, plus real-time webhooks. Trusted by Kenya's leading developers.
             </p>
           </div>
 

@@ -6,7 +6,7 @@ const tiers = [
   {
     name: 'Starter',
     price: '0.80',
-    description: 'Perfect for small businesses getting started with SMS marketing.',
+    description: 'Ideal for Kenyan SMEs and startups getting started with SMS marketing.',
     volume: 'Up to 50K SMS/month',
     features: [
       'Bulk SMS campaigns',
@@ -23,7 +23,7 @@ const tiers = [
   {
     name: 'Growth',
     price: '0.60',
-    description: 'For growing businesses that need advanced tools and higher volumes.',
+    description: 'For scaling businesses that need WhatsApp, USSD, and advanced automation tools.',
     volume: 'Up to 500K SMS/month',
     features: [
       'Everything in Starter',
@@ -42,7 +42,7 @@ const tiers = [
   {
     name: 'Enterprise',
     price: 'Custom',
-    description: 'For large organizations with custom requirements and dedicated support.',
+    description: 'For banks, SACCOs, and enterprises with custom infrastructure requirements.',
     volume: 'Unlimited volume',
     features: [
       'Everything in Growth',
@@ -66,7 +66,7 @@ export default function Pricing() {
   const { ref, isVisible } = useScrollAnimation();
 
   return (
-    <section id="pricing" className="py-24 px-4 md:px-8 max-w-7xl mx-auto scroll-mt-24">
+    <section id="pricing" className="py-10 md:py-14 px-4 md:px-8 max-w-7xl mx-auto scroll-mt-24">
       {/* HEADER */}
       <div
         ref={ref}
@@ -76,11 +76,11 @@ export default function Pricing() {
           Transparent Pricing
         </div>
         <h2 className="font-display font-bold text-slate-900 dark:text-white text-3xl md:text-5xl leading-tight">
-          Simple pricing,{' '}
-          <span className="gradient-text">powerful results.</span>
+          Transparent pricing,{' '}
+          <span className="gradient-text">no hidden fees.</span>
         </h2>
         <p className="text-slate-600 dark:text-gray-400 text-base md:text-lg">
-          Volume-based discounts applied automatically. Pay via M-Pesa, no hidden fees.
+          Pay per SMS via M-Pesa — volume discounts applied automatically. Cancel anytime, no contracts.
         </p>
 
         {/* Currency toggle */}
@@ -187,8 +187,7 @@ export default function Pricing() {
             <div>
               <h3 className="font-display font-semibold text-slate-900 dark:text-white text-xl mb-1">Become a Trackom Reseller</h3>
               <p className="text-slate-600 dark:text-gray-400 text-sm leading-relaxed">
-                Purchase wholesale bulk SMS at discounted rates and sell to your own clients. 
-                Get your own branded portal, flexible pricing, and dedicated support.
+                Buy wholesale SMS credits via M-Pesa at deeply discounted rates. Get your own branded portal, set your own pricing, and start earning immediately.
               </p>
             </div>
           </div>

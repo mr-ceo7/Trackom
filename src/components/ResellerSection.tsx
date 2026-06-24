@@ -7,7 +7,7 @@ export default function ResellerSection({ onOpenSignup }: { onOpenSignup: () => 
   const { ref: ctaRef, isVisible: ctaVisible } = useScrollAnimation();
 
   return (
-    <section className="relative bg-[#F3F4FD] dark:bg-[#07070C] py-20 md:py-28 transition-colors duration-300 border-t border-slate-200/50 dark:border-white/5 overflow-hidden">
+    <section className="relative bg-[#F3F4FD] dark:bg-[#07070C] py-10 md:py-14 transition-colors duration-300 border-t border-slate-200/50 dark:border-white/5 overflow-hidden">
       {/* Background ambient glow orbs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden hidden dark:block">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full bg-emerald-500/[0.015] blur-[150px]" />
@@ -20,10 +20,10 @@ export default function ResellerSection({ onOpenSignup }: { onOpenSignup: () => 
           className={`flex flex-col gap-4 text-center max-w-3xl mx-auto mb-14 md:mb-20 scroll-animate ${headerVisible ? 'is-visible' : ''}`}
         >
           <h2 className="font-display font-bold text-slate-900 dark:text-white text-3xl sm:text-4xl md:text-5xl lg:text-[3.25rem] leading-[1.1] tracking-wide uppercase">
-            Become a Bulk SMS Reseller
+            Start Your Own SMS Business in Kenya
           </h2>
           <p className="text-slate-600 dark:text-gray-400 text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
-            Register, buy wholesale bulk SMS, and manage your own clients to build a profitable business.
+            Buy wholesale SMS credits via M-Pesa, brand the platform as your own, and start earning from day one. Over 500 resellers already earning with Trackom.
           </p>
         </div>
 
@@ -159,7 +159,7 @@ export default function ResellerSection({ onOpenSignup }: { onOpenSignup: () => 
           className={`flex flex-col gap-6 text-center max-w-3xl mx-auto items-center scroll-animate ${ctaVisible ? 'is-visible' : ''}`}
         >
           <h3 className="font-display font-bold text-slate-900 dark:text-white text-2xl sm:text-3xl md:text-4xl uppercase tracking-wide">
-            Ready to Scale Your Business?
+            Start Earning Today
           </h3>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full sm:w-auto">
@@ -173,7 +173,7 @@ export default function ResellerSection({ onOpenSignup }: { onOpenSignup: () => 
               onClick={onOpenSignup}
               className="w-full sm:w-auto px-8 py-3.5 rounded-full text-sm font-semibold text-slate-800 dark:text-white border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 cursor-pointer hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none text-center"
             >
-              Talk to a Strategist
+              Talk to Our Kenya Team
             </button>
           </div>
         </div>
