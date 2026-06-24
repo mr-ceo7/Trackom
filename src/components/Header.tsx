@@ -169,17 +169,17 @@ export default function Header({ onOpenSignup }: HeaderProps) {
             </AnimatePresence>
           </div>
 
-          {/* Pricing Link */}
+          {/* About Us Link */}
           <a
-            href="#pricing"
-            onClick={(e) => scrollToSection('pricing', e)}
+            href="#how-it-works"
+            onClick={(e) => scrollToSection('how-it-works', e)}
             className={`text-sm font-medium transition-colors duration-300 relative group ${
               scrolled
                 ? 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
                 : 'text-gray-300 hover:text-white'
             }`}
           >
-            Pricing
+            About Us
             <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-brand-primary to-brand-accent group-hover:w-full transition-all duration-300 rounded-full" />
           </a>
 
@@ -247,6 +247,20 @@ export default function Header({ onOpenSignup }: HeaderProps) {
             }`}
           >
             FAQ
+            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-brand-primary to-brand-accent group-hover:w-full transition-all duration-300 rounded-full" />
+          </a>
+
+          {/* Contact Link */}
+          <a
+            href="#contact"
+            onClick={(e) => scrollToSection('contact', e)}
+            className={`text-sm font-medium transition-colors duration-300 relative group ${
+              scrolled
+                ? 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
+                : 'text-gray-300 hover:text-white'
+            }`}
+          >
+            Contact
             <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-brand-primary to-brand-accent group-hover:w-full transition-all duration-300 rounded-full" />
           </a>
         </nav>
@@ -339,12 +353,12 @@ export default function Header({ onOpenSignup }: HeaderProps) {
               {/* General Links */}
               <div className="flex flex-col gap-1">
                 <a
-                  href="#pricing"
-                  onClick={(e) => scrollToSection('pricing', e)}
+                  href="#how-it-works"
+                  onClick={(e) => scrollToSection('how-it-works', e)}
                   className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white transition-all duration-200"
                 >
-                  <CreditCard className="w-5 h-5 text-brand-primary" />
-                  <span className="font-medium text-sm">Pricing</span>
+                  <Cpu className="w-5 h-5 text-brand-primary" />
+                  <span className="font-medium text-sm">About Us</span>
                 </a>
 
                 <a
@@ -354,6 +368,15 @@ export default function Header({ onOpenSignup }: HeaderProps) {
                 >
                   <HelpCircle className="w-5 h-5 text-brand-accent" />
                   <span className="font-medium text-sm">FAQ</span>
+                </a>
+
+                <a
+                  href="#contact"
+                  onClick={(e) => scrollToSection('contact', e)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white transition-all duration-200"
+                >
+                  <MessageSquare className="w-5 h-5 text-brand-emerald" />
+                  <span className="font-medium text-sm">Contact</span>
                 </a>
               </div>
 

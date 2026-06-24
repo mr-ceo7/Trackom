@@ -10,7 +10,6 @@ import APIIntegration from './components/APIIntegration';
 import ResellerSection from './components/ResellerSection';
 import Services from './components/Services';
 import HowItWorks from './components/HowItWorks';
-import Pricing from './components/Pricing';
 import Testimonials from './components/Testimonials';
 import FAQSection from './components/FAQSection';
 import CTABanner from './components/CTABanner';
@@ -94,8 +93,6 @@ export default function App() {
         {/* How It Works */}
         <HowItWorks />
 
-        {/* Pricing */}
-        <Pricing />
 
         {/* Testimonials */}
         <Testimonials />
@@ -135,7 +132,7 @@ export default function App() {
       </main>
 
       {/* FOOTER */}
-      <footer className="bg-white dark:bg-surface-dark border-t border-slate-200 dark:border-white/6 py-16 px-4 md:px-8 relative z-10">
+      <footer id="contact" className="bg-white dark:bg-surface-dark border-t border-slate-200 dark:border-white/6 py-16 px-4 md:px-8 relative z-10">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 text-left">
           {/* Brand */}
           <div className="flex flex-col gap-4">

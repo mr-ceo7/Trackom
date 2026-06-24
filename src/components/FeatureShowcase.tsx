@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { motion, useScroll, AnimatePresence } from 'motion/react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, MessageSquare, ShieldCheck, Repeat, Briefcase } from 'lucide-react';
 
 const features = [
   {
@@ -113,7 +113,7 @@ function DeckCard({ feature, index, total, activeIndex, onNext, onPrev, setIsPau
 /* ──────────────────────────────────
    DESKTOP BENTO GRID
    ────────────────────────────────── */
-function DesktopBentoGrid() {
+function DesktopBentoGrid({ onOpenSignup }: { onOpenSignup: () => void }) {
   const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({ threshold: 0.1 });
 
   return (
@@ -121,7 +121,7 @@ function DesktopBentoGrid() {
       <div className="grid md:grid-cols-3 md:grid-rows-2 gap-5 lg:gap-6">
         {/* Hero card — col 1-2, row 1-2 */}
         <div className="md:col-span-2 md:row-span-2 flex">
-          <div className="flex-1 flex flex-col rounded-2xl overflow-hidden bg-white dark:bg-[#0e1422] border border-slate-200 dark:border-blue-500/10 shadow-lg shadow-slate-200/50 dark:shadow-black/20 group hover:scale-[1.01] transition-transform duration-500 relative min-h-[480px]">
+          <div className="flex-1 flex flex-col rounded-2xl overflow-hidden bg-white dark:bg-[#0e1422] border border-slate-200 dark:border-blue-500/10 shadow-lg shadow-slate-200/50 dark:shadow-black/20 group hover:scale-[1.01] transition-transform duration-500 relative min-h-[550px]">
             {/* Background Video */}
             <div className="absolute inset-0 w-full h-full overflow-hidden bg-black">
               <video autoPlay muted loop playsInline className="w-full h-full object-cover select-none pointer-events-none group-hover:scale-[1.02] transition-transform duration-700 opacity-60">
@@ -131,29 +131,89 @@ function DesktopBentoGrid() {
             </div>
 
             {/* Overlaid Text Content */}
-            <div className="relative z-10 p-8 flex flex-col h-full justify-between flex-grow">
+            <div className="relative z-10 p-8 flex flex-col gap-6 justify-between h-full flex-grow">
               <div className="flex flex-col gap-3">
                 <h3 className="font-display font-bold text-white text-2xl md:text-3xl lg:text-4xl leading-tight">{features[0].title}</h3>
-                <p className="text-slate-300 text-sm md:text-base lg:text-lg leading-relaxed max-w-2xl">{features[0].description}</p>
+                <p className="text-slate-300 text-base md:text-lg leading-relaxed max-w-3xl">{features[0].description}</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-x-6 gap-y-4 pt-6 border-t border-white/10 mt-6">
-                <div className="flex items-center gap-3 text-xs md:text-sm text-slate-200">
-                  <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-400" />
-                  <span>Instant triggers on Lipa Na M-Pesa payments</span>
+              {/* Solutions Grid - Directly after description */}
+              <div className="flex flex-col gap-4 mt-2">
+                <h4 className="text-sm font-bold text-blue-400 uppercase tracking-wider">Integrated Solutions</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="flex gap-4 items-start">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                      <MessageSquare className="w-5 h-5 text-indigo-400" />
+                    </div>
+                    <div>
+                      <h5 className="text-base md:text-lg font-bold text-white uppercase">SMS Marketing</h5>
+                      <p className="text-sm md:text-base text-slate-300 leading-normal">Promotional campaigns with smart routing.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4 items-start">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                      <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                    </div>
+                    <div>
+                      <h5 className="text-base md:text-lg font-bold text-white uppercase">OTP Alerts</h5>
+                      <p className="text-sm md:text-base text-slate-300 leading-normal">Secure verification delivery (&lt;180ms).</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4 items-start">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                      <Repeat className="w-5 h-5 text-amber-400" />
+                    </div>
+                    <div>
+                      <h5 className="text-base md:text-lg font-bold text-white uppercase">Two-Way SMS</h5>
+                      <p className="text-sm md:text-base text-slate-300 leading-normal">Engage audiences with shortcodes.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4 items-start">
+                    <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                      <Briefcase className="w-5 h-5 text-purple-400" />
+                    </div>
+                    <div>
+                      <h5 className="text-base md:text-lg font-bold text-white uppercase">Reseller Portal</h5>
+                      <p className="text-sm md:text-base text-slate-300 leading-normal">White-label portals &amp; custom pricing.</p>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3 text-xs md:text-sm text-slate-200">
-                  <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-400" />
-                  <span>Custom delays, time windows & schedules</span>
-                </div>
-                <div className="flex items-center gap-3 text-xs md:text-sm text-slate-200">
-                  <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-400" />
-                  <span>Drag-and-drop workflow designer</span>
-                </div>
-                <div className="flex items-center gap-3 text-xs md:text-sm text-slate-200">
-                  <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-400" />
-                  <span>Automatic failover to backup carrier routes</span>
-                </div>
+              </div>
+
+              {/* Checklist - Below the Solutions */}
+              <div className="flex flex-col gap-4 pt-6 border-t border-white/10 mt-2">
+                <h4 className="text-sm font-bold text-emerald-400 uppercase tracking-wider">Key Capabilities</h4>
+                <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <li className="flex items-start gap-3.5 text-sm md:text-base text-slate-200">
+                    <CheckCircle2 className="w-5.5 h-5.5 shrink-0 text-emerald-400 mt-0.5" />
+                    <span>Instant triggers on Lipa Na M-Pesa payments</span>
+                  </li>
+                  <li className="flex items-start gap-3.5 text-sm md:text-base text-slate-200">
+                    <CheckCircle2 className="w-5.5 h-5.5 shrink-0 text-emerald-400 mt-0.5" />
+                    <span>Custom delays, time windows &amp; schedules</span>
+                  </li>
+                  <li className="flex items-start gap-3.5 text-sm md:text-base text-slate-200">
+                    <CheckCircle2 className="w-5.5 h-5.5 shrink-0 text-emerald-400 mt-0.5" />
+                    <span>Drag-and-drop workflow designer</span>
+                  </li>
+                  <li className="flex items-start gap-3.5 text-sm md:text-base text-slate-200">
+                    <CheckCircle2 className="w-5.5 h-5.5 shrink-0 text-emerald-400 mt-0.5" />
+                    <span>Automatic failover to backup carrier routes</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Bottom CTA */}
+              <div className="pt-6 border-t border-white/10 flex justify-start">
+                <button
+                  onClick={onOpenSignup}
+                  className="h-12 px-8 rounded-full text-sm font-bold text-white bg-[#2563EB] hover:bg-[#1D4ED8] hover:scale-[1.02] active:scale-95 transition-all duration-300 flex items-center justify-center border border-transparent shadow-lg shadow-blue-500/20 cursor-pointer"
+                >
+                  Configure Automated Journey
+                </button>
               </div>
             </div>
           </div>
@@ -243,7 +303,7 @@ export default function FeatureShowcase({ onOpenSignup }: FeatureShowcaseProps) 
           </p>
         </div>
 
-        <DesktopBentoGrid />
+        <DesktopBentoGrid onOpenSignup={onOpenSignup} />
 
         <div ref={ctaRef} className={`flex justify-center scroll-animate ${ctaVisible ? 'is-visible' : ''}`}>
           <button onClick={onOpenSignup} className="px-8 py-3.5 rounded-full text-sm font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none">
