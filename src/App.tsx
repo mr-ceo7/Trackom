@@ -9,9 +9,7 @@ import PlatformCapabilities from './components/PlatformCapabilities';
 import APIIntegration from './components/APIIntegration';
 import ResellerSection from './components/ResellerSection';
 import Services from './components/Services';
-import Features from './components/Features';
 import HowItWorks from './components/HowItWorks';
-import APIBlock from './components/APIBlock';
 import Pricing from './components/Pricing';
 import Testimonials from './components/Testimonials';
 import FAQSection from './components/FAQSection';
@@ -93,14 +91,8 @@ export default function App() {
         {/* Services Grid */}
         <Services />
 
-        {/* Feature Highlights */}
-        <Features />
-
         {/* How It Works */}
         <HowItWorks />
-
-        {/* Developer API Block */}
-        <APIBlock />
 
         {/* Pricing */}
         <Pricing />
