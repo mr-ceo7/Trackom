@@ -119,8 +119,22 @@ function DesktopBentoGrid() {
         <div className="flex">
           <div className={`flex-1 flex flex-col rounded-2xl overflow-hidden shadow-lg shadow-slate-200/50 dark:shadow-black/20 border group hover:scale-[1.02] transition-transform duration-300 ${controlFeatures[0].bgClass} ${controlFeatures[0].borderClass}`}>
             <div className="p-6 pb-4">
-              <h3 className="font-display font-bold text-slate-900 dark:text-white text-lg md:text-xl mb-2 leading-tight">{controlFeatures[0].title}</h3>
-              <p className="text-slate-500 dark:text-gray-400 text-xs md:text-sm leading-relaxed">{controlFeatures[0].description}</p>
+              <h3 className="font-display font-bold text-slate-900 dark:text-white text-xl md:text-2xl mb-2 leading-tight">{controlFeatures[0].title}</h3>
+              <p className="text-slate-600 dark:text-gray-400 text-sm md:text-base leading-relaxed mb-3">{controlFeatures[0].description}</p>
+              <ul className="flex flex-col gap-2 pt-3 border-t border-slate-200 dark:border-white/5 mb-1 text-xs md:text-sm text-slate-600 dark:text-gray-300">
+                <li className="flex items-center gap-2">
+                  <span className="text-brand-primary">👥</span>
+                  <span>Real-time dynamic group updates</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-brand-emerald">🚫</span>
+                  <span>Automated CA Kenya DND filter checks</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-brand-accent">🔄</span>
+                  <span>Direct database synchronization</span>
+                </li>
+              </ul>
             </div>
             <div className="relative w-full aspect-video md:flex-1 overflow-hidden bg-black/10 flex items-center justify-center">
               <img src={controlFeatures[0].src} alt={controlFeatures[0].title} className="w-full h-full object-cover select-none pointer-events-none group-hover:scale-[1.03] transition-transform duration-700" />
@@ -131,9 +145,27 @@ function DesktopBentoGrid() {
         {/* Hero card — col 2-3, row 1-2 (Deep Analytics — right side) */}
         <div className="md:col-span-2 md:row-span-2 flex">
           <div className={`flex-1 flex flex-col rounded-2xl overflow-hidden shadow-lg shadow-slate-200/50 dark:shadow-black/20 border group hover:scale-[1.01] transition-transform duration-500 ${controlFeatures[2].bgClass} ${controlFeatures[2].borderClass}`}>
-            <div className="p-8 pb-5">
-              <h3 className="font-display font-bold text-slate-900 dark:text-white text-xl md:text-2xl lg:text-3xl mb-3 leading-tight">{controlFeatures[2].title}</h3>
-              <p className="text-slate-500 dark:text-gray-400 text-sm md:text-base leading-relaxed">{controlFeatures[2].description}</p>
+            <div className="p-8 pb-5 flex-grow-0">
+              <h3 className="font-display font-bold text-slate-900 dark:text-white text-2xl md:text-3xl lg:text-4xl mb-3 leading-tight">{controlFeatures[2].title}</h3>
+              <p className="text-slate-600 dark:text-gray-400 text-base md:text-lg leading-relaxed mb-4">{controlFeatures[2].description}</p>
+              <div className="grid grid-cols-2 gap-x-6 gap-y-2.5 pt-4 border-t border-slate-200 dark:border-white/5 mb-2">
+                <div className="flex items-center gap-2 text-xs md:text-sm text-slate-600 dark:text-gray-300">
+                  <span className="text-brand-primary">📈</span>
+                  <span>AI campaign CTR optimizations</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs md:text-sm text-slate-600 dark:text-gray-300">
+                  <span className="text-brand-accent">💰</span>
+                  <span>Sales conversion ROI tracking</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs md:text-sm text-slate-600 dark:text-gray-300">
+                  <span className="text-brand-emerald">📊</span>
+                  <span>Exportable reports (PDF/CSV/Excel)</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs md:text-sm text-slate-600 dark:text-gray-300">
+                  <span className="text-brand-primary">⏳</span>
+                  <span>Real-time carrier latency graphs</span>
+                </div>
+              </div>
             </div>
             <div className="relative flex-1 min-h-[300px] overflow-hidden flex items-center justify-center bg-black/10">
               <img src={controlFeatures[2].src} alt={controlFeatures[2].title} className="w-full h-full object-cover select-none pointer-events-none group-hover:scale-[1.02] transition-transform duration-700" />
@@ -145,8 +177,22 @@ function DesktopBentoGrid() {
         <div className="flex">
           <div className={`flex-1 flex flex-col rounded-2xl overflow-hidden shadow-lg shadow-slate-200/50 dark:shadow-black/20 border group hover:scale-[1.02] transition-transform duration-300 ${controlFeatures[1].bgClass} ${controlFeatures[1].borderClass}`}>
             <div className="p-6 pb-4">
-              <h3 className="font-display font-bold text-slate-900 dark:text-white text-lg md:text-xl mb-2 leading-tight">{controlFeatures[1].title}</h3>
-              <p className="text-slate-500 dark:text-gray-400 text-xs md:text-sm leading-relaxed">{controlFeatures[1].description}</p>
+              <h3 className="font-display font-bold text-slate-900 dark:text-white text-xl md:text-2xl mb-2 leading-tight">{controlFeatures[1].title}</h3>
+              <p className="text-slate-600 dark:text-gray-400 text-sm md:text-base leading-relaxed mb-3">{controlFeatures[1].description}</p>
+              <ul className="flex flex-col gap-2 pt-3 border-t border-slate-200 dark:border-white/5 mb-1 text-xs md:text-sm text-slate-600 dark:text-gray-300">
+                <li className="flex items-center gap-2">
+                  <span className="text-brand-primary">⚡</span>
+                  <span>M-Pesa transaction sync webhooks</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-brand-emerald">🔄</span>
+                  <span>Dynamic drip campaigns & delays</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-brand-accent">🛡️</span>
+                  <span>Advanced anti-spam route shuffle</span>
+                </li>
+              </ul>
             </div>
             <div className="relative w-full aspect-video md:flex-1 overflow-hidden bg-black/10 flex items-center justify-center">
               <img src={controlFeatures[1].src} alt={controlFeatures[1].title} className="w-full h-full object-cover select-none pointer-events-none group-hover:scale-[1.03] transition-transform duration-700" />

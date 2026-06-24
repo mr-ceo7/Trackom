@@ -66,11 +66,13 @@ function BentoCard({
   card,
   isHero = false,
   delay = 0,
+  onOpenSignup,
 }: {
   card: (typeof integrationCards)[number];
   isHero?: boolean;
   delay?: number;
   key?: any;
+  onOpenSignup: () => void;
 }) {
   const Icon = card.icon;
 
@@ -87,30 +89,61 @@ function BentoCard({
       <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10 ring-1 ring-blue-500/20 dark:ring-blue-400/15" />
 
       {/* Visual Area */}
-      <div
-        className={`
-          relative w-full overflow-hidden bg-black/10 flex items-center justify-center
-          ${isHero ? 'aspect-[16/9] md:aspect-auto md:flex-1 md:min-h-0' : 'aspect-[16/10]'}
-        `}
-      >
-        {card.type === 'video' ? (
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="w-full h-full object-contain select-none pointer-events-none group-hover:scale-[1.03] transition-transform duration-700 ease-out"
-          >
-            <source src={card.src} type="video/mp4" />
-          </video>
-        ) : (
-          <img
-            src={card.src}
-            alt={card.title}
-            className="w-full h-full object-contain select-none pointer-events-none group-hover:scale-[1.03] transition-transform duration-700 ease-out"
-          />
-        )}
-      </div>
+      {card.title === 'MODERN DEVELOPER TOOLS & SDKs' ? (
+        <div className="w-full flex flex-col justify-between p-6 bg-[#161a26]/40 dark:bg-black/10 shrink-0 border-b border-slate-200/50 dark:border-white/5">
+          <div className="px-2 mb-4">
+            <h4 className="text-sm font-extrabold text-slate-900 dark:text-emerald-400 uppercase tracking-wider mb-1.5">Multi-Language SDK Support</h4>
+            <p className="text-xs leading-relaxed text-slate-800 dark:text-gray-200 font-medium">
+              Integrate Trackom seamlessly using officially supported SDKs for Node.js, Python, Go, PHP, and Java. Get up and running in minutes with native client libraries.
+            </p>
+          </div>
+          <div className="relative w-full aspect-[16/10] md:aspect-auto md:min-h-[160px] overflow-hidden flex items-center justify-center">
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-contain select-none pointer-events-none group-hover:scale-[1.03] transition-transform duration-700 ease-out"
+            >
+              <source src={card.src} type="video/mp4" />
+            </video>
+          </div>
+          <div className="px-2 mt-4 flex flex-col gap-2 items-start">
+            <h4 className="text-sm font-extrabold text-slate-900 dark:text-blue-400 uppercase tracking-wider">Interactive API Playground</h4>
+            <p className="text-xs leading-relaxed text-slate-800 dark:text-gray-200 font-medium">
+              Test queries, inspect payloads, and mock responses directly inside our interactive Swagger sandbox before writing production code.
+            </p>
+            <button onClick={onOpenSignup} className="h-8 px-4 rounded-full text-xs font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer hover:scale-[1.02] active:scale-95 transition-all duration-300 flex items-center justify-center border border-transparent">
+              Explore Developer Docs
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div
+          className={`
+            relative w-full overflow-hidden bg-black/10 flex items-center justify-center
+            ${isHero ? 'aspect-[16/9] md:aspect-auto md:flex-1 md:min-h-0' : 'aspect-[16/10]'}
+          `}
+        >
+          {card.type === 'video' ? (
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-contain select-none pointer-events-none group-hover:scale-[1.03] transition-transform duration-700 ease-out"
+            >
+              <source src={card.src} type="video/mp4" />
+            </video>
+          ) : (
+            <img
+              src={card.src}
+              alt={card.title}
+              className="w-full h-full object-contain select-none pointer-events-none group-hover:scale-[1.03] transition-transform duration-700 ease-out"
+            />
+          )}
+        </div>
+      )}
 
       {/* Text Content */}
       <div className={`p-5 ${isHero ? 'md:p-6' : ''} flex flex-col gap-3 flex-shrink-0`}>
@@ -187,25 +220,25 @@ export default function APIIntegration({ onOpenSignup }: APIIntegrationProps) {
             {/* Hero card — col 1-2, row 1-2 (Developer Tools & SDKs) */}
             <div className="md:col-span-2 md:row-span-2 flex" style={{ transitionDelay: '0ms' }}>
               <div className="flex-1 flex">
-                <BentoCard card={integrationCards[1]} isHero delay={0} />
+                <BentoCard card={integrationCards[1]} isHero delay={0} onOpenSignup={onOpenSignup} />
               </div>
             </div>
 
             {/* Top-right card (REST API) */}
             <div className="flex" style={{ transitionDelay: '120ms' }}>
-              <BentoCard card={integrationCards[0]} delay={120} />
+              <BentoCard card={integrationCards[0]} delay={120} onOpenSignup={onOpenSignup} />
             </div>
 
             {/* Bottom-right card (Webhooks) */}
             <div className="flex" style={{ transitionDelay: '240ms' }}>
-              <BentoCard card={integrationCards[2]} delay={240} />
+              <BentoCard card={integrationCards[2]} delay={240} onOpenSignup={onOpenSignup} />
             </div>
           </div>
 
           {/* Mobile stack */}
           <div className="flex flex-col gap-5 md:hidden">
             {integrationCards.map((card, index) => (
-              <BentoCard key={card.title} card={card} delay={index * 120} />
+              <BentoCard key={card.title} card={card} delay={index * 120} onOpenSignup={onOpenSignup} />
             ))}
           </div>
         </div>

@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { motion, useScroll, AnimatePresence } from 'motion/react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
+import { CheckCircle2 } from 'lucide-react';
 
 const features = [
   {
@@ -120,15 +121,40 @@ function DesktopBentoGrid() {
       <div className="grid md:grid-cols-3 md:grid-rows-2 gap-5 lg:gap-6">
         {/* Hero card — col 1-2, row 1-2 */}
         <div className="md:col-span-2 md:row-span-2 flex">
-          <div className="flex-1 flex flex-col rounded-2xl overflow-hidden bg-white dark:bg-[#0e1422] border border-slate-200 dark:border-blue-500/10 shadow-lg shadow-slate-200/50 dark:shadow-black/20 group hover:scale-[1.01] transition-transform duration-500">
-            <div className="p-8 pb-5">
-              <h3 className="font-display font-bold text-slate-900 dark:text-white text-xl md:text-2xl lg:text-3xl mb-3 leading-tight">{features[0].title}</h3>
-              <p className="text-slate-500 dark:text-gray-400 text-sm md:text-base leading-relaxed">{features[0].description}</p>
-            </div>
-            <div className="relative flex-1 min-h-[300px] overflow-hidden flex items-center justify-center bg-black/10">
-              <video autoPlay muted loop playsInline className="w-full h-full object-cover select-none pointer-events-none group-hover:scale-[1.02] transition-transform duration-700">
+          <div className="flex-1 flex flex-col rounded-2xl overflow-hidden bg-white dark:bg-[#0e1422] border border-slate-200 dark:border-blue-500/10 shadow-lg shadow-slate-200/50 dark:shadow-black/20 group hover:scale-[1.01] transition-transform duration-500 relative min-h-[480px]">
+            {/* Background Video */}
+            <div className="absolute inset-0 w-full h-full overflow-hidden bg-black">
+              <video autoPlay muted loop playsInline className="w-full h-full object-cover select-none pointer-events-none group-hover:scale-[1.02] transition-transform duration-700 opacity-60">
                 <source src={features[0].src} type="video/mp4" />
               </video>
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-slate-950/80" />
+            </div>
+
+            {/* Overlaid Text Content */}
+            <div className="relative z-10 p-8 flex flex-col h-full justify-between flex-grow">
+              <div className="flex flex-col gap-3">
+                <h3 className="font-display font-bold text-white text-2xl md:text-3xl lg:text-4xl leading-tight">{features[0].title}</h3>
+                <p className="text-slate-300 text-sm md:text-base lg:text-lg leading-relaxed max-w-2xl">{features[0].description}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-x-6 gap-y-4 pt-6 border-t border-white/10 mt-6">
+                <div className="flex items-center gap-3 text-xs md:text-sm text-slate-200">
+                  <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-400" />
+                  <span>Instant triggers on Lipa Na M-Pesa payments</span>
+                </div>
+                <div className="flex items-center gap-3 text-xs md:text-sm text-slate-200">
+                  <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-400" />
+                  <span>Custom delays, time windows & schedules</span>
+                </div>
+                <div className="flex items-center gap-3 text-xs md:text-sm text-slate-200">
+                  <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-400" />
+                  <span>Drag-and-drop workflow designer</span>
+                </div>
+                <div className="flex items-center gap-3 text-xs md:text-sm text-slate-200">
+                  <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-400" />
+                  <span>Automatic failover to backup carrier routes</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -137,8 +163,22 @@ function DesktopBentoGrid() {
         <div className="flex">
           <div className="flex-1 flex flex-col rounded-2xl overflow-hidden bg-white dark:bg-[#0e1422] border border-slate-200 dark:border-emerald-500/10 shadow-lg shadow-slate-200/50 dark:shadow-black/20 group hover:scale-[1.02] transition-transform duration-300">
             <div className="p-6 pb-4">
-              <h3 className="font-display font-bold text-slate-900 dark:text-white text-lg md:text-xl mb-2 leading-tight">{features[1].title}</h3>
-              <p className="text-slate-500 dark:text-gray-400 text-xs md:text-sm leading-relaxed">{features[1].description}</p>
+              <h3 className="font-display font-bold text-slate-900 dark:text-white text-xl md:text-2xl mb-2 leading-tight">{features[1].title}</h3>
+              <p className="text-slate-600 dark:text-gray-400 text-sm md:text-base leading-relaxed mb-3">{features[1].description}</p>
+              <ul className="flex flex-col gap-2 pt-3 border-t border-slate-200 dark:border-white/5 mb-1 text-xs md:text-sm text-slate-600 dark:text-gray-300">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
+                  <span>Filter contacts by County & Age group</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
+                  <span>Live Safaricom, Airtel & Telkom routing</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
+                  <span>Import directly from Excel, CSV, or APIs</span>
+                </li>
+              </ul>
             </div>
             <div className="relative w-full aspect-video md:flex-1 overflow-hidden bg-black/10 flex items-center justify-center">
               <img src={features[1].src} alt={features[1].title} className="w-full h-full object-cover select-none pointer-events-none group-hover:scale-[1.03] transition-transform duration-700" />
@@ -150,8 +190,22 @@ function DesktopBentoGrid() {
         <div className="flex">
           <div className="flex-1 flex flex-col rounded-2xl overflow-hidden bg-white dark:bg-[#0e1422] border border-slate-200 dark:border-purple-500/10 shadow-lg shadow-slate-200/50 dark:shadow-black/20 group hover:scale-[1.02] transition-transform duration-300">
             <div className="p-6 pb-4">
-              <h3 className="font-display font-bold text-slate-900 dark:text-white text-lg md:text-xl mb-2 leading-tight">{features[2].title}</h3>
-              <p className="text-slate-500 dark:text-gray-400 text-xs md:text-sm leading-relaxed">{features[2].description}</p>
+              <h3 className="font-display font-bold text-slate-900 dark:text-white text-xl md:text-2xl mb-2 leading-tight">{features[2].title}</h3>
+              <p className="text-slate-600 dark:text-gray-400 text-sm md:text-base leading-relaxed mb-3">{features[2].description}</p>
+              <ul className="flex flex-col gap-2 pt-3 border-t border-slate-200 dark:border-white/5 mb-1 text-xs md:text-sm text-slate-600 dark:text-gray-300">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
+                  <span>Official WhatsApp Business API</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
+                  <span>Voice Broadcasting & Interactive IVR</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
+                  <span>Interactive USSD menus (*141# etc.)</span>
+                </li>
+              </ul>
             </div>
             <div className="relative w-full aspect-video md:flex-1 overflow-hidden bg-black/10 flex items-center justify-center">
               <video autoPlay muted loop playsInline className="w-full h-full object-cover select-none pointer-events-none group-hover:scale-[1.03] transition-transform duration-700">

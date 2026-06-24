@@ -51,10 +51,13 @@ export default function ResellerSection({ onOpenSignup }: { onOpenSignup: () => 
                 <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0 mt-0.5">
                   <UserPlus className="w-4.5 h-4.5 text-blue-500 dark:text-blue-400" />
                 </div>
-                <h3 className="font-display font-bold text-slate-900 dark:text-white text-sm lg:text-base leading-snug uppercase tracking-wide">
+                <h3 className="font-display font-bold text-slate-900 dark:text-white text-base lg:text-lg leading-snug uppercase tracking-wide">
                   Simple Reseller Onboarding
                 </h3>
               </div>
+              <p className="text-slate-600 dark:text-gray-400 text-xs lg:text-sm leading-relaxed">
+                Launch your white-label SMS business in minutes. Set up custom branding, portal domains, and system access without writing a line of code.
+              </p>
 
               <ul className="flex flex-col gap-2.5 mt-auto pt-3 border-t border-slate-200 dark:border-white/5">
                 {[
@@ -63,7 +66,7 @@ export default function ResellerSection({ onOpenSignup }: { onOpenSignup: () => 
                   'Dedicated reseller portal access.',
                   'Instant account setup.',
                 ].map((bullet) => (
-                  <li key={bullet} className="flex items-start gap-2.5 text-xs text-slate-600 dark:text-gray-300">
+                  <li key={bullet} className="flex items-start gap-2.5 text-xs lg:text-sm text-slate-600 dark:text-gray-300">
                     <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500 mt-0.5" />
                     <span>{bullet}</span>
                   </li>
@@ -77,25 +80,28 @@ export default function ResellerSection({ onOpenSignup }: { onOpenSignup: () => 
             className="flex flex-col md:flex-row rounded-2xl overflow-hidden border border-slate-200 dark:border-white/5 shadow-md bg-white dark:bg-[#282e3e] group transition-transform duration-300 hover:scale-[1.02] md:col-span-2"
           >
             {/* Text Content */}
-            <div className="p-6 flex flex-col gap-4 flex-1 justify-center">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                  <Briefcase className="w-4.5 h-4.5 text-emerald-500 dark:text-emerald-400" />
+            <div className="p-8 lg:p-10 flex flex-col gap-6 flex-1 justify-center">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                  <Briefcase className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
                 </div>
-                <h3 className="font-display font-bold text-slate-900 dark:text-white text-sm lg:text-base leading-snug uppercase tracking-wide">
+                <h3 className="font-display font-bold text-slate-900 dark:text-white text-xl md:text-2xl lg:text-3xl leading-snug uppercase tracking-wide">
                   White-Label Client Management
                 </h3>
               </div>
+              <p className="text-slate-600 dark:text-gray-300 text-sm md:text-base lg:text-lg leading-relaxed">
+                Manage your users, customize login layouts with your logo, set custom client margins, and monitor real-time credit purchases under your brand.
+              </p>
 
-              <ul className="flex flex-col gap-2.5 mt-4 pt-3 border-t border-slate-200 dark:border-white/5">
+              <ul className="flex flex-col gap-3.5 mt-3 pt-5 border-t border-slate-200 dark:border-white/5">
                 {[
                   'White-label customization with your brand.',
                   'Branded client login interface.',
                   'Manage client pricing and credits.',
                   'Integrated billing and reporting.',
                 ].map((bullet) => (
-                  <li key={bullet} className="flex items-start gap-2.5 text-xs text-slate-600 dark:text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500 mt-0.5" />
+                  <li key={bullet} className="flex items-start gap-3 text-sm lg:text-base text-slate-600 dark:text-gray-300">
+                    <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-500 mt-0.5" />
                     <span>{bullet}</span>
                   </li>
                 ))}
@@ -103,12 +109,29 @@ export default function ResellerSection({ onOpenSignup }: { onOpenSignup: () => 
             </div>
 
             {/* Visual Area */}
-            <div className="relative w-full md:w-1/2 aspect-[16/10] md:aspect-auto overflow-hidden bg-black/10 flex items-center justify-center shrink-0">
-              <img
-                src="/images/screennnn/Gemini_Generated_Image_z6efx3z6efx3z6ef (Edited 3).png"
-                alt="White-Label Client Management"
-                className="w-full h-full object-contain select-none pointer-events-none group-hover:scale-[1.02] transition-transform duration-500"
-              />
+            <div className="w-full md:w-1/2 flex flex-col justify-between p-6 bg-[#161a26]/40 dark:bg-black/10 shrink-0 border-l border-slate-200/50 dark:border-white/5">
+              <div className="px-2 mb-4">
+                <h4 className="text-sm font-extrabold text-slate-900 dark:text-emerald-400 uppercase tracking-wider mb-1.5">Custom Domain Setup</h4>
+                <p className="text-xs leading-relaxed text-slate-800 dark:text-gray-200 font-medium">
+                  Route to your own subdomain (e.g., sms.yourbrand.co.ke) with automatic SSL provisioning. 100% white-label system.
+                </p>
+              </div>
+              <div className="relative w-full aspect-[16/10] md:aspect-auto md:min-h-[160px] overflow-hidden flex items-center justify-center">
+                <img
+                  src="/images/screennnn/Gemini_Generated_Image_z6efx3z6efx3z6ef (Edited 3).png"
+                  alt="White-Label Client Management"
+                  className="w-full h-full object-contain select-none pointer-events-none group-hover:scale-[1.02] transition-transform duration-500"
+                />
+              </div>
+              <div className="px-2 mt-4 flex flex-col gap-2 items-start">
+                <h4 className="text-sm font-extrabold text-slate-900 dark:text-blue-400 uppercase tracking-wider">Client Control Panel</h4>
+                <p className="text-xs leading-relaxed text-slate-800 dark:text-gray-200 font-medium">
+                  Control reseller margin rates, customize user invoice headers, and toggle features dynamically from your central administrator panel.
+                </p>
+                <button onClick={onOpenSignup} className="h-8 px-4 rounded-full text-xs font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer hover:scale-[1.02] active:scale-95 transition-all duration-300 flex items-center justify-center border border-transparent">
+                  Launch Demo Portal
+                </button>
+              </div>
             </div>
           </div>
 
@@ -117,34 +140,54 @@ export default function ResellerSection({ onOpenSignup }: { onOpenSignup: () => 
             className="flex flex-col md:flex-row rounded-2xl overflow-hidden border border-slate-200 dark:border-white/5 shadow-md bg-white dark:bg-[#192134] group transition-transform duration-300 hover:scale-[1.02] md:col-span-3"
           >
             {/* Visual Area */}
-            <div className="relative w-full md:w-1/2 aspect-[16/10] md:aspect-auto overflow-hidden bg-black/10 flex items-center justify-center shrink-0">
-              <img
-                src="/images/screennnn/Gemini_Generated_Image_z6efx3z6efx3z6ef (Edited 2).png"
-                alt="Wholesale Pricing"
-                className="w-full h-full object-contain select-none pointer-events-none group-hover:scale-[1.02] transition-transform duration-500"
-              />
+            <div className="w-full md:w-1/2 flex flex-col justify-between p-6 bg-[#161a26]/40 dark:bg-black/10 shrink-0 border-r border-slate-200/50 dark:border-white/5">
+              <div className="px-2 mb-4">
+                <h4 className="text-sm font-extrabold text-slate-900 dark:text-amber-400 uppercase tracking-wider mb-1.5 font-display">Wholesale Core Access</h4>
+                <p className="text-xs leading-relaxed text-slate-800 dark:text-gray-200 font-medium">
+                  Connect to local Safaricom, Airtel & Telkom direct trunks. Credits bought in bulk never expire.
+                </p>
+              </div>
+              <div className="relative w-full aspect-[16/10] md:aspect-auto md:min-h-[160px] overflow-hidden flex items-center justify-center">
+                <img
+                  src="/images/screennnn/Gemini_Generated_Image_z6efx3z6efx3z6ef (Edited 2).png"
+                  alt="Wholesale Pricing"
+                  className="w-full h-full object-contain select-none pointer-events-none group-hover:scale-[1.02] transition-transform duration-500"
+                />
+              </div>
+              <div className="px-2 mt-4 flex flex-col gap-2 items-start">
+                <h4 className="text-sm font-extrabold text-slate-900 dark:text-emerald-400 uppercase tracking-wider font-display">Instant Wallet Topup</h4>
+                <p className="text-xs leading-relaxed text-slate-800 dark:text-gray-200 font-medium">
+                  Fund credit wallets instantly using Lipa Na M-Pesa Till or Paybill with real-time balance calculations.
+                </p>
+                <button onClick={onOpenSignup} className="h-8 px-4 rounded-full text-xs font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer hover:scale-[1.02] active:scale-95 transition-all duration-300 flex items-center justify-center border border-transparent">
+                  Get Reseller Rates
+                </button>
+              </div>
             </div>
 
             {/* Text Content */}
-            <div className="p-6 flex flex-col gap-4 flex-1 justify-center">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                  <DollarSign className="w-4.5 h-4.5 text-amber-500 dark:text-amber-400" />
+            <div className="p-8 lg:p-10 flex flex-col gap-6 flex-1 justify-center">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                  <DollarSign className="w-5 h-5 text-amber-500 dark:text-amber-400" />
                 </div>
-                <h3 className="font-display font-bold text-slate-900 dark:text-white text-sm lg:text-base leading-snug uppercase tracking-wide">
+                <h3 className="font-display font-bold text-slate-900 dark:text-white text-xl md:text-2xl lg:text-3xl leading-snug uppercase tracking-wide">
                   Wholesale Bulk SMS Pricing
                 </h3>
               </div>
+              <p className="text-slate-600 dark:text-gray-300 text-sm md:text-base lg:text-lg leading-relaxed">
+                Unlock high profit margins with direct wholesale credit bundles. Pay instantly via Lipa Na M-Pesa or bank transfers, and set your own rates.
+              </p>
 
-              <ul className="flex flex-col gap-2.5 mt-4 pt-3 border-t border-slate-200 dark:border-white/5">
+              <ul className="flex flex-col gap-3.5 mt-3 pt-5 border-t border-slate-200 dark:border-white/5">
                 {[
                   'Deeply discounted wholesale rates.',
                   'Volume-based tiered pricing model.',
                   'Purchase credits in bulk.',
                   'Real-time credit balance monitoring.',
                 ].map((bullet) => (
-                  <li key={bullet} className="flex items-start gap-2.5 text-xs text-slate-600 dark:text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500 mt-0.5" />
+                  <li key={bullet} className="flex items-start gap-3 text-sm lg:text-base text-slate-600 dark:text-gray-300">
+                    <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-500 mt-0.5" />
                     <span>{bullet}</span>
                   </li>
                 ))}
