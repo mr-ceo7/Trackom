@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import FeatureShowcase from './components/FeatureShowcase';
@@ -23,6 +23,28 @@ import { Shield, CheckCircle2 } from 'lucide-react';
 
 export default function App() {
   const [isSignupOpen, setIsSignupOpen] = useState(false);
+  const [isAtBottom, setIsAtBottom] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const threshold = 30; // px threshold from bottom
+      const scrolledToBottom =
+        window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - threshold;
+      setIsAtBottom(scrolledToBottom);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    // Run initially
+    handleScroll();
+
+    // Re-check after a brief timeout to ensure document layout has fully computed
+    const timer = setTimeout(handleScroll, 100);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(timer);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen text-slate-800 bg-[#F3F4FD] dark:text-gray-200 dark:bg-surface-dark selection:bg-brand-primary/30 transition-colors duration-300 relative flex flex-col justify-between font-sans">
@@ -31,7 +53,10 @@ export default function App() {
       <ParticleCanvas />
 
       {/* VIEWPORT GLOW BORDER EFFECT */}
-      <div className="fixed inset-0 pointer-events-none z-[9999] viewport-glow-border" />
+      <div 
+        className="fixed inset-x-0 top-0 pointer-events-none z-[9999] viewport-glow-border transition-[bottom] duration-500 ease-out" 
+        style={{ bottom: isAtBottom ? '0px' : '-80px' }}
+      />
 
       {/* DOT GRID OVERLAY */}
       <div className="absolute inset-0 dot-grid pointer-events-none z-0" />

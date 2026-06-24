@@ -162,29 +162,25 @@ export default function Hero({ onOpenSignup }: HeroProps) {
                 <img
                   src="/Gemini_Generated_Image_8ab5bh8ab5bh8ab5.png"
                   alt="Trackom - The Ultimate Bulk SMS Platform"
-                  className="max-w-full h-auto max-h-[180px] lg:max-h-[240px] object-contain -ml-4"
+                  className="max-w-full h-auto max-h-[180px] lg:max-h-[240px] object-contain ml-0"
                 />
 
                 {/* CTA BUTTONS SCREEN 1 */}
                 <div className="flex flex-col sm:flex-row items-center gap-4 mt-8 w-full sm:w-auto font-sans">
                   <button
                     onClick={onOpenSignup}
-                    className="w-full sm:w-auto px-8 py-3.5 rounded-full text-sm font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none flex items-center justify-center gap-2.5"
+                    className="w-full sm:w-auto h-12 px-8 rounded-full text-sm font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none flex items-center justify-center gap-2 border border-transparent"
                   >
                     <span>Get Started Free</span>
                     <Rocket className="w-4 h-4" />
                   </button>
 
-                  <a
-                    href="#api-docs"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      document.getElementById('api-docs')?.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                    className="w-full sm:w-auto px-8 py-3.5 rounded-full text-sm font-semibold text-gray-300 hover:text-white bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 hover:scale-[1.01] active:scale-98 transition-all duration-300 flex items-center justify-center gap-2.5 focus:outline-none backdrop-blur-sm shadow-sm"
+                  <button
+                    onClick={onOpenSignup}
+                    className="w-full sm:w-auto h-12 px-8 rounded-full text-sm font-semibold text-gray-300 hover:text-white bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 hover:scale-[1.01] active:scale-98 transition-all duration-300 flex items-center justify-center gap-2 focus:outline-none backdrop-blur-sm shadow-sm"
                   >
                     <span>Book a Demo</span>
-                  </a>
+                  </button>
                 </div>
               </motion.div>
 
@@ -214,7 +210,7 @@ export default function Hero({ onOpenSignup }: HeroProps) {
                 <div className="flex flex-col sm:flex-row items-center gap-4 mt-8 w-full sm:w-auto font-sans">
                   <button
                     onClick={onOpenSignup}
-                    className="w-full sm:w-auto px-8 py-3.5 rounded-full text-sm font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none flex items-center justify-center gap-2.5"
+                    className="w-full sm:w-auto h-12 px-8 rounded-full text-sm font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none flex items-center justify-center gap-2 border border-transparent"
                   >
                     <span>Start Sending — It's Free</span>
                     <Rocket className="w-4 h-4" />
@@ -226,7 +222,7 @@ export default function Hero({ onOpenSignup }: HeroProps) {
                       e.preventDefault();
                       document.getElementById('api-docs')?.scrollIntoView({ behavior: 'smooth' });
                     }}
-                    className="w-full sm:w-auto px-8 py-3.5 rounded-full text-sm font-semibold text-gray-300 hover:text-white bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 hover:scale-[1.01] active:scale-98 transition-all duration-300 flex items-center justify-center gap-2.5 focus:outline-none backdrop-blur-sm shadow-sm"
+                    className="w-full sm:w-auto h-12 px-8 rounded-full text-sm font-semibold text-gray-300 hover:text-white bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 hover:scale-[1.01] active:scale-98 transition-all duration-300 flex items-center justify-center gap-2 focus:outline-none backdrop-blur-sm shadow-sm"
                   >
                     <span>See How It Works</span>
                   </a>
