@@ -19,9 +19,9 @@
   --color-brand-emerald: #10B981;
 
   /* Surfaces */
-  --color-surface-dark: #0A0A0F;
-  --color-surface-card: #111118;
-  --color-surface-elevated: #1A1A24;
+  --color-surface-dark: #1b1c22;
+  --color-surface-card: #23252f;
+  --color-surface-elevated: #282a36;
   --color-surface-border: rgba(255, 255, 255, 0.08);
 
   /* Legacy compatibility aliases */
@@ -40,7 +40,7 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #0A0A0F;
+  background-color: var(--color-surface-dark);
   color: #F8FAFC;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
@@ -660,12 +660,12 @@ body {
 }
 
 .dark .clay-sidebar {
-  background: #0c0c14 !important;
+  background: var(--color-surface-card) !important;
   border: none !important;
   box-shadow:
-    6px 0 20px rgba(0, 0, 0, 0.65),
-    inset -3px 0 8px rgba(0, 0, 0, 0.55),
-    inset 1px 0 3px rgba(255, 255, 255, 0.04);
+    6px 0 20px rgba(0, 0, 0, 0.55),
+    inset -3px 0 8px rgba(0, 0, 0, 0.45),
+    inset 1px 0 3px rgba(255, 255, 255, 0.03);
 }
 
 /* ---------- Clay Topbar ---------- */
@@ -678,13 +678,10 @@ body {
 }
 
 .dark .clay-topbar {
-  background: rgba(12, 12, 20, 0.85) !important;
+  background: transparent !important;
   border: none !important;
-  box-shadow:
-    0 4px 20px rgba(0, 0, 0, 0.55),
-    inset 0 -2px 6px rgba(0, 0, 0, 0.45),
-    inset 0 1px 3px rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(16px);
+  box-shadow: none !important;
+  backdrop-filter: none !important;
 }
 
 /* ---------- Clay Nav Item (sidebar links) ---------- */

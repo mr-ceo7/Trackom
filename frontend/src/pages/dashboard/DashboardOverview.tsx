@@ -100,8 +100,8 @@ export default function DashboardOverview() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* SPEEDOMETER: Throughput Speed */}
-        <div className="clay-card rounded-3xl p-6 flex flex-col justify-between items-center text-center relative overflow-hidden dark:border-white/10 h-76">
-          <div className="w-full flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-3">
+        <div className="clay-card rounded-3xl p-6 flex flex-col justify-between items-center text-center relative overflow-hidden h-76">
+          <div className="w-full flex items-center justify-between pb-3">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
               <Cpu className="w-3.5 h-3.5 text-brand-primary" /> Live Gateway Speed
             </span>
@@ -132,8 +132,8 @@ export default function DashboardOverview() {
         </div>
 
         {/* CARRIER split neon distribution */}
-        <div className="clay-card clay-card-hover rounded-3xl p-6 flex flex-col justify-between dark:border-white/10 h-76">
-          <div className="flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-3">
+        <div className="clay-card clay-card-hover rounded-3xl p-6 flex flex-col justify-between h-76">
+          <div className="flex items-center justify-between pb-3">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
               <Server className="w-3.5 h-3.5 text-brand-accent" /> Traffic Carrier Split
             </span>
@@ -148,8 +148,8 @@ export default function DashboardOverview() {
                 </span>
                 <span className="font-mono text-slate-900 dark:text-white">72%</span>
               </div>
-              <div className="w-full h-2 clay-inset dark:bg-white/5 rounded-full overflow-hidden">
-                <div className="h-full bg-brand-emerald rounded-full" style={{ width: '72%' }} />
+              <div className="w-full h-3.5 clay-inset rounded-full overflow-hidden">
+                <div className="h-full bg-brand-emerald rounded-full animate-pulse" style={{ width: '72%' }} />
               </div>
             </div>
 
@@ -161,7 +161,7 @@ export default function DashboardOverview() {
                 </span>
                 <span className="font-mono text-slate-900 dark:text-white">20%</span>
               </div>
-              <div className="w-full h-2 clay-inset dark:bg-white/5 rounded-full overflow-hidden">
+              <div className="w-full h-3.5 clay-inset rounded-full overflow-hidden">
                 <div className="h-full bg-red-500 rounded-full" style={{ width: '20%' }} />
               </div>
             </div>
@@ -174,7 +174,7 @@ export default function DashboardOverview() {
                 </span>
                 <span className="font-mono text-slate-900 dark:text-white">8%</span>
               </div>
-              <div className="w-full h-2 clay-inset dark:bg-white/5 rounded-full overflow-hidden">
+              <div className="w-full h-3.5 clay-inset rounded-full overflow-hidden">
                 <div className="h-full bg-cyan-500 rounded-full" style={{ width: '8%' }} />
               </div>
             </div>
@@ -182,8 +182,8 @@ export default function DashboardOverview() {
         </div>
 
         {/* LATENCY MONITOR: Link stats */}
-        <div className="clay-card clay-card-hover rounded-3xl p-6 flex flex-col justify-between dark:border-white/10 h-76">
-          <div className="flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-3">
+        <div className="clay-card clay-card-hover rounded-3xl p-6 flex flex-col justify-between h-76">
+          <div className="flex items-center justify-between pb-3">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
               <Wifi className="w-3.5 h-3.5 text-brand-emerald" /> Link Latency Monitor
             </span>
@@ -195,14 +195,14 @@ export default function DashboardOverview() {
               { carrier: 'Airtel API Node', ping: airtelPing, status: 'Healthy', color: 'text-brand-emerald' },
               { carrier: 'Telkom SMS SMPP Bind', ping: telkomPing, status: 'Stable', color: 'text-brand-accent' },
             ].map((node) => (
-              <div key={node.carrier} className="flex items-center justify-between p-2 rounded-2xl clay-inset dark:bg-white/[0.02] dark:border-white/5">
+              <div key={node.carrier} className="flex items-center justify-between p-3.5 rounded-2xl clay-inset">
                 <div>
                   <div className="text-xs font-bold text-slate-800 dark:text-gray-200">{node.carrier}</div>
                   <div className="text-[10px] text-slate-400 font-semibold font-mono mt-0.5">{node.ping}ms latency</div>
                 </div>
                 <div className="text-right">
                   <span className={`inline-flex items-center gap-1 text-[10px] font-bold ${node.color} uppercase tracking-wider`}>
-                    <span className="w-1 h-1 bg-current rounded-full" /> {node.status}
+                    <span className="w-1.5 h-1.5 bg-current rounded-full animate-pulse" /> {node.status}
                   </span>
                 </div>
               </div>
@@ -213,7 +213,7 @@ export default function DashboardOverview() {
       </div>
 
       {/* Action panel */}
-      <div className="clay-card rounded-3xl p-8 text-center dark:border-white/10">
+      <div className="clay-card rounded-3xl p-8 text-center">
         <div className="text-4xl mb-3">🚀</div>
         <h3 className="font-display font-semibold text-lg text-slate-900 dark:text-white">Ready to send your first message?</h3>
         <p className="text-sm text-slate-500 dark:text-gray-400 mt-1 mb-4 max-w-md mx-auto">
