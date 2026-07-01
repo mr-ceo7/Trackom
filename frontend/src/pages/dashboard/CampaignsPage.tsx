@@ -297,13 +297,13 @@ export default function CampaignsPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Total Campaigns', value: campaigns.length, color: 'text-brand-primary', bg: 'bg-brand-primary/10', icon: Megaphone },
-          { label: 'Messages Sent', value: totalSent.toLocaleString(), color: 'text-brand-emerald', bg: 'bg-brand-emerald/10', icon: Send },
-          { label: 'Delivery Rate', value: `${deliveryRate}%`, color: 'text-blue-500', bg: 'bg-blue-500/10', icon: BarChart3 },
-          { label: 'Scheduled / Queued', value: scheduledCount + campaigns.filter(c => c.status === 'queued' || c.status === 'sending').length, color: 'text-amber-500', bg: 'bg-amber-500/10', icon: Clock },
+          { label: 'Total Campaigns', value: campaigns.length, color: 'text-brand-primary', bg: 'clay-icon-raised', glow: 'drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]', icon: Megaphone },
+          { label: 'Messages Sent', value: totalSent.toLocaleString(), color: 'text-brand-emerald', bg: 'clay-icon-raised', glow: 'drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]', icon: Send },
+          { label: 'Delivery Rate', value: `${deliveryRate}%`, color: 'text-blue-500', bg: 'clay-icon-raised', glow: 'drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]', icon: BarChart3 },
+          { label: 'Scheduled / Queued', value: scheduledCount + campaigns.filter(c => c.status === 'queued' || c.status === 'sending').length, color: 'text-amber-500', bg: 'clay-icon-raised', glow: 'drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]', icon: Clock },
         ].map(s => (
           <div key={s.label} className="clay-stat rounded-3xl p-4 flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-2xl ${s.bg} flex items-center justify-center shrink-0`}><s.icon className={`w-5 h-5 ${s.color}`} /></div>
+            <div className={`w-10 h-10 rounded-2xl ${s.bg} flex items-center justify-center shrink-0`}><s.icon className={`w-5 h-5 ${s.color} ${s.glow}`} /></div>
             <div><div className="text-xl font-bold text-slate-900 dark:text-white font-mono">{s.value}</div><div className="text-[11px] text-slate-500 dark:text-gray-400 font-medium">{s.label}</div></div>
           </div>
         ))}

@@ -99,13 +99,13 @@ export default function ReportsPage() {
       {/* KPI cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Total Sent', value: stats.total_sent.toLocaleString(), icon: MessageSquare, color: 'text-brand-primary', bg: 'bg-brand-primary/10' },
-          { label: 'Messages Today', value: stats.sent_today.toLocaleString(), icon: CheckCircle2, color: 'text-brand-emerald', bg: 'bg-brand-emerald/10' },
-          { label: 'Carrier Delivery', value: '99.2%', icon: Clock, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-          { label: 'Credit Rate', value: `${user?.credit_rate?.toFixed(2) || '1.00'} cr/SMS`, icon: Coins, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+          { label: 'Total Sent', value: stats.total_sent.toLocaleString(), icon: MessageSquare, color: 'text-brand-primary', bg: 'clay-icon-raised', glow: 'drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]' },
+          { label: 'Messages Today', value: stats.sent_today.toLocaleString(), icon: CheckCircle2, color: 'text-brand-emerald', bg: 'clay-icon-raised', glow: 'drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]' },
+          { label: 'Carrier Delivery', value: '99.2%', icon: Clock, color: 'text-amber-500', bg: 'clay-icon-raised', glow: 'drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]' },
+          { label: 'Credit Rate', value: `${user?.credit_rate?.toFixed(2) || '1.00'} cr/SMS`, icon: Coins, color: 'text-purple-500', bg: 'clay-icon-raised', glow: 'drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]' },
         ].map(s => (
-          <div key={s.label} className="clay-stat rounded-3xl p-5 dark:border-white/10 flex items-center gap-4">
-            <div className={`w-11 h-11 rounded-2xl ${s.bg} flex items-center justify-center shrink-0`}><s.icon className={`w-5 h-5 ${s.color}`} /></div>
+          <div key={s.label} className="clay-stat rounded-3xl p-5 flex items-center gap-4">
+            <div className={`w-11 h-11 rounded-2xl ${s.bg} flex items-center justify-center shrink-0`}><s.icon className={`w-5 h-5 ${s.color} ${s.glow}`} /></div>
             <div className="space-y-0.5">
               <div className="text-2xl font-bold text-slate-900 dark:text-white font-mono leading-none">{s.value}</div>
               <div className="text-[11px] text-slate-500 dark:text-gray-400 font-medium">{s.label}</div>

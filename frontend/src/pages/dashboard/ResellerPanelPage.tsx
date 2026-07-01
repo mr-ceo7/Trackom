@@ -161,12 +161,12 @@ export default function ResellerPanelPage() {
           {/* KPI Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
-              { label: 'My Pool Balance', value: `${stats?.reseller_balance?.toLocaleString() || 0} cr`, desc: 'Available for client allocations', icon: Coins, color: 'text-brand-primary', bg: 'bg-brand-primary/10' },
-              { label: 'My Sub-accounts', value: stats?.total_clients || 0, desc: 'Registered tenant integrations', icon: Users, color: 'text-brand-accent', bg: 'bg-brand-accent/10' },
-              { label: 'Client Messages Sent', value: stats?.total_sms_sent?.toLocaleString() || 0, desc: 'Aggregated reseller dispatches', icon: Megaphone, color: 'text-brand-emerald', bg: 'bg-brand-emerald/10' },
+              { label: 'My Pool Balance', value: `${stats?.reseller_balance?.toLocaleString() || 0} cr`, desc: 'Available for client allocations', icon: Coins, color: 'text-brand-primary', bg: 'clay-icon-raised', glow: 'drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]' },
+              { label: 'My Sub-accounts', value: stats?.total_clients || 0, desc: 'Registered tenant integrations', icon: Users, color: 'text-brand-accent', bg: 'clay-icon-raised', glow: 'drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]' },
+              { label: 'Client Messages Sent', value: stats?.total_sms_sent?.toLocaleString() || 0, desc: 'Aggregated reseller dispatches', icon: Megaphone, color: 'text-brand-emerald', bg: 'clay-icon-raised', glow: 'drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]' },
             ].map((card, idx) => (
               <div key={idx} className="clay-stat rounded-3xl p-5 flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-2xl ${card.bg} flex items-center justify-center shrink-0`}><card.icon className={`w-6 h-6 ${card.color}`} /></div>
+                <div className={`w-12 h-12 rounded-2xl ${card.bg} flex items-center justify-center shrink-0`}><card.icon className={`w-6 h-6 ${card.color} ${card.glow}`} /></div>
                 <div className="space-y-0.5 text-left">
                   <div className="text-[10px] text-slate-400 dark:text-gray-500 font-semibold uppercase tracking-wider">{card.label}</div>
                   <div className="text-2xl font-black text-slate-900 dark:text-white font-mono leading-none">{card.value}</div>

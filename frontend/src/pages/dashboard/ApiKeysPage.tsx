@@ -90,7 +90,7 @@ export default function ApiKeysPage() {
             <div key={k.id} className="clay-card clay-card-hover rounded-3xl p-5 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 flex items-center justify-center"><Key className="w-5 h-5 text-brand-primary" /></div>
+                  <div className="w-10 h-10 rounded-2xl clay-icon-raised flex items-center justify-center"><Key className="w-5 h-5 text-brand-primary drop-shadow-[0_0_6px_rgba(99,102,241,0.5)]" /></div>
                   <div>
                     <h3 className="text-sm font-semibold text-slate-900 dark:text-white">{k.name}</h3>
                     <div className="text-[11px] text-slate-400 dark:text-gray-500 font-mono mt-0.5">Created {new Date(k.created_at).toLocaleDateString()}</div>

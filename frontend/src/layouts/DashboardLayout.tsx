@@ -127,14 +127,16 @@ export default function DashboardLayout() {
               to={item.to}
               end={item.end}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-all duration-200 ${
+                `flex items-center gap-3 px-3 py-2 rounded-2xl text-sm font-medium transition-all duration-200 group ${
                   isActive
-                    ? 'clay-nav-active text-brand-primary dark:text-brand-primary-light'
+                    ? 'clay-nav-active text-brand-primary dark:text-brand-primary-light font-semibold'
                     : 'text-slate-600 dark:text-gray-400 hover:bg-slate-200/40 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white'
                 }`
               }
             >
-              <item.icon className="w-[18px] h-[18px]" />
+              <div className="w-8 h-8 rounded-xl clay-icon-raised flex items-center justify-center shrink-0">
+                <item.icon className="w-4 h-4 transition-all duration-200" />
+              </div>
               <span>{item.label}</span>
               {item.label === 'Compose SMS' && (
                 <span className="ml-auto w-2 h-2 rounded-full bg-brand-emerald animate-pulse" />
@@ -181,8 +183,11 @@ export default function DashboardLayout() {
               </div>
               <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
                 {currentNavItems.map((item) => (
-                  <NavLink key={item.to} to={item.to} end={item.end} onClick={() => setSidebarOpen(false)} className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-all ${isActive ? 'clay-nav-active text-brand-primary' : 'text-slate-600 dark:text-gray-400 hover:bg-slate-200/40 dark:hover:bg-white/5'}`}>
-                    <item.icon className="w-[18px] h-[18px]" /><span>{item.label}</span>
+                  <NavLink key={item.to} to={item.to} end={item.end} onClick={() => setSidebarOpen(false)} className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-2xl text-sm font-medium transition-all group ${isActive ? 'clay-nav-active text-brand-primary font-semibold' : 'text-slate-600 dark:text-gray-400 hover:bg-slate-200/40 dark:hover:bg-white/5'}`}>
+                    <div className="w-8 h-8 rounded-xl clay-icon-raised flex items-center justify-center shrink-0">
+                      <item.icon className="w-4 h-4" />
+                    </div>
+                    <span>{item.label}</span>
                   </NavLink>
                 ))}
               </nav>
@@ -277,8 +282,8 @@ export default function DashboardLayout() {
                   const colorClass = typeColors[n.type] || 'text-slate-500 bg-slate-100';
                   return (
                     <div key={n.id} onClick={() => handleMarkRead(n.id)} className={`p-4 flex gap-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors relative ${!n.is_read ? 'bg-brand-primary/5' : ''}`}>
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${colorClass}`}>
-                        <Icon className="w-4 h-4" />
+                      <div className="w-8 h-8 rounded-lg clay-icon-raised flex items-center justify-center shrink-0">
+                        <Icon className={`w-4 h-4 ${colorClass.split(' ')[0]} ${n.type === 'success' ? 'drop-shadow-[0_0_5px_rgba(16,185,129,0.4)]' : n.type === 'error' ? 'drop-shadow-[0_0_5px_rgba(239,68,68,0.4)]' : n.type === 'warning' ? 'drop-shadow-[0_0_5px_rgba(245,158,11,0.4)]' : 'drop-shadow-[0_0_5px_rgba(59,130,246,0.4)]'}`} />
                       </div>
                       <div className="space-y-1 flex-1">
                         <div className="text-xs font-semibold text-slate-950 dark:text-white flex items-center justify-between">

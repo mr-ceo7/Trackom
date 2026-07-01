@@ -238,14 +238,14 @@ export default function AdminPanelPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: 'Total Clients', value: stats?.total_users || 0, desc: `${stats?.active_users || 0} active SaaS tenants`, icon: Users, color: 'text-brand-primary', bg: 'bg-brand-primary/10' },
-            { label: 'Total Campaigns', value: stats?.total_campaigns || 0, desc: 'Dispatches initialized', icon: Megaphone, color: 'text-brand-accent', bg: 'bg-brand-accent/10' },
-            { label: 'Overall SMS Sent', value: stats?.total_sms_sent?.toLocaleString() || 0, desc: `Success Rate: ${stats?.success_rate || 100}%`, icon: Zap, color: 'text-brand-emerald', bg: 'bg-brand-emerald/10' },
-            { label: 'Gateway API Pool', value: `${stats?.system_balance?.toLocaleString() || 0} cr`, desc: 'Global wholesale credits', icon: Coins, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+            { label: 'Total Clients', value: stats?.total_users || 0, desc: `${stats?.active_users || 0} active SaaS tenants`, icon: Users, color: 'text-brand-primary', bg: 'clay-icon-raised', glow: 'drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]' },
+            { label: 'Total Campaigns', value: stats?.total_campaigns || 0, desc: 'Dispatches initialized', icon: Megaphone, color: 'text-brand-accent', bg: 'clay-icon-raised', glow: 'drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]' },
+            { label: 'Overall SMS Sent', value: stats?.total_sms_sent?.toLocaleString() || 0, desc: `Success Rate: ${stats?.success_rate || 100}%`, icon: Zap, color: 'text-brand-emerald', bg: 'clay-icon-raised', glow: 'drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]' },
+            { label: 'Gateway API Pool', value: `${stats?.system_balance?.toLocaleString() || 0} cr`, desc: 'Global wholesale credits', icon: Coins, color: 'text-amber-500', bg: 'clay-icon-raised', glow: 'drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]' },
           ].map((card, idx) => (
             <div key={idx} className="clay-stat rounded-3xl p-5 flex items-center gap-4">
               <div className={`w-12 h-12 rounded-2xl ${card.bg} flex items-center justify-center shrink-0`}>
-                <card.icon className={`w-6 h-6 ${card.color}`} />
+                <card.icon className={`w-6 h-6 ${card.color} ${card.glow}`} />
               </div>
               <div className="space-y-0.5 text-left">
                 <div className="text-[10px] text-slate-400 dark:text-gray-500 font-semibold uppercase tracking-wider">{card.label}</div>

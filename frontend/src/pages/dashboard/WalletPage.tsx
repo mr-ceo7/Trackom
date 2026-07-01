@@ -163,8 +163,8 @@ export default function WalletPage() {
             {transactions.map(tx => (
               <div key={tx.id} className="clay-row-hover px-5 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${tx.type === 'topup' ? 'bg-brand-emerald/10' : tx.type === 'bonus' ? 'bg-amber-500/10' : 'bg-red-500/10'}`}>
-                    {tx.type === 'topup' ? <ArrowDownRight className="w-4 h-4 text-brand-emerald" /> : tx.type === 'bonus' ? <Wallet className="w-4 h-4 text-amber-500" /> : <ArrowUpRight className="w-4 h-4 text-red-400" />}
+                  <div className="w-9 h-9 rounded-xl clay-icon-raised flex items-center justify-center shrink-0">
+                    {tx.type === 'topup' ? <ArrowDownRight className="w-4 h-4 text-brand-emerald drop-shadow-[0_0_6px_rgba(16,185,129,0.5)]" /> : tx.type === 'bonus' ? <Wallet className="w-4 h-4 text-amber-500 drop-shadow-[0_0_6px_rgba(245,158,11,0.5)]" /> : <ArrowUpRight className="w-4 h-4 text-red-400 drop-shadow-[0_0_6px_rgba(248,113,113,0.5)]" />}
                   </div>
                   <div>
                     <div className="text-sm font-medium text-slate-900 dark:text-white">{tx.description || tx.type.replace('_', ' ')}</div>
@@ -291,8 +291,8 @@ export default function WalletPage() {
 
               {stkStep === 'success' && (
                 <div className="flex flex-col items-center justify-center py-10 space-y-6 text-center">
-                  <div className="w-16 h-16 rounded-full bg-brand-emerald/10 flex items-center justify-center border border-brand-emerald/20 text-brand-emerald animate-bounce">
-                    <CheckCircle2 className="w-10 h-10" />
+                  <div className="w-16 h-16 rounded-full clay-icon-raised flex items-center justify-center text-brand-emerald animate-bounce">
+                    <CheckCircle2 className="w-10 h-10 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
                   </div>
                   <div className="space-y-1">
                     <h4 className="font-bold text-base text-white">Payment Received!</h4>
@@ -311,8 +311,8 @@ export default function WalletPage() {
 
               {stkStep === 'error' && (
                 <div className="flex flex-col items-center justify-center py-10 space-y-6 text-center">
-                  <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20 text-red-500">
-                    <ShieldAlert className="w-10 h-10" />
+                  <div className="w-16 h-16 rounded-full clay-icon-raised flex items-center justify-center text-red-500">
+                    <ShieldAlert className="w-10 h-10 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
                   </div>
                   <div className="space-y-1">
                     <h4 className="font-bold text-base text-white">Transaction Failed</h4>
