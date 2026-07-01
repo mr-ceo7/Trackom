@@ -16,6 +16,7 @@ class ContactGroupResponse(BaseModel):
     name: str
     description: Optional[str]
     created_at: datetime
+    contacts_count: int = 0
     model_config = {"from_attributes": True}
 
 

@@ -20,6 +20,10 @@ class ApiKey(Base):
     key_prefix: Mapped[str] = mapped_column(String(8), nullable=False)  # First 8 chars shown
     hashed_key: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    scope: Mapped[str] = mapped_column(String(50), default="full_access", nullable=False)
+    rate_limit: Mapped[int] = mapped_column(Integer, default=60, nullable=False)
+    ip_whitelist: Mapped[str] = mapped_column(String(255), nullable=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     usage_count: Mapped[int] = mapped_column(Integer, default=0)
     last_used_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)

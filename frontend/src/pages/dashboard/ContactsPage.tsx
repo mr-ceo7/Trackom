@@ -24,10 +24,12 @@ interface Group {
   name: string;
   description: string | null;
   created_at: string;
+  contacts_count: number;
 }
 
 export default function ContactsPage() {
   const [activeTab, setActiveTab] = useState<'contacts' | 'groups'>('contacts');
+  const [filterGroupId, setFilterGroupId] = useState('');
   const [search, setSearch] = useState('');
   
   // Contacts states
@@ -45,7 +47,7 @@ export default function ContactsPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [search]);
+  }, [search, filterGroupId]);
 
   // Groups states
   const [groups, setGroups] = useState<Group[]>([]);
@@ -58,6 +60,8 @@ export default function ContactsPage() {
   // CSV Import states
   const [showImport, setShowImport] = useState(false);
   const [importGroupId, setImportGroupId] = useState('');
+  const [inlineGroupName, setInlineGroupName] = useState('');
+  const [inlineGroupDesc, setInlineGroupDesc] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -80,11 +84,11 @@ export default function ContactsPage() {
   const [bulkError, setBulkError] = useState<string | null>(null);
   const [bulkSuccess, setBulkSuccess] = useState<string | null>(null);
 
-  // Clear selection on tab, search, or page navigation
+  // Clear selection on tab, search, page navigation, or filter change
   useEffect(() => {
     setSelectedIds([]);
     setSelectAllTotal(false);
-  }, [activeTab, search, page]);
+  }, [activeTab, search, page, filterGroupId]);
 
   // Auto-scroll terminal logs to bottom on update
   useEffect(() => {
@@ -100,7 +104,8 @@ export default function ContactsPage() {
         params: {
           page,
           limit,
-          ...(search ? { search } : {})
+          ...(search ? { search } : {}),
+          ...(filterGroupId ? { group_id: filterGroupId } : {})
         } 
       });
       setContacts(resp.data);
@@ -112,7 +117,7 @@ export default function ContactsPage() {
       }
     } catch { /* noop */ }
     finally { setLoadingContacts(false); }
-  }, [page, limit, search]);
+  }, [page, limit, search, filterGroupId]);
 
   const fetchGroups = useCallback(async () => {
     setLoadingGroups(true);
@@ -323,6 +328,16 @@ export default function ContactsPage() {
   };
 
   // CSV Import Actions
+  const handleCloseImport = () => {
+    setShowImport(false);
+    setImportGroupId('');
+    setInlineGroupName('');
+    setInlineGroupDesc('');
+    setImportResult(null);
+    setSelectedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
@@ -342,10 +357,34 @@ export default function ContactsPage() {
       '📂 [FILE] Reading CSV upload buffer...',
     ]);
 
+    let targetGroupId = importGroupId;
+
+    if (importGroupId === 'create_new_group') {
+      if (!inlineGroupName.trim()) {
+        setImportResult({ type: 'error', text: 'New group name is required.' });
+        setImporting(false);
+        return;
+      }
+      try {
+        setTerminalLogs(prev => [...prev, `📁 Creating new contact group "${inlineGroupName}"...`]);
+        const groupResp = await api.post('/contacts/groups', {
+          name: inlineGroupName,
+          description: inlineGroupDesc || null
+        });
+        targetGroupId = groupResp.data.id;
+        setTerminalLogs(prev => [...prev, `✅ Group created successfully (ID: ${targetGroupId})`]);
+        await fetchGroups(); // Refresh background list
+      } catch (err: any) {
+        setImporting(false);
+        setImportResult({ type: 'error', text: `Failed to create group: ${err.response?.data?.detail || err.message}` });
+        return;
+      }
+    }
+
     const formData = new FormData();
     formData.append('file', selectedFile);
-    if (importGroupId) {
-      formData.append('group_id', importGroupId);
+    if (targetGroupId) {
+      formData.append('group_id', targetGroupId);
     }
 
     let eventSource: EventSource | null = null;
@@ -375,6 +414,8 @@ export default function ContactsPage() {
             });
             setSelectedFile(null);
             setImportGroupId('');
+            setInlineGroupName('');
+            setInlineGroupDesc('');
             if (fileInputRef.current) fileInputRef.current.value = '';
             setTimeout(() => {
               setShowImport(false);
@@ -482,6 +523,19 @@ export default function ContactsPage() {
               placeholder="Search contacts..." 
             />
           </div>
+
+          {filterGroupId && (
+            <div className="flex items-center gap-2 px-4 py-2 bg-brand-primary/15 border border-brand-primary/25 text-brand-primary dark:text-brand-primary-light text-xs font-semibold rounded-2xl w-fit">
+              <span>Segment Filter Active: <strong>{groups.find(g => g.id === filterGroupId)?.name || 'Filtered'}</strong></span>
+              <button 
+                onClick={() => setFilterGroupId('')}
+                className="p-0.5 rounded-full hover:bg-brand-primary/20 cursor-pointer transition-colors flex items-center justify-center"
+                title="Clear Filter"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
 
           {selectedIds.length === contacts.length && totalContactsCount > contacts.length && (
             <div className="clay-card rounded-2xl p-4 flex items-center justify-between gap-4 transition-all">
@@ -629,11 +683,20 @@ export default function ContactsPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {groups.map((g) => (
-                <div key={g.id} className="clay-card clay-card-hover rounded-3xl p-5 flex flex-col justify-between dark:border-white/10 relative overflow-hidden">
+                <div 
+                  key={g.id} 
+                  onClick={() => { setFilterGroupId(g.id); setActiveTab('contacts'); setPage(1); }}
+                  className="clay-card clay-card-hover rounded-3xl p-5 flex flex-col justify-between dark:border-white/10 relative overflow-hidden cursor-pointer hover:scale-[1.01] transition-all"
+                >
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Layers className="w-4 h-4 text-brand-primary" />
-                      <h3 className="text-sm font-bold text-slate-900 dark:text-white">{g.name}</h3>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Layers className="w-4 h-4 text-brand-primary" />
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white">{g.name}</h3>
+                      </div>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand-primary/10 text-brand-primary dark:bg-brand-primary/20 dark:text-brand-primary-light shrink-0">
+                        {g.contacts_count || 0} contacts
+                      </span>
                     </div>
                     <p className="text-xs text-slate-500 dark:text-gray-400 leading-relaxed min-h-[32px]">
                       {g.description || 'No description provided.'}
@@ -642,7 +705,7 @@ export default function ContactsPage() {
                   <div className="flex items-center justify-between border-t border-slate-200/20 dark:border-white/5 mt-4 pt-3 text-[11px] text-slate-400">
                     <span>Created {new Date(g.created_at).toLocaleDateString()}</span>
                     <button 
-                      onClick={() => handleDeleteGroup(g.id)}
+                      onClick={(e) => { e.stopPropagation(); handleDeleteGroup(g.id); }}
                       className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 cursor-pointer transition-all"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -665,14 +728,14 @@ export default function ContactsPage() {
       <AnimatePresence>
         {showImport && (
           <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-50" onClick={() => setShowImport(false)} />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-50" onClick={handleCloseImport} />
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="fixed inset-0 z-50 flex items-center justify-center p-4">
               <div className="clay-card rounded-3xl dark:border dark:border-white/10 w-full max-w-md p-6 space-y-5" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <FileSpreadsheet className="w-5 h-5 text-brand-primary" />Import Contacts (CSV)
                   </h3>
-                  <button onClick={() => setShowImport(false)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer"><X className="w-5 h-5" /></button>
+                  <button onClick={handleCloseImport} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer"><X className="w-5 h-5" /></button>
                 </div>
 
                 {importResult && (
@@ -739,8 +802,39 @@ export default function ContactsPage() {
                         {groups.map(g => (
                           <option key={g.id} value={g.id}>{g.name}</option>
                         ))}
+                        <option value="create_new_group">+ Create New Group...</option>
                       </select>
                     </div>
+
+                    {importGroupId === 'create_new_group' && (
+                      <motion.div 
+                        initial={{ opacity: 0, height: 0 }} 
+                        animate={{ opacity: 1, height: 'auto' }} 
+                        className="space-y-3 p-3 bg-brand-primary/5 rounded-2xl border border-brand-primary/10"
+                      >
+                        <div className="space-y-1">
+                          <label className="block text-[10px] font-bold uppercase text-slate-500 dark:text-gray-400">New Group Name *</label>
+                          <input 
+                            type="text" 
+                            value={inlineGroupName} 
+                            onChange={e => setInlineGroupName(e.target.value)} 
+                            placeholder="e.g. VIP Customers" 
+                            required={importGroupId === 'create_new_group'}
+                            className="clay-input w-full px-3 py-2 rounded-xl text-slate-900 dark:text-white focus:outline-none text-xs transition-all"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="block text-[10px] font-bold uppercase text-slate-500 dark:text-gray-400">Description (Optional)</label>
+                          <textarea 
+                            value={inlineGroupDesc} 
+                            onChange={e => setInlineGroupDesc(e.target.value)} 
+                            placeholder="Briefly describe this group..." 
+                            rows={2}
+                            className="clay-input w-full px-3 py-2 rounded-xl text-slate-900 dark:text-white focus:outline-none text-xs transition-all resize-none"
+                          />
+                        </div>
+                      </motion.div>
+                    )}
 
                     <div className="clay-inset rounded-2xl p-3.5 text-[11px] text-slate-500 leading-normal flex gap-2">
                       <AlertCircle className="w-4 h-4 text-brand-primary shrink-0" />
@@ -750,7 +844,7 @@ export default function ContactsPage() {
                     </div>
 
                     <div className="flex gap-3">
-                      <button type="button" onClick={() => setShowImport(false)} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
+                      <button type="button" onClick={handleCloseImport} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
                       <button 
                         type="submit" 
                         disabled={importing || !selectedFile} 

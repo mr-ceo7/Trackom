@@ -26,6 +26,8 @@ export default function ReportsPage() {
   const [loadingStats, setLoadingStats] = useState(true);
   const [stats, setStats] = useState({ total_sent: 0, sent_today: 0, balance: 0 });
   const [batchFilter, setBatchFilter] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [page, setPage] = useState(1);
   const [limit] = useState(25);
 
@@ -36,13 +38,15 @@ export default function ReportsPage() {
         params: {
           page,
           limit,
-          ...(batchFilter ? { batch_number: batchFilter } : {})
+          ...(batchFilter ? { batch_number: batchFilter } : {}),
+          ...(startDate ? { start_date: startDate } : {}),
+          ...(endDate ? { end_date: endDate } : {})
         }
       });
       setMessages(resp.data);
     } catch { /* noop */ }
     finally { setLoading(false); }
-  }, [page, limit, batchFilter]);
+  }, [page, limit, batchFilter, startDate, endDate]);
 
   const fetchStats = useCallback(async () => {
     setLoadingStats(true);
@@ -65,7 +69,9 @@ export default function ReportsPage() {
     try {
       const response = await api.get(`/messages/export/${format}`, {
         params: {
-          batch_number: batchFilter || undefined
+          batch_number: batchFilter || undefined,
+          start_date: startDate || undefined,
+          end_date: endDate || undefined
         },
         responseType: 'blob'
       });
@@ -117,40 +123,78 @@ export default function ReportsPage() {
 
       {/* History table and Export controls */}
       <div className="space-y-4">
-        <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
-          <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input 
-              type="text" 
-              value={batchFilter} 
-              onChange={e => { setBatchFilter(e.target.value); setPage(1); }} 
-              className="w-full pl-11 pr-4 py-2.5 rounded-2xl clay-input text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary text-xs transition-all" 
-              placeholder="Filter by Batch Tracking Number..." 
-            />
+        <div className="clay-card rounded-3xl p-5 space-y-4 dark:border dark:border-white/10">
+          <div className="text-xs font-semibold text-slate-700 dark:text-gray-300">Filter History Logs</div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input 
+                type="text" 
+                value={batchFilter} 
+                onChange={e => { setBatchFilter(e.target.value); setPage(1); }} 
+                className="w-full pl-11 pr-4 py-3 rounded-2xl clay-input text-slate-900 dark:text-white focus:outline-none text-xs transition-all" 
+                placeholder="Batch Tracking Number..." 
+              />
+            </div>
+            
+            <div className="relative flex items-center">
+              <span className="absolute left-4 text-[10px] uppercase font-bold text-slate-400 dark:text-gray-500 z-10 pointer-events-none">Start</span>
+              <input 
+                type="datetime-local" 
+                value={startDate} 
+                onChange={e => { setStartDate(e.target.value); setPage(1); }} 
+                className="w-full pl-14 pr-4 py-3 rounded-2xl clay-input text-slate-900 dark:text-white focus:outline-none text-xs transition-all font-mono" 
+              />
+            </div>
+            
+            <div className="relative flex items-center">
+              <span className="absolute left-4 text-[10px] uppercase font-bold text-slate-400 dark:text-gray-500 z-10 pointer-events-none">End</span>
+              <input 
+                type="datetime-local" 
+                value={endDate} 
+                onChange={e => { setEndDate(e.target.value); setPage(1); }} 
+                className="w-full pl-14 pr-4 py-3 rounded-2xl clay-input text-slate-900 dark:text-white focus:outline-none text-xs transition-all font-mono" 
+              />
+            </div>
           </div>
-
-          <div className="inline-flex gap-2 shrink-0">
-            <button
-              onClick={() => handleExport('csv')}
-              className="flex items-center gap-1.5 px-3 py-2 clay-button-secondary rounded-2xl text-xs font-semibold text-slate-600 dark:text-gray-300 cursor-pointer transition-all"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>CSV</span>
-            </button>
-            <button
-              onClick={() => handleExport('xlsx')}
-              className="flex items-center gap-1.5 px-3 py-2 clay-button-secondary rounded-2xl text-xs font-semibold text-slate-600 dark:text-gray-300 cursor-pointer transition-all"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Excel</span>
-            </button>
-            <button
-              onClick={() => handleExport('pdf')}
-              className="flex items-center gap-1.5 px-3 py-2 clay-button-primary rounded-2xl text-xs font-semibold cursor-pointer transition-all"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>PDF / Print</span>
-            </button>
+          
+          <div className="flex flex-col sm:flex-row gap-3 items-center justify-between pt-3.5 border-t border-slate-200/20 dark:border-white/5">
+            <div>
+              {(startDate || endDate || batchFilter) ? (
+                <button 
+                  onClick={() => { setStartDate(''); setEndDate(''); setBatchFilter(''); setPage(1); }}
+                  className="text-xs font-semibold text-brand-primary hover:text-brand-primary-hover hover:underline cursor-pointer transition-all"
+                >
+                  Clear Active Filters
+                </button>
+              ) : (
+                <span className="text-[10px] text-slate-400 dark:text-gray-500">Specify dates, times, or batches to refine results.</span>
+              )}
+            </div>
+            
+            <div className="inline-flex gap-2 shrink-0">
+              <button
+                onClick={() => handleExport('csv')}
+                className="flex items-center gap-1.5 px-4 py-2.5 clay-button-secondary rounded-2xl text-xs font-bold text-slate-600 dark:text-gray-300 cursor-pointer transition-all"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>CSV</span>
+              </button>
+              <button
+                onClick={() => handleExport('xlsx')}
+                className="flex items-center gap-1.5 px-4 py-2.5 clay-button-secondary rounded-2xl text-xs font-bold text-slate-600 dark:text-gray-300 cursor-pointer transition-all"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Excel</span>
+              </button>
+              <button
+                onClick={() => handleExport('pdf')}
+                className="flex items-center gap-1.5 px-4 py-2.5 clay-button-primary rounded-2xl text-xs font-bold cursor-pointer transition-all"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>PDF / Print</span>
+              </button>
+            </div>
           </div>
         </div>
 

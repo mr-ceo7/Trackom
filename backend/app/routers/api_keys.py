@@ -45,6 +45,10 @@ async def create_key(
         key_prefix=key_prefix,
         hashed_key=hashed,
         is_active=True,
+        scope=data.scope,
+        rate_limit=data.rate_limit,
+        ip_whitelist=data.ip_whitelist,
+        expires_at=data.expires_at,
     )
     db.add(api_key)
     await db.flush()
@@ -55,6 +59,10 @@ async def create_key(
         name=api_key.name,
         key_prefix=key_prefix,
         is_active=True,
+        scope=api_key.scope,
+        rate_limit=api_key.rate_limit,
+        ip_whitelist=api_key.ip_whitelist,
+        expires_at=api_key.expires_at,
         last_used_at=None,
         usage_count=0,
         created_at=api_key.created_at,

@@ -66,6 +66,7 @@ export default function DashboardLayout() {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [clickedItem, setClickedItem] = useState<string | null>(null);
   
   // Notification state
   const [notifications, setNotifications] = useState<NotificationData[]>([]);
@@ -126,6 +127,7 @@ export default function DashboardLayout() {
               key={item.to}
               to={item.to}
               end={item.end}
+              onClick={() => setClickedItem(item.to)}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2 rounded-2xl text-sm font-medium transition-all duration-200 group ${
                   isActive
@@ -134,9 +136,18 @@ export default function DashboardLayout() {
                 }`
               }
             >
-              <div className="w-8 h-8 rounded-xl clay-icon-raised flex items-center justify-center shrink-0">
+              <motion.div 
+                className="w-8 h-8 rounded-xl clay-icon-raised flex items-center justify-center shrink-0"
+                animate={clickedItem === item.to ? { rotate: 360 } : { rotate: 0 }}
+                transition={{ duration: 0.6, ease: "backOut" }}
+                onAnimationComplete={() => {
+                  if (clickedItem === item.to) {
+                    setClickedItem(null);
+                  }
+                }}
+              >
                 <item.icon className="w-4 h-4 transition-all duration-200" />
-              </div>
+              </motion.div>
               <span>{item.label}</span>
               {item.label === 'Compose SMS' && (
                 <span className="ml-auto w-2 h-2 rounded-full bg-brand-emerald animate-pulse" />
@@ -170,10 +181,19 @@ export default function DashboardLayout() {
               </div>
               <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
                 {currentNavItems.map((item) => (
-                  <NavLink key={item.to} to={item.to} end={item.end} onClick={() => setSidebarOpen(false)} className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-2xl text-sm font-medium transition-all group ${isActive ? 'clay-nav-active text-brand-primary font-semibold' : 'text-slate-600 dark:text-gray-400 hover:bg-slate-200/40 dark:hover:bg-white/5'}`}>
-                    <div className="w-8 h-8 rounded-xl clay-icon-raised flex items-center justify-center shrink-0">
+                  <NavLink key={item.to} to={item.to} end={item.end} onClick={() => { setSidebarOpen(false); setClickedItem(item.to); }} className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-2xl text-sm font-medium transition-all group ${isActive ? 'clay-nav-active text-brand-primary font-semibold' : 'text-slate-600 dark:text-gray-400 hover:bg-slate-200/40 dark:hover:bg-white/5'}`}>
+                    <motion.div 
+                      className="w-8 h-8 rounded-xl clay-icon-raised flex items-center justify-center shrink-0"
+                      animate={clickedItem === item.to ? { rotate: 360 } : { rotate: 0 }}
+                      transition={{ duration: 0.6, ease: "backOut" }}
+                      onAnimationComplete={() => {
+                        if (clickedItem === item.to) {
+                          setClickedItem(null);
+                        }
+                      }}
+                    >
                       <item.icon className="w-4 h-4" />
-                    </div>
+                    </motion.div>
                     <span>{item.label}</span>
                   </NavLink>
                 ))}

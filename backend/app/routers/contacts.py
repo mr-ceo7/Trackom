@@ -7,13 +7,13 @@ from datetime import datetime
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query, BackgroundTasks, UploadFile, File, Form, Response
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 
 from app.database import get_db
-from app.models.contact import Contact, ContactGroup
+from app.models.contact import Contact, ContactGroup, contact_group_members
 from app.models.user import User
 from app.middleware.auth import get_current_user
 from app.schemas.contacts import (
@@ -32,12 +32,30 @@ async def list_groups(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(
-        select(ContactGroup)
+    q = (
+        select(
+            ContactGroup,
+            func.count(Contact.id).label("contacts_count")
+        )
+        .outerjoin(contact_group_members, ContactGroup.id == contact_group_members.c.group_id)
+        .outerjoin(Contact, (contact_group_members.c.contact_id == Contact.id) & (Contact.deleted_at.is_(None)))
         .where(ContactGroup.user_id == current_user.id, ContactGroup.deleted_at.is_(None))
+        .group_by(ContactGroup.id)
         .order_by(ContactGroup.name)
     )
-    return result.scalars().all()
+    result = await db.execute(q)
+    rows = result.all()
+    
+    groups_data = []
+    for group, count in rows:
+        groups_data.append({
+            "id": group.id,
+            "name": group.name,
+            "description": group.description,
+            "created_at": group.created_at,
+            "contacts_count": count
+        })
+    return groups_data
 
 
 @router.post("/groups", response_model=ContactGroupResponse, status_code=201)

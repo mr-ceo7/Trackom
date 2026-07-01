@@ -98,15 +98,40 @@ async def send_sms(
     )
 
 
+def filter_by_date(q, start_date: Optional[str], end_date: Optional[str]):
+    if start_date:
+        try:
+            s_str = start_date
+            if len(s_str) == 10:
+                s_str += "T00:00:00"
+            start_dt = datetime.fromisoformat(s_str)
+            q = q.where(SmsMessage.created_at >= start_dt)
+        except ValueError:
+            pass
+
+    if end_date:
+        try:
+            e_str = end_date
+            if len(e_str) == 10:
+                e_str += "T23:59:59.999999"
+            end_dt = datetime.fromisoformat(e_str)
+            q = q.where(SmsMessage.created_at <= end_dt)
+        except ValueError:
+            pass
+    return q
+
+
 @router.get("/history", response_model=List[SmsMessageResponse])
 async def message_history(
     page: int = Query(1, ge=1),
     limit: int = Query(50, ge=1, le=200),
     batch_number: Optional[str] = Query(None),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get SMS send history for the current user, optionally filtered by batch."""
+    """Get SMS send history for the current user, optionally filtered by batch and date range."""
     q = (
         select(SmsMessage)
         .where(SmsMessage.user_id == current_user.id, SmsMessage.deleted_at.is_(None))
@@ -114,6 +139,8 @@ async def message_history(
     
     if batch_number:
         q = q.where(SmsMessage.batch_number == batch_number)
+        
+    q = filter_by_date(q, start_date, end_date)
         
     q = q.order_by(SmsMessage.created_at.desc()).offset((page - 1) * limit).limit(limit)
     result = await db.execute(q)
@@ -147,6 +174,8 @@ async def sms_stats(
 @router.get("/export/csv")
 async def export_csv(
     batch_number: Optional[str] = Query(None),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -154,6 +183,7 @@ async def export_csv(
     q = select(SmsMessage).where(SmsMessage.user_id == current_user.id, SmsMessage.deleted_at.is_(None))
     if batch_number:
         q = q.where(SmsMessage.batch_number == batch_number)
+    q = filter_by_date(q, start_date, end_date)
     q = q.order_by(SmsMessage.created_at.desc())
     res = await db.execute(q)
     messages = res.scalars().all()
@@ -184,6 +214,8 @@ async def export_csv(
 @router.get("/export/xlsx")
 async def export_xlsx(
     batch_number: Optional[str] = Query(None),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -191,6 +223,7 @@ async def export_xlsx(
     q = select(SmsMessage).where(SmsMessage.user_id == current_user.id, SmsMessage.deleted_at.is_(None))
     if batch_number:
         q = q.where(SmsMessage.batch_number == batch_number)
+    q = filter_by_date(q, start_date, end_date)
     q = q.order_by(SmsMessage.created_at.desc())
     res = await db.execute(q)
     messages = res.scalars().all()
@@ -210,6 +243,8 @@ async def export_xlsx(
 @router.get("/export/pdf")
 async def export_pdf(
     batch_number: Optional[str] = Query(None),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -217,6 +252,7 @@ async def export_pdf(
     q = select(SmsMessage).where(SmsMessage.user_id == current_user.id, SmsMessage.deleted_at.is_(None))
     if batch_number:
         q = q.where(SmsMessage.batch_number == batch_number)
+    q = filter_by_date(q, start_date, end_date)
     q = q.order_by(SmsMessage.created_at.desc())
     res = await db.execute(q)
     messages = res.scalars().all()

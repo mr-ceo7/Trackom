@@ -103,13 +103,20 @@ export default function WalletPage() {
 
       {/* Balance cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="clay-stat rounded-3xl p-6 col-span-1 sm:col-span-2 bg-gradient-to-br from-brand-primary to-brand-accent text-white relative overflow-hidden">
+        <div className="clay-stat rounded-3xl p-6 col-span-1 sm:col-span-2 bg-gradient-to-br from-brand-primary to-brand-accent text-white relative overflow-hidden flex flex-col justify-between min-h-[140px]">
           <div className="absolute top-0 right-0 w-40 h-40 rounded-full bg-white/10 blur-3xl" />
-          <div className="relative z-10">
-            <div className="text-white/60 text-xs font-semibold uppercase tracking-wider mb-1">SMS Balance</div>
-            <div className="text-4xl font-bold font-mono">{user?.sms_balance?.toLocaleString() || '0'}</div>
-            <div className="text-white/50 text-xs mt-1">credits remaining</div>
-            <button onClick={() => { setErrorMsg(''); setSuccessMsg(''); setShowTopup(!showTopup); }} className="mt-4 flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-semibold bg-white/20 hover:bg-white/30 backdrop-blur cursor-pointer transition-all">
+          <div className="relative z-10 flex justify-between items-start w-full">
+            <div className="space-y-1">
+              <div className="text-white/60 text-xs font-semibold uppercase tracking-wider">SMS Balance</div>
+              <div className="text-4xl font-bold font-mono leading-none py-1">{user?.sms_balance?.toLocaleString() || '0'}</div>
+              <div className="text-white/50 text-xs">credits remaining</div>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/10 shadow-lg shrink-0">
+              <Wallet className="w-6 h-6 text-white" />
+            </div>
+          </div>
+          <div className="relative z-10 mt-4">
+            <button onClick={() => { setErrorMsg(''); setSuccessMsg(''); setShowTopup(!showTopup); }} className="flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-semibold bg-white/20 hover:bg-white/30 backdrop-blur cursor-pointer transition-all">
               <Plus className="w-4 h-4" />Top Up
             </button>
           </div>

@@ -2,7 +2,7 @@
  * ApiKeysPage — manage API keys with real backend CRUD.
  */
 import { useState, useEffect, useCallback } from 'react';
-import { Key, Plus, Copy, Trash2, CheckCircle2, Shield, X, AlertTriangle } from 'lucide-react';
+import { Key, Plus, Copy, Trash2, CheckCircle2, Shield, X, AlertTriangle, Sliders, Calendar, Globe, Zap, ShieldAlert } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import api from '../../services/api';
 import Loader from '../../components/Loader';
@@ -12,6 +12,10 @@ interface ApiKeyData {
   name: string;
   key_prefix: string;
   is_active: boolean;
+  scope: string;
+  rate_limit: number;
+  ip_whitelist: string | null;
+  expires_at: string | null;
   last_used_at: string | null;
   usage_count: number;
   created_at: string;
@@ -23,6 +27,11 @@ export default function ApiKeysPage() {
   const [copied, setCopied] = useState('');
   const [showGenerate, setShowGenerate] = useState(false);
   const [keyName, setKeyName] = useState('');
+  const [scope, setScope] = useState('full_access');
+  const [rateLimit, setRateLimit] = useState(60);
+  const [ipWhitelist, setIpWhitelist] = useState('');
+  const [expiresAt, setExpiresAt] = useState('');
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [newFullKey, setNewFullKey] = useState<string | null>(null);
 
@@ -44,13 +53,34 @@ export default function ApiKeysPage() {
     setTimeout(() => setCopied(''), 2000);
   };
 
+  const handleCloseModal = () => {
+    setShowGenerate(false);
+    setKeyName('');
+    setScope('full_access');
+    setRateLimit(60);
+    setIpWhitelist('');
+    setExpiresAt('');
+    setShowAdvanced(false);
+  };
+
   const handleGenerate = async () => {
     if (!keyName.trim()) return;
     setGenerating(true);
     try {
-      const resp = await api.post('/api-keys', { name: keyName });
+      const resp = await api.post('/api-keys', { 
+        name: keyName,
+        scope,
+        rate_limit: rateLimit,
+        ip_whitelist: ipWhitelist.trim() || null,
+        expires_at: expiresAt ? new Date(expiresAt).toISOString() : null
+      });
       setNewFullKey(resp.data.full_key);
       setKeyName('');
+      setScope('full_access');
+      setRateLimit(60);
+      setIpWhitelist('');
+      setExpiresAt('');
+      setShowAdvanced(false);
       await fetchKeys();
     } catch { /* noop */ }
     finally { setGenerating(false); }
@@ -106,10 +136,53 @@ export default function ApiKeysPage() {
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-4 text-xs flex-wrap">
+              <div className="flex items-center gap-2 text-xs flex-wrap">
                 <code className="clay-inset px-3 py-1.5 rounded-2xl text-slate-600 dark:text-gray-400 font-mono">{k.key_prefix}••••••••••••••••</code>
-                <span className="text-slate-400">{k.usage_count.toLocaleString()} requests</span>
-                <span className={`clay-pill px-2 py-0.5 rounded-md text-[10px] font-semibold ${k.is_active ? 'bg-brand-emerald/10 text-brand-emerald' : 'bg-red-500/10 text-red-500'}`}>{k.is_active ? 'Active' : 'Revoked'}</span>
+                
+                <span className="text-slate-400 font-medium shrink-0">{k.usage_count.toLocaleString()} requests</span>
+                
+                <span className={`clay-pill px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide shrink-0 ${
+                  k.scope === 'send_only' 
+                    ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400' 
+                    : k.scope === 'read_only' 
+                    ? 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400' 
+                    : 'bg-brand-primary/15 text-brand-primary dark:text-brand-primary-light'
+                }`}>
+                  {k.scope === 'send_only' ? 'Send Only' : k.scope === 'read_only' ? 'Read Only' : 'Full Access'}
+                </span>
+
+                <span className="clay-pill px-2 py-0.5 rounded-md text-[10px] font-semibold text-slate-500 bg-slate-100 dark:bg-slate-800 dark:text-gray-400 shrink-0">
+                  {k.rate_limit} req/min
+                </span>
+
+                {k.ip_whitelist ? (
+                  <span className="clay-pill px-2 py-0.5 rounded-md text-[10px] font-semibold text-amber-600 bg-amber-500/10 dark:text-amber-400 shrink-0 flex items-center gap-1">
+                    <Globe className="w-3 h-3" /> Restricted IP
+                  </span>
+                ) : (
+                  <span className="clay-pill px-2 py-0.5 rounded-md text-[10px] font-semibold text-slate-400 bg-slate-100/50 dark:bg-slate-800/50 shrink-0 flex items-center gap-1">
+                    <Globe className="w-3 h-3 text-slate-400" /> Any IP
+                  </span>
+                )}
+
+                {k.expires_at ? (
+                  <span className={`clay-pill px-2 py-0.5 rounded-md text-[10px] font-semibold shrink-0 flex items-center gap-1 ${
+                    new Date(k.expires_at).getTime() < Date.now() 
+                      ? 'bg-red-500/10 text-red-500' 
+                      : 'bg-indigo-500/10 text-indigo-500 dark:text-indigo-400'
+                  }`}>
+                    <Calendar className="w-3 h-3" /> 
+                    {new Date(k.expires_at).getTime() < Date.now() ? 'Expired' : `Expires ${new Date(k.expires_at).toLocaleDateString()}`}
+                  </span>
+                ) : (
+                  <span className="clay-pill px-2 py-0.5 rounded-md text-[10px] font-semibold text-slate-400 bg-slate-100/50 dark:bg-slate-800/50 shrink-0 flex items-center gap-1">
+                    <Calendar className="w-3 h-3 text-slate-400" /> No Expiry
+                  </span>
+                )}
+
+                <span className={`clay-pill px-2 py-0.5 rounded-md text-[10px] font-bold ${k.is_active ? 'bg-brand-emerald/10 text-brand-emerald' : 'bg-red-500/10 text-red-500'} shrink-0`}>
+                  {k.is_active ? 'Active' : 'Revoked'}
+                </span>
               </div>
             </div>
           ))}
@@ -126,12 +199,12 @@ export default function ApiKeysPage() {
       <AnimatePresence>
         {showGenerate && (
           <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-50" onClick={() => setShowGenerate(false)} />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-50" onClick={handleCloseModal} />
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <div className="clay-card rounded-3xl dark:border dark:border-white/10 shadow-2xl w-full max-w-md p-6 space-y-5" onClick={e => e.stopPropagation()}>
+              <div className="clay-card rounded-3xl dark:border dark:border-white/10 shadow-2xl w-full max-w-md p-6 space-y-5 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center gap-2"><Key className="w-5 h-5 text-brand-primary" />Generate API Key</h3>
-                  <button onClick={() => setShowGenerate(false)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer"><X className="w-5 h-5" /></button>
+                  <button onClick={handleCloseModal} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer"><X className="w-5 h-5" /></button>
                 </div>
 
                 {!newFullKey ? (
@@ -140,8 +213,77 @@ export default function ApiKeysPage() {
                       <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Key Name</label>
                       <input type="text" value={keyName} onChange={e => setKeyName(e.target.value)} className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" placeholder="e.g. Production Backend" />
                     </div>
-                    <div className="flex gap-3">
-                      <button onClick={() => setShowGenerate(false)} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
+
+                    <div className="pt-2">
+                      <button 
+                        type="button"
+                        onClick={() => setShowAdvanced(!showAdvanced)} 
+                        className="flex items-center gap-1.5 text-xs font-bold text-brand-primary hover:text-brand-primary-hover transition-colors cursor-pointer"
+                      >
+                        <Sliders className="w-3.5 h-3.5" />
+                        <span>{showAdvanced ? 'Hide Advanced Config' : 'Show Advanced Config'}</span>
+                      </button>
+                    </div>
+
+                    {showAdvanced && (
+                      <motion.div 
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="space-y-4 pt-4 border-t border-slate-200/20 dark:border-white/5"
+                      >
+                        <div className="space-y-1.5">
+                          <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Permissions (Scope)</label>
+                          <select 
+                            value={scope} 
+                            onChange={e => setScope(e.target.value)} 
+                            className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-xs cursor-pointer"
+                          >
+                            <option value="full_access">Full Access (Read, Write, Send)</option>
+                            <option value="send_only">Send SMS Only</option>
+                            <option value="read_only">Read Only (Reports & History)</option>
+                          </select>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1.5">
+                            <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Rate Limit (req/min)</label>
+                            <input 
+                              type="number" 
+                              value={rateLimit} 
+                              onChange={e => setRateLimit(Number(e.target.value))} 
+                              min="0"
+                              className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-xs transition-all" 
+                            />
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Expiration Date</label>
+                            <input 
+                              type="date" 
+                              value={expiresAt} 
+                              onChange={e => setExpiresAt(e.target.value)} 
+                              className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-xs transition-all font-mono" 
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">IP Whitelist</label>
+                          <input 
+                            type="text" 
+                            value={ipWhitelist} 
+                            onChange={e => setIpWhitelist(e.target.value)} 
+                            placeholder="e.g. 192.168.1.1, 10.0.0.0/24" 
+                            className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-xs transition-all" 
+                          />
+                          <p className="text-[10px] text-slate-400 dark:text-gray-500">Comma-separated list of allowed IPs or CIDR blocks. Leave blank to allow any IP address.</p>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    <div className="flex gap-3 pt-2">
+                      <button onClick={handleCloseModal} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
                       <button onClick={handleGenerate} disabled={generating || !keyName.trim()} className="clay-button-primary flex-1 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-50">
                         {generating ? 'Generating...' : 'Generate'}
                       </button>
@@ -159,7 +301,7 @@ export default function ApiKeysPage() {
                         {copied === 'new_key' ? <CheckCircle2 className="w-4 h-4 text-brand-emerald" /> : <Copy className="w-4 h-4" />}
                       </button>
                     </div>
-                    <button onClick={() => setShowGenerate(false)} className="clay-button-primary w-full py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all">Done</button>
+                    <button onClick={handleCloseModal} className="clay-button-primary w-full py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all">Done</button>
                   </div>
                 )}
               </div>
