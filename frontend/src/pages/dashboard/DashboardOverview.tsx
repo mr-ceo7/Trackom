@@ -84,8 +84,8 @@ export default function DashboardOverview() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => (
-          <div key={stat.label} className="glass-card rounded-2xl p-5 flex items-start gap-4">
-            <div className={`w-11 h-11 rounded-xl ${stat.bg} flex items-center justify-center shrink-0`}>
+          <div key={stat.label} className="clay-stat rounded-3xl p-5 flex items-start gap-4">
+            <div className={`w-11 h-11 rounded-2xl ${stat.bg} flex items-center justify-center shrink-0`}>
               <stat.icon className={`w-5 h-5 ${stat.color}`} />
             </div>
             <div>
@@ -100,8 +100,8 @@ export default function DashboardOverview() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* SPEEDOMETER: Throughput Speed */}
-        <div className="glass-card rounded-2xl p-6 flex flex-col justify-between items-center text-center relative overflow-hidden border border-slate-200 dark:border-white/10 h-76">
-          <div className="w-full flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-3">
+        <div className="clay-card rounded-3xl p-6 flex flex-col justify-between items-center text-center relative overflow-hidden dark:border-white/10 h-76">
+          <div className="w-full flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-3">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
               <Cpu className="w-3.5 h-3.5 text-brand-primary" /> Live Gateway Speed
             </span>
@@ -112,7 +112,7 @@ export default function DashboardOverview() {
 
           <div className="relative w-44 h-24 flex items-end justify-center mt-6 overflow-hidden">
             {/* Speed dial */}
-            <div className="absolute inset-0 rounded-t-full border-[10px] border-slate-100 dark:border-white/5 border-b-0" />
+            <div className="absolute inset-0 rounded-t-full border-[10px] border-slate-200/20 dark:border-white/5 border-b-0" />
             <div className="absolute inset-0 rounded-t-full border-[10px] border-brand-primary border-b-0 border-r-transparent border-l-transparent opacity-60" />
             
             {/* Needle */}
@@ -122,7 +122,7 @@ export default function DashboardOverview() {
             />
             
             {/* Hub */}
-            <div className="absolute bottom-0 w-5 h-2.5 bg-slate-900 dark:bg-white rounded-t-full border border-slate-200 dark:border-white/20" />
+            <div className="absolute bottom-0 w-5 h-2.5 bg-slate-900 dark:bg-white rounded-t-full dark:border-white/20" />
           </div>
 
           <div className="mt-2 space-y-0.5">
@@ -132,8 +132,8 @@ export default function DashboardOverview() {
         </div>
 
         {/* CARRIER split neon distribution */}
-        <div className="glass-card rounded-2xl p-6 flex flex-col justify-between border border-slate-200 dark:border-white/10 h-76">
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-3">
+        <div className="clay-card clay-card-hover rounded-3xl p-6 flex flex-col justify-between dark:border-white/10 h-76">
+          <div className="flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-3">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
               <Server className="w-3.5 h-3.5 text-brand-accent" /> Traffic Carrier Split
             </span>
@@ -148,7 +148,7 @@ export default function DashboardOverview() {
                 </span>
                 <span className="font-mono text-slate-900 dark:text-white">72%</span>
               </div>
-              <div className="w-full h-2 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
+              <div className="w-full h-2 clay-inset dark:bg-white/5 rounded-full overflow-hidden">
                 <div className="h-full bg-brand-emerald rounded-full" style={{ width: '72%' }} />
               </div>
             </div>
@@ -161,7 +161,7 @@ export default function DashboardOverview() {
                 </span>
                 <span className="font-mono text-slate-900 dark:text-white">20%</span>
               </div>
-              <div className="w-full h-2 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
+              <div className="w-full h-2 clay-inset dark:bg-white/5 rounded-full overflow-hidden">
                 <div className="h-full bg-red-500 rounded-full" style={{ width: '20%' }} />
               </div>
             </div>
@@ -174,7 +174,7 @@ export default function DashboardOverview() {
                 </span>
                 <span className="font-mono text-slate-900 dark:text-white">8%</span>
               </div>
-              <div className="w-full h-2 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
+              <div className="w-full h-2 clay-inset dark:bg-white/5 rounded-full overflow-hidden">
                 <div className="h-full bg-cyan-500 rounded-full" style={{ width: '8%' }} />
               </div>
             </div>
@@ -182,8 +182,8 @@ export default function DashboardOverview() {
         </div>
 
         {/* LATENCY MONITOR: Link stats */}
-        <div className="glass-card rounded-2xl p-6 flex flex-col justify-between border border-slate-200 dark:border-white/10 h-76">
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-3">
+        <div className="clay-card clay-card-hover rounded-3xl p-6 flex flex-col justify-between dark:border-white/10 h-76">
+          <div className="flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-3">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
               <Wifi className="w-3.5 h-3.5 text-brand-emerald" /> Link Latency Monitor
             </span>
@@ -195,7 +195,7 @@ export default function DashboardOverview() {
               { carrier: 'Airtel API Node', ping: airtelPing, status: 'Healthy', color: 'text-brand-emerald' },
               { carrier: 'Telkom SMS SMPP Bind', ping: telkomPing, status: 'Stable', color: 'text-brand-accent' },
             ].map((node) => (
-              <div key={node.carrier} className="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5">
+              <div key={node.carrier} className="flex items-center justify-between p-2 rounded-2xl clay-inset dark:bg-white/[0.02] dark:border-white/5">
                 <div>
                   <div className="text-xs font-bold text-slate-800 dark:text-gray-200">{node.carrier}</div>
                   <div className="text-[10px] text-slate-400 font-semibold font-mono mt-0.5">{node.ping}ms latency</div>
@@ -213,17 +213,17 @@ export default function DashboardOverview() {
       </div>
 
       {/* Action panel */}
-      <div className="glass-card rounded-2xl p-8 text-center border border-slate-200 dark:border-white/10">
+      <div className="clay-card rounded-3xl p-8 text-center dark:border-white/10">
         <div className="text-4xl mb-3">🚀</div>
         <h3 className="font-display font-semibold text-lg text-slate-900 dark:text-white">Ready to send your first message?</h3>
         <p className="text-sm text-slate-500 dark:text-gray-400 mt-1 mb-4 max-w-md mx-auto">
           You have {user?.sms_balance?.toLocaleString()} free SMS credits. Start by composing a message or importing your contacts.
         </p>
         <div className="flex items-center justify-center gap-3">
-          <a href="/dashboard/compose" className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-brand-primary hover:bg-brand-primary-hover text-white transition-all shadow-lg shadow-brand-primary/20">
+          <a href="/dashboard/compose" className="clay-button-primary px-5 py-2.5 rounded-2xl text-sm font-semibold text-white transition-all">
             Compose SMS
           </a>
-          <a href="/dashboard/contacts" className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-gray-300 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-white/10 transition-all">
+          <a href="/dashboard/contacts" className="clay-button-secondary px-5 py-2.5 rounded-2xl text-sm font-semibold text-slate-700 dark:text-gray-300 transition-all">
             Import Contacts
           </a>
         </div>

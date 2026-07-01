@@ -245,7 +245,7 @@ export default function ComposeSMS() {
         {/* Left — Message form */}
         <div className="lg:col-span-2 space-y-5">
           {/* Sender ID */}
-          <div className="glass-card rounded-2xl p-5 space-y-4">
+          <div className="clay-card rounded-3xl p-5 space-y-4">
             <h3 className="font-display font-semibold text-sm text-slate-900 dark:text-white flex items-center gap-2">
               <Hash className="w-4 h-4 text-brand-primary" /> Sender ID
             </h3>
@@ -254,26 +254,26 @@ export default function ComposeSMS() {
               value={senderId}
               onChange={(e) => setSenderId(e.target.value)}
               maxLength={11}
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 text-sm font-mono transition-all"
+              className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm font-mono transition-all"
               placeholder="TRACKOM"
             />
             <p className="text-[11px] text-slate-400 dark:text-gray-500">Max 11 alphanumeric characters. Must be registered with CA Kenya.</p>
           </div>
 
           {/* Recipients */}
-          <div className="glass-card rounded-2xl p-5 space-y-4">
+          <div className="clay-card rounded-3xl p-5 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-display font-semibold text-sm text-slate-900 dark:text-white flex items-center gap-2">
                 <Users className="w-4 h-4 text-brand-accent" /> Recipients
               </h3>
-              <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 rounded-lg p-0.5">
+              <div className="clay-inset flex items-center gap-1 rounded-2xl p-0.5">
                 {(['single', 'bulk', 'group'] as const).map((mode) => (
                   <button
                     key={mode}
                     type="button"
                     onClick={() => handleModeChange(mode)}
-                    className={`px-3 py-1.5 rounded-md text-xs font-medium capitalize cursor-pointer transition-all ${
-                      sendMode === mode ? 'bg-white dark:bg-white/10 text-brand-primary shadow-sm' : 'text-slate-500 dark:text-gray-400'
+                    className={`px-3 py-1.5 rounded-xl text-xs font-medium capitalize cursor-pointer transition-all ${
+                      sendMode === mode ? 'clay-nav-active text-brand-primary shadow-sm' : 'text-slate-500 dark:text-gray-400'
                     }`}
                   >
                     {mode}
@@ -288,7 +288,7 @@ export default function ComposeSMS() {
                 <select
                   value={selectedGroupId}
                   onChange={(e) => setSelectedGroupId(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary text-sm cursor-pointer"
+                  className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm cursor-pointer"
                 >
                   <option value="">— Select a group —</option>
                   <option value="all-contacts">— All Contacts —</option>
@@ -307,7 +307,7 @@ export default function ComposeSMS() {
                 onChange={(e) => setRecipients(e.target.value)}
                 readOnly={sendMode === 'group'}
                 rows={sendMode === 'single' ? 2 : 5}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 text-sm font-mono transition-all resize-none disabled:opacity-75"
+                className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm font-mono transition-all resize-none disabled:opacity-75"
                 placeholder={
                   sendMode === 'single'
                     ? '+254712345678'
@@ -340,7 +340,7 @@ export default function ComposeSMS() {
           </div>
 
           {/* Message */}
-          <div className="glass-card rounded-2xl p-5 space-y-4">
+          <div className="clay-card rounded-3xl p-5 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <h3 className="font-display font-semibold text-sm text-slate-900 dark:text-white flex items-center gap-2">
                 <MessageSquare className="w-4 h-4 text-brand-emerald" /> Message
@@ -350,7 +350,7 @@ export default function ComposeSMS() {
                 <select
                   value={selectedTemplateId}
                   onChange={(e) => handleTemplateSelect(e.target.value)}
-                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary text-xs cursor-pointer max-w-[150px] sm:max-w-none"
+                  className="clay-input px-3 py-1.5 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-xs cursor-pointer max-w-[150px] sm:max-w-none"
                 >
                   <option value="">— Select Template —</option>
                   {templates.map(t => (
@@ -362,7 +362,7 @@ export default function ComposeSMS() {
                   <button
                     type="button"
                     onClick={() => setShowSaveTemplateModal(true)}
-                    className="px-3 py-1.5 rounded-xl bg-brand-primary/10 hover:bg-brand-primary text-brand-primary hover:text-white text-xs font-semibold cursor-pointer transition-all shrink-0"
+                    className="clay-button-secondary px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all shrink-0"
                   >
                     Save as Template
                   </button>
@@ -377,7 +377,7 @@ export default function ComposeSMS() {
                 setSelectedTemplateId('');
               }}
               rows={5}
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 text-sm transition-all resize-none"
+              className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all resize-none"
               placeholder="Type your message here..."
             />
             <div className="flex items-center justify-between text-[11px] text-slate-400 dark:text-gray-500 font-mono">
@@ -392,7 +392,7 @@ export default function ComposeSMS() {
           </div>
 
           {/* Advanced Options (Scheduling & Tracking) */}
-          <div className="glass-card rounded-2xl p-5 space-y-4">
+          <div className="clay-card rounded-3xl p-5 space-y-4">
             <h3 className="font-display font-semibold text-sm text-slate-900 dark:text-white flex items-center gap-2">
               <Sliders className="w-4 h-4 text-brand-primary" /> Advanced Options
             </h3>
@@ -408,7 +408,7 @@ export default function ComposeSMS() {
                   value={batchNumber}
                   onChange={(e) => setBatchNumber(e.target.value)}
                   placeholder="e.g. BATCH-2026-Q2"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary text-xs"
+                  className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-xs"
                 />
               </div>
 
@@ -440,7 +440,7 @@ export default function ComposeSMS() {
                     value={scheduledAt}
                     onChange={(e) => setScheduledAt(e.target.value)}
                     required
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary text-xs font-mono"
+                    className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-xs font-mono"
                   />
                 </div>
               )}
@@ -450,7 +450,7 @@ export default function ComposeSMS() {
 
         {/* Right — Summary & Send */}
         <div className="space-y-5">
-          <div className="glass-card rounded-2xl p-5 space-y-4 sticky top-20">
+          <div className="clay-card rounded-3xl p-5 space-y-4 sticky top-20">
             <h3 className="font-display font-semibold text-sm text-slate-900 dark:text-white">Summary</h3>
 
             <div className="space-y-3">
@@ -466,7 +466,7 @@ export default function ComposeSMS() {
                 </div>
               ))}
 
-              <div className="h-px bg-slate-200 dark:bg-white/6" />
+              <div className="h-px bg-slate-200/20 dark:bg-white/6" />
 
               <div className="flex items-center justify-between text-sm">
                 <span className="text-slate-500 dark:text-gray-400">Your Balance</span>
@@ -484,7 +484,7 @@ export default function ComposeSMS() {
             <button
               type="submit"
               disabled={isSending || charCount === 0 || recipientCount === 0}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-semibold text-white bg-brand-primary hover:bg-brand-primary-hover cursor-pointer shadow-lg shadow-brand-primary/20 transition-all duration-300 disabled:opacity-50 active:scale-[0.98]"
+              className="clay-button-primary w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-semibold text-white transition-all duration-300 disabled:opacity-50 active:scale-[0.98]"
             >
               {isSending ? (
                 <span className="flex items-center gap-2">
@@ -581,8 +581,8 @@ export default function ComposeSMS() {
         {showSaveTemplateModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowSaveTemplateModal(false)} className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" />
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="glass-card w-full max-w-sm rounded-2xl border border-slate-200 dark:border-white/10 p-6 relative z-10 text-left bg-white dark:bg-[#0c0f1d] shadow-2xl">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4 mb-4">
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="clay-card w-full max-w-sm rounded-3xl p-6 relative z-10 text-left dark:bg-[#0c0f1d] dark:border dark:border-white/10 shadow-2xl">
+              <div className="flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-4 mb-4">
                 <h3 className="font-display font-bold text-base text-slate-900 dark:text-white">Save Message as Template</h3>
                 <button type="button" onClick={() => setShowSaveTemplateModal(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"><X className="w-4 h-4" /></button>
               </div>
@@ -594,11 +594,11 @@ export default function ComposeSMS() {
                     value={newTemplateName} 
                     onChange={e => setNewTemplateName(e.target.value)} 
                     placeholder="e.g. Easter Promo, Overdue Alert" 
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.02] text-slate-900 dark:text-white text-xs focus:outline-none focus:border-brand-primary" 
+                    className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" 
                     required 
                   />
                 </div>
-                <button type="submit" disabled={isSavingTemplate || !newTemplateName} className="w-full py-3 rounded-xl bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2">
+                <button type="submit" disabled={isSavingTemplate || !newTemplateName} className="clay-button-primary w-full py-3 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2">
                   {isSavingTemplate ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <span>Save Template</span>}
                 </button>
               </form>

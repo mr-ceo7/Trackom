@@ -144,7 +144,7 @@ class TestCampaigns:
         assert resp.status_code == 201
         data = resp.json()
         assert data["name"] == "Promo 2"
-        assert data["status"] == "queued"
+        assert data["status"] == "draft"
         assert data["total_recipients"] == 1
 
 

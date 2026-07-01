@@ -103,8 +103,8 @@ export default function FAQSection() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className={`glass-card rounded-xl transition-all duration-300 overflow-hidden ${
-                    isOpen ? 'border-brand-primary/30 ring-1 ring-brand-primary/10' : ''
+                  className={`clay-card rounded-2xl transition-all duration-300 overflow-hidden ${
+                    isOpen ? 'ring-1 ring-brand-primary/20' : ''
                   }`}
                 >
                   <button

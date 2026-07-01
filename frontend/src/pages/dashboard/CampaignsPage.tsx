@@ -77,10 +77,10 @@ const CampaignRow: React.FC<{ c: CampaignData; statusConfig: any }> = ({ c, stat
   const deliveryRate = c.sent_count > 0 ? Math.round((c.delivered_count / c.sent_count) * 100) : 0;
 
   return (
-    <div className="glass-card rounded-2xl overflow-hidden hover:shadow-md transition-all border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03]">
+    <div className="clay-card clay-card-hover rounded-3xl overflow-hidden transition-all dark:border-white/10">
       <div className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className={`w-10 h-10 rounded-xl ${cfg.bg} flex items-center justify-center shrink-0`}>
+          <div className={`w-10 h-10 rounded-2xl ${cfg.bg} flex items-center justify-center shrink-0`}>
             <Icon className={`w-5 h-5 ${cfg.color} ${c.status === 'sending' ? 'animate-pulse' : ''}`} />
           </div>
           <div>
@@ -141,7 +141,7 @@ const CampaignRow: React.FC<{ c: CampaignData; statusConfig: any }> = ({ c, stat
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/[0.01] px-5 py-4 space-y-3.5"
+            className="clay-inset border-t border-slate-200/20 dark:border-white/5 px-5 py-4 space-y-3.5"
           >
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
               <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider flex items-center gap-1.5">
@@ -152,7 +152,7 @@ const CampaignRow: React.FC<{ c: CampaignData; statusConfig: any }> = ({ c, stat
               </div>
             </div>
 
-            <div className="w-full h-1.5 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
+            <div className="w-full h-1.5 clay-card dark:bg-white/5 rounded-full overflow-hidden">
               <motion.div 
                 className="h-full bg-gradient-to-r from-brand-primary via-indigo-500 to-brand-emerald rounded-full" 
                 animate={{ width: `${progressPercent}%` }}
@@ -289,7 +289,7 @@ export default function CampaignsPage() {
           <h1 className="text-2xl font-display font-bold text-slate-900 dark:text-white">Campaigns</h1>
           <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">Create and manage bulk SMS campaigns.</p>
         </div>
-        <button onClick={() => { setErrorMsg(''); setShowCreate(true); }} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-brand-primary hover:bg-brand-primary-hover cursor-pointer shadow-lg shadow-brand-primary/20 transition-all">
+        <button onClick={() => { setErrorMsg(''); setShowCreate(true); }} className="clay-button-primary flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-semibold text-white cursor-pointer transition-all">
           <Plus className="w-3.5 h-3.5" />New Campaign
         </button>
       </div>
@@ -302,8 +302,8 @@ export default function CampaignsPage() {
           { label: 'Delivery Rate', value: `${deliveryRate}%`, color: 'text-blue-500', bg: 'bg-blue-500/10', icon: BarChart3 },
           { label: 'Scheduled / Queued', value: scheduledCount + campaigns.filter(c => c.status === 'queued' || c.status === 'sending').length, color: 'text-amber-500', bg: 'bg-amber-500/10', icon: Clock },
         ].map(s => (
-          <div key={s.label} className="glass-card rounded-2xl p-4 flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-xl ${s.bg} flex items-center justify-center shrink-0`}><s.icon className={`w-5 h-5 ${s.color}`} /></div>
+          <div key={s.label} className="clay-stat rounded-3xl p-4 flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-2xl ${s.bg} flex items-center justify-center shrink-0`}><s.icon className={`w-5 h-5 ${s.color}`} /></div>
             <div><div className="text-xl font-bold text-slate-900 dark:text-white font-mono">{s.value}</div><div className="text-[11px] text-slate-500 dark:text-gray-400 font-medium">{s.label}</div></div>
           </div>
         ))}
@@ -331,7 +331,7 @@ export default function CampaignsPage() {
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-50" onClick={() => setShowCreate(false)} />
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <form onSubmit={handleCreate} className="bg-white dark:bg-surface-card rounded-2xl border border-slate-200 dark:border-white/10 shadow-2xl w-full max-w-md p-6 space-y-5" onClick={e => e.stopPropagation()}>
+              <form onSubmit={handleCreate} className="clay-card rounded-3xl dark:border dark:border-white/10 w-full max-w-md p-6 space-y-5" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center gap-2"><Megaphone className="w-5 h-5 text-brand-primary" />New Campaign</h3>
                   <button type="button" onClick={() => setShowCreate(false)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer"><X className="w-5 h-5" /></button>
@@ -344,12 +344,12 @@ export default function CampaignsPage() {
                 <div className="space-y-4">
                   <div className="space-y-1.5">
                     <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Campaign Name</label>
-                    <input type="text" value={campaignName} onChange={e => setCampaignName(e.target.value)} required className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary text-sm transition-all" placeholder="e.g. June Flash Sale" />
+                    <input type="text" value={campaignName} onChange={e => setCampaignName(e.target.value)} required className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" placeholder="e.g. June Flash Sale" />
                   </div>
                   
                   <div className="space-y-1.5">
                     <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Sender ID</label>
-                    <input type="text" value={senderId} onChange={e => setSenderId(e.target.value)} required className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary text-sm font-mono transition-all" placeholder="TRACKOM" />
+                    <input type="text" value={senderId} onChange={e => setSenderId(e.target.value)} required className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm font-mono transition-all" placeholder="TRACKOM" />
                   </div>
 
                   <div className="space-y-1.5">
@@ -357,7 +357,7 @@ export default function CampaignsPage() {
                     <select
                       value={selectedGroupId}
                       onChange={e => setSelectedGroupId(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary text-sm cursor-pointer"
+                      className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm cursor-pointer"
                     >
                       <option value="">— All Contacts —</option>
                       {groups.map(g => (
@@ -381,7 +381,7 @@ export default function CampaignsPage() {
                             if (match) setMessageContent(match.content);
                           }
                         }}
-                        className="px-2 py-1 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary text-[10px] cursor-pointer"
+                        className="clay-input px-2 py-1 rounded-xl text-slate-900 dark:text-white focus:outline-none text-[10px] cursor-pointer"
                       >
                         <option value="">— Use Template —</option>
                         {templates.map(t => (
@@ -397,13 +397,13 @@ export default function CampaignsPage() {
                       }} 
                       required 
                       rows={4} 
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary text-sm transition-all resize-none" 
+                      className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all resize-none" 
                       placeholder="Type your marketing or notification message here..." 
                     />
                   </div>
 
                   {/* Scheduling Section */}
-                  <div className="space-y-3 p-3.5 border border-slate-100 dark:border-white/5 rounded-xl bg-slate-50 dark:bg-white/[0.01]">
+                  <div className="clay-inset space-y-3 p-3.5 rounded-2xl">
                     <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-gray-300 cursor-pointer">
                       <input 
                         type="checkbox" 
@@ -422,15 +422,15 @@ export default function CampaignsPage() {
                           value={scheduledAt} 
                           onChange={e => setScheduledAt(e.target.value)}
                           required={isScheduled}
-                          className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary text-xs"
+                          className="clay-input w-full px-3 py-2 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-xs"
                         />
                       </div>
                     )}
                   </div>
 
                   <div className="flex gap-3">
-                    <button type="button" onClick={() => setShowCreate(false)} className="flex-1 py-3 rounded-xl text-sm font-medium text-slate-600 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 cursor-pointer transition-all">Cancel</button>
-                    <button type="submit" disabled={saving || !campaignName.trim() || !messageContent.trim()} className="flex-1 py-3 rounded-xl text-sm font-semibold text-white bg-brand-primary hover:bg-brand-primary-hover cursor-pointer shadow-lg shadow-brand-primary/20 transition-all disabled:opacity-50">
+                    <button type="button" onClick={() => setShowCreate(false)} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
+                    <button type="submit" disabled={saving || !campaignName.trim() || !messageContent.trim()} className="clay-button-primary flex-1 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-50">
                       {saving ? 'Creating...' : isScheduled ? 'Schedule Campaign' : 'Launch Campaign'}
                     </button>
                   </div>

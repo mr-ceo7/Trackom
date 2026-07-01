@@ -113,10 +113,10 @@ export default function DashboardLayout() {
     .toUpperCase() || '??';
 
   return (
-    <div className="min-h-screen flex bg-[#F3F4FD] dark:bg-surface-dark">
+    <div className="min-h-screen flex bg-[#E4E8F1] dark:bg-surface-dark">
       {/* SIDEBAR — Desktop */}
-      <aside className="hidden lg:flex flex-col w-64 border-r border-slate-200 dark:border-white/6 bg-white dark:bg-surface-card shrink-0">
-        <div className="px-6 py-5 border-b border-slate-200 dark:border-white/6">
+      <aside className="hidden lg:flex flex-col w-64 clay-sidebar dark:bg-surface-card shrink-0">
+        <div className="px-6 py-5 border-b border-slate-200/40 dark:border-white/6">
           <NavLink to="/"><TrackomLogo size={24} /></NavLink>
         </div>
 
@@ -127,10 +127,10 @@ export default function DashboardLayout() {
               to={item.to}
               end={item.end}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                `flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-all duration-200 ${
                   isActive
-                    ? 'bg-brand-primary/10 text-brand-primary dark:text-brand-primary-light'
-                    : 'text-slate-600 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white'
+                    ? 'clay-nav-active text-brand-primary dark:text-brand-primary-light'
+                    : 'text-slate-600 dark:text-gray-400 hover:bg-slate-200/40 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white'
                 }`
               }
             >
@@ -143,8 +143,8 @@ export default function DashboardLayout() {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-slate-200 dark:border-white/6 space-y-3">
-          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/6">
+        <div className="p-4 border-t border-slate-200/40 dark:border-white/6 space-y-3">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-2xl clay-inset dark:bg-white/[0.03] dark:border-white/6">
             <MessageSquare className="w-4 h-4 text-brand-primary" />
             <div className="flex-1">
               <div className="text-[10px] text-slate-400 dark:text-gray-500 uppercase tracking-wider font-semibold">SMS Balance</div>
@@ -155,7 +155,7 @@ export default function DashboardLayout() {
           </div>
 
           <div className="flex items-center gap-3 px-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-primary to-brand-accent flex items-center justify-center text-white text-xs font-bold shrink-0">
+            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-brand-primary to-brand-accent flex items-center justify-center text-white text-xs font-bold shrink-0 clay-button-primary">
               {initials}
             </div>
             <div className="flex-1 min-w-0">
@@ -174,14 +174,14 @@ export default function DashboardLayout() {
         {sidebarOpen && (
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
-            <motion.aside initial={{ x: -280 }} animate={{ x: 0 }} exit={{ x: -280 }} transition={{ type: 'spring', damping: 25 }} className="fixed left-0 top-0 bottom-0 w-72 bg-white dark:bg-surface-card border-r border-slate-200 dark:border-white/6 z-50 lg:hidden flex flex-col">
-              <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200 dark:border-white/6">
+            <motion.aside initial={{ x: -280 }} animate={{ x: 0 }} exit={{ x: -280 }} transition={{ type: 'spring', damping: 25 }} className="fixed left-0 top-0 bottom-0 w-72 clay-sidebar dark:bg-surface-card z-50 lg:hidden flex flex-col">
+              <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200/40 dark:border-white/6">
                 <TrackomLogo size={24} />
                 <button onClick={() => setSidebarOpen(false)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer transition-colors"><X className="w-5 h-5" /></button>
               </div>
               <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
                 {currentNavItems.map((item) => (
-                  <NavLink key={item.to} to={item.to} end={item.end} onClick={() => setSidebarOpen(false)} className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${isActive ? 'bg-brand-primary/10 text-brand-primary' : 'text-slate-600 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-white/5'}`}>
+                  <NavLink key={item.to} to={item.to} end={item.end} onClick={() => setSidebarOpen(false)} className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-all ${isActive ? 'clay-nav-active text-brand-primary' : 'text-slate-600 dark:text-gray-400 hover:bg-slate-200/40 dark:hover:bg-white/5'}`}>
                     <item.icon className="w-[18px] h-[18px]" /><span>{item.label}</span>
                   </NavLink>
                 ))}
@@ -194,19 +194,19 @@ export default function DashboardLayout() {
       {/* MAIN CONTENT AREA */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* TOP BAR */}
-        <header className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-slate-200 dark:border-white/6 bg-white/80 dark:bg-surface-card/80 backdrop-blur-lg sticky top-0 z-30">
+        <header className="flex items-center justify-between px-4 sm:px-6 py-3 clay-topbar dark:bg-surface-card/80 dark:backdrop-blur-lg sticky top-0 z-30">
           <div className="flex items-center gap-3">
-            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-xl text-slate-500 hover:text-slate-700 dark:text-gray-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 cursor-pointer transition-all">
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-2xl text-slate-500 hover:text-slate-700 dark:text-gray-400 dark:hover:text-white hover:bg-slate-200/40 dark:hover:bg-white/5 cursor-pointer transition-all">
               <Menu className="w-5 h-5" />
             </button>
             <h1 className="text-lg font-display font-semibold text-slate-900 dark:text-white hidden sm:block">Dashboard</h1>
           </div>
 
           <div className="flex items-center gap-3">
-            <ThemeToggle className="border border-slate-200 dark:border-white/10 text-slate-500 dark:text-gray-400 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10" />
+            <ThemeToggle className="clay-button-secondary dark:border-white/10 text-slate-500 dark:text-gray-400 dark:bg-white/5 dark:hover:bg-white/10" />
 
             {/* Notifications */}
-            <button onClick={() => setNotiOpen(true)} className="relative p-2 rounded-xl text-slate-500 hover:text-slate-700 dark:text-gray-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 cursor-pointer transition-all border border-slate-200 dark:border-white/10">
+            <button onClick={() => setNotiOpen(true)} className="relative p-2 rounded-2xl text-slate-500 hover:text-slate-700 dark:text-gray-400 dark:hover:text-white clay-button-secondary dark:bg-white/5 dark:hover:bg-white/10 cursor-pointer transition-all dark:border-white/10">
               <Bell className="w-[18px] h-[18px]" />
               {unreadCount > 0 && (
                 <span className="absolute top-1 right-1 px-1 min-w-4 h-4 text-[9px] font-bold text-white bg-red-500 rounded-full flex items-center justify-center animate-pulse">
@@ -217,14 +217,14 @@ export default function DashboardLayout() {
 
             {/* Profile dropdown */}
             <div className="relative">
-              <button onClick={() => setProfileOpen(!profileOpen)} className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 cursor-pointer transition-all">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-primary to-brand-accent flex items-center justify-center text-white text-xs font-bold">{initials}</div>
+              <button onClick={() => setProfileOpen(!profileOpen)} className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-2xl hover:bg-slate-200/40 dark:hover:bg-white/5 cursor-pointer transition-all">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-primary to-brand-accent flex items-center justify-center text-white text-xs font-bold clay-button-primary">{initials}</div>
                 <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
               </button>
 
               <AnimatePresence>
                 {profileOpen && (
-                  <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }} className="absolute right-0 mt-2 w-56 rounded-xl bg-white dark:bg-surface-card border border-slate-200 dark:border-white/10 shadow-xl z-50 overflow-hidden">
+                  <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }} className="absolute right-0 mt-2 w-56 rounded-2xl clay-card dark:bg-surface-card dark:border-white/10 shadow-xl z-50 overflow-hidden">
                     <div className="px-4 py-3 border-b border-slate-100 dark:border-white/5">
                       <div className="text-sm font-semibold text-slate-900 dark:text-white">{user?.full_name}</div>
                       <div className="text-xs text-slate-400 dark:text-gray-500 truncate">{user?.email}</div>
@@ -255,7 +255,7 @@ export default function DashboardLayout() {
         {notiOpen && (
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-50" onClick={() => setNotiOpen(false)} />
-            <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }} className="fixed right-0 top-0 bottom-0 w-80 sm:w-96 bg-white dark:bg-surface-card border-l border-slate-200 dark:border-white/6 z-50 flex flex-col shadow-2xl">
+            <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }} className="fixed right-0 top-0 bottom-0 w-80 sm:w-96 clay-sidebar dark:bg-surface-card z-50 flex flex-col">
               <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-white/6">
                 <div className="flex items-center gap-2">
                   <Bell className="w-5 h-5 text-brand-primary" />

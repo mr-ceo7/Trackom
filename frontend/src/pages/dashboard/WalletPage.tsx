@@ -102,18 +102,18 @@ export default function WalletPage() {
 
       {/* Balance cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="glass-card rounded-2xl p-6 col-span-1 sm:col-span-2 bg-gradient-to-br from-brand-primary to-brand-accent text-white relative overflow-hidden">
+        <div className="clay-stat rounded-3xl p-6 col-span-1 sm:col-span-2 bg-gradient-to-br from-brand-primary to-brand-accent text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-40 h-40 rounded-full bg-white/10 blur-3xl" />
           <div className="relative z-10">
             <div className="text-white/60 text-xs font-semibold uppercase tracking-wider mb-1">SMS Balance</div>
             <div className="text-4xl font-bold font-mono">{user?.sms_balance?.toLocaleString() || '0'}</div>
             <div className="text-white/50 text-xs mt-1">credits remaining</div>
-            <button onClick={() => { setErrorMsg(''); setSuccessMsg(''); setShowTopup(!showTopup); }} className="mt-4 flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold bg-white/20 hover:bg-white/30 backdrop-blur cursor-pointer transition-all">
+            <button onClick={() => { setErrorMsg(''); setSuccessMsg(''); setShowTopup(!showTopup); }} className="mt-4 flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-semibold bg-white/20 hover:bg-white/30 backdrop-blur cursor-pointer transition-all">
               <Plus className="w-4 h-4" />Top Up
             </button>
           </div>
         </div>
-        <div className="glass-card rounded-2xl p-6 flex flex-col justify-between">
+        <div className="clay-stat rounded-3xl p-6 flex flex-col justify-between">
           <div className="text-slate-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider">Plan</div>
           <div className="text-2xl font-bold text-slate-900 dark:text-white capitalize">{user?.plan || 'starter'}</div>
           <a href="/dashboard/settings" className="text-xs text-brand-primary font-semibold hover:underline mt-2">Upgrade →</a>
@@ -122,7 +122,7 @@ export default function WalletPage() {
 
       {/* Top-up panel */}
       {showTopup && (
-        <div className="glass-card rounded-2xl p-6 space-y-4">
+        <div className="clay-card rounded-3xl p-6 space-y-4">
           <h3 className="font-display font-semibold text-sm text-slate-900 dark:text-white flex items-center gap-2"><CreditCard className="w-4 h-4 text-brand-primary" />Quick Top-Up</h3>
           
           {errorMsg && <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-xs rounded-xl">{errorMsg}</div>}
@@ -130,15 +130,15 @@ export default function WalletPage() {
 
           <div className="flex flex-wrap gap-2">
             {presets.map(a => (
-              <button key={a} onClick={() => setTopupAmount(String(a))} className={`px-4 py-2 rounded-xl text-sm font-semibold border cursor-pointer transition-all ${topupAmount === String(a) ? 'border-brand-primary bg-brand-primary/10 text-brand-primary' : 'border-slate-200 dark:border-white/10 text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
+              <button key={a} onClick={() => setTopupAmount(String(a))} className={`clay-pill px-4 py-2 rounded-2xl text-sm font-semibold cursor-pointer transition-all ${topupAmount === String(a) ? 'clay-nav-active text-brand-primary' : 'text-slate-600 dark:text-gray-400'}`}>
                 KES {a.toLocaleString()}
               </button>
             ))}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <input type="number" value={topupAmount} onChange={e => setTopupAmount(e.target.value)} className="px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary text-sm font-mono transition-all" placeholder="Amount (KES)" />
-            <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary text-sm font-mono transition-all" placeholder="M-Pesa Number (e.g. 0712345678)" />
-            <button onClick={handleOpenStk} disabled={!topupAmount || !phone} className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white bg-brand-primary hover:bg-brand-primary-hover cursor-pointer shadow-lg shadow-brand-primary/20 transition-all">
+            <input type="number" value={topupAmount} onChange={e => setTopupAmount(e.target.value)} className="clay-input px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm font-mono transition-all" placeholder="Amount (KES)" />
+            <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="clay-input px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm font-mono transition-all" placeholder="M-Pesa Number (e.g. 0712345678)" />
+            <button onClick={handleOpenStk} disabled={!topupAmount || !phone} className="clay-button-primary flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all">
               <Smartphone className="w-4 h-4" />
               <span>Simulate M-Pesa Pay</span>
             </button>
@@ -150,8 +150,8 @@ export default function WalletPage() {
       )}
 
       {/* Transaction history */}
-      <div className="glass-card rounded-2xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-200 dark:border-white/6 flex items-center gap-2">
+      <div className="clay-card rounded-3xl overflow-hidden">
+        <div className="px-5 py-4 border-b border-slate-200/20 dark:border-white/6 flex items-center gap-2 clay-inset">
           <Receipt className="w-4 h-4 text-slate-400" />
           <h3 className="font-display font-semibold text-sm text-slate-900 dark:text-white">Transaction History</h3>
         </div>
@@ -161,7 +161,7 @@ export default function WalletPage() {
         ) : (
           <div className="divide-y divide-slate-100 dark:divide-white/[0.03]">
             {transactions.map(tx => (
-              <div key={tx.id} className="px-5 py-4 flex items-center justify-between">
+              <div key={tx.id} className="clay-row-hover px-5 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${tx.type === 'topup' ? 'bg-brand-emerald/10' : tx.type === 'bonus' ? 'bg-amber-500/10' : 'bg-red-500/10'}`}>
                     {tx.type === 'topup' ? <ArrowDownRight className="w-4 h-4 text-brand-emerald" /> : tx.type === 'bonus' ? <Wallet className="w-4 h-4 text-amber-500" /> : <ArrowUpRight className="w-4 h-4 text-red-400" />}

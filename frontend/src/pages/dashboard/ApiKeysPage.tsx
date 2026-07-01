@@ -69,12 +69,12 @@ export default function ApiKeysPage() {
           <h1 className="text-2xl font-display font-bold text-slate-900 dark:text-white">API Keys</h1>
           <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">Manage your API keys for programmatic access.</p>
         </div>
-        <button onClick={() => { setNewFullKey(null); setShowGenerate(true); }} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-brand-primary hover:bg-brand-primary-hover cursor-pointer shadow-lg shadow-brand-primary/20 transition-all">
+        <button onClick={() => { setNewFullKey(null); setShowGenerate(true); }} className="clay-button-primary flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-semibold text-white cursor-pointer transition-all">
           <Plus className="w-3.5 h-3.5" />Generate Key
         </button>
       </div>
 
-      <div className="glass-card rounded-2xl p-5 flex items-start gap-3 border-l-4 border-brand-primary">
+      <div className="clay-card rounded-3xl p-5 flex items-start gap-3 border-l-4 border-brand-primary">
         <Shield className="w-5 h-5 text-brand-primary shrink-0 mt-0.5" />
         <div>
           <h4 className="text-sm font-semibold text-slate-900 dark:text-white">Security Notice</h4>
@@ -87,10 +87,10 @@ export default function ApiKeysPage() {
       ) : (
         <div className="space-y-3">
           {keys.map(k => (
-            <div key={k.id} className="glass-card rounded-2xl p-5 space-y-3">
+            <div key={k.id} className="clay-card clay-card-hover rounded-3xl p-5 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-brand-primary/10 flex items-center justify-center"><Key className="w-5 h-5 text-brand-primary" /></div>
+                  <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 flex items-center justify-center"><Key className="w-5 h-5 text-brand-primary" /></div>
                   <div>
                     <h3 className="text-sm font-semibold text-slate-900 dark:text-white">{k.name}</h3>
                     <div className="text-[11px] text-slate-400 dark:text-gray-500 font-mono mt-0.5">Created {new Date(k.created_at).toLocaleDateString()}</div>
@@ -106,9 +106,9 @@ export default function ApiKeysPage() {
                 </div>
               </div>
               <div className="flex items-center gap-4 text-xs flex-wrap">
-                <code className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-gray-400 font-mono">{k.key_prefix}••••••••••••••••</code>
+                <code className="clay-inset px-3 py-1.5 rounded-2xl text-slate-600 dark:text-gray-400 font-mono">{k.key_prefix}••••••••••••••••</code>
                 <span className="text-slate-400">{k.usage_count.toLocaleString()} requests</span>
-                <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold ${k.is_active ? 'bg-brand-emerald/10 text-brand-emerald' : 'bg-red-500/10 text-red-500'}`}>{k.is_active ? 'Active' : 'Revoked'}</span>
+                <span className={`clay-pill px-2 py-0.5 rounded-md text-[10px] font-semibold ${k.is_active ? 'bg-brand-emerald/10 text-brand-emerald' : 'bg-red-500/10 text-red-500'}`}>{k.is_active ? 'Active' : 'Revoked'}</span>
               </div>
             </div>
           ))}
@@ -127,7 +127,7 @@ export default function ApiKeysPage() {
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-50" onClick={() => setShowGenerate(false)} />
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <div className="bg-white dark:bg-surface-card rounded-2xl border border-slate-200 dark:border-white/10 shadow-2xl w-full max-w-md p-6 space-y-5" onClick={e => e.stopPropagation()}>
+              <div className="clay-card rounded-3xl dark:border dark:border-white/10 shadow-2xl w-full max-w-md p-6 space-y-5" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center gap-2"><Key className="w-5 h-5 text-brand-primary" />Generate API Key</h3>
                   <button onClick={() => setShowGenerate(false)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer"><X className="w-5 h-5" /></button>
@@ -137,28 +137,28 @@ export default function ApiKeysPage() {
                   <div className="space-y-4">
                     <div className="space-y-1.5">
                       <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Key Name</label>
-                      <input type="text" value={keyName} onChange={e => setKeyName(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary text-sm transition-all" placeholder="e.g. Production Backend" />
+                      <input type="text" value={keyName} onChange={e => setKeyName(e.target.value)} className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" placeholder="e.g. Production Backend" />
                     </div>
                     <div className="flex gap-3">
-                      <button onClick={() => setShowGenerate(false)} className="flex-1 py-3 rounded-xl text-sm font-medium text-slate-600 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 cursor-pointer transition-all">Cancel</button>
-                      <button onClick={handleGenerate} disabled={generating || !keyName.trim()} className="flex-1 py-3 rounded-xl text-sm font-semibold text-white bg-brand-primary hover:bg-brand-primary-hover cursor-pointer shadow-lg shadow-brand-primary/20 transition-all disabled:opacity-50">
+                      <button onClick={() => setShowGenerate(false)} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
+                      <button onClick={handleGenerate} disabled={generating || !keyName.trim()} className="clay-button-primary flex-1 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-50">
                         {generating ? 'Generating...' : 'Generate'}
                       </button>
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-500 text-xs flex gap-2 items-start">
+                    <div className="clay-inset p-3 rounded-2xl text-amber-500 text-xs flex gap-2 items-start">
                       <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                       <span>Make sure to copy your API key now. You won't be able to see it again for security reasons.</span>
                     </div>
                     <div className="relative">
-                      <pre className="bg-slate-900 rounded-xl p-4 text-xs text-slate-200 font-mono break-all pr-12">{newFullKey}</pre>
+                      <pre className="clay-inset bg-slate-900 rounded-2xl p-4 text-xs text-slate-200 font-mono break-all pr-12">{newFullKey}</pre>
                       <button onClick={() => handleCopy(newFullKey, 'new_key')} className="absolute top-2.5 right-2.5 p-2 rounded-lg bg-white/10 hover:bg-white/20 text-slate-400 hover:text-white cursor-pointer transition-all">
                         {copied === 'new_key' ? <CheckCircle2 className="w-4 h-4 text-brand-emerald" /> : <Copy className="w-4 h-4" />}
                       </button>
                     </div>
-                    <button onClick={() => setShowGenerate(false)} className="w-full py-3 rounded-xl text-sm font-semibold text-white bg-brand-primary hover:bg-brand-primary-hover cursor-pointer shadow-lg shadow-brand-primary/20 transition-all">Done</button>
+                    <button onClick={() => setShowGenerate(false)} className="clay-button-primary w-full py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all">Done</button>
                   </div>
                 )}
               </div>

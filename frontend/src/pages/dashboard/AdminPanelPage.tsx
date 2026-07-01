@@ -243,8 +243,8 @@ export default function AdminPanelPage() {
             { label: 'Overall SMS Sent', value: stats?.total_sms_sent?.toLocaleString() || 0, desc: `Success Rate: ${stats?.success_rate || 100}%`, icon: Zap, color: 'text-brand-emerald', bg: 'bg-brand-emerald/10' },
             { label: 'Gateway API Pool', value: `${stats?.system_balance?.toLocaleString() || 0} cr`, desc: 'Global wholesale credits', icon: Coins, color: 'text-amber-500', bg: 'bg-amber-500/10' },
           ].map((card, idx) => (
-            <div key={idx} className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/10 flex items-center gap-4">
-              <div className={`w-12 h-12 rounded-xl ${card.bg} flex items-center justify-center shrink-0`}>
+            <div key={idx} className="clay-stat rounded-3xl p-5 flex items-center gap-4">
+              <div className={`w-12 h-12 rounded-2xl ${card.bg} flex items-center justify-center shrink-0`}>
                 <card.icon className={`w-6 h-6 ${card.color}`} />
               </div>
               <div className="space-y-0.5 text-left">
@@ -290,7 +290,7 @@ export default function AdminPanelPage() {
               type="text" 
               value={search} 
               onChange={e => { setSearch(e.target.value); setPage(1); }} 
-              className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 text-sm transition-all" 
+              className="clay-input w-full pl-11 pr-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" 
               placeholder="Search tenant emails, names, or companies..." 
             />
           </div>
@@ -299,11 +299,11 @@ export default function AdminPanelPage() {
           {loadingUsers ? (
             <div className="text-center py-16"><Loader2 className="w-8 h-8 text-brand-primary animate-spin mx-auto" /></div>
           ) : (
-            <div className="glass-card rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10">
+            <div className="clay-card rounded-3xl overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
-                    <tr className="border-b border-slate-200 dark:border-white/6 bg-slate-50/50 dark:bg-white/[0.01]">
+                    <tr className="border-b border-slate-200/20 dark:border-white/6 clay-inset">
                       <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Tenant</th>
                       <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Plan & Rate</th>
                       <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Wallet Balance</th>
@@ -436,7 +436,7 @@ export default function AdminPanelPage() {
             </h3>
             <button
               onClick={() => { setSelectedGateway(null); setGwName(''); setGwUrl(''); setGwKey(''); setGwWeight(50); setGwActive(true); setIsGatewayModalOpen(true); }}
-              className="flex items-center gap-1.5 px-4 py-2 bg-brand-primary hover:bg-brand-primary-hover text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-brand-primary/10 cursor-pointer"
+              className="clay-button-primary flex items-center gap-1.5 px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Add API Gateway</span>
@@ -450,7 +450,7 @@ export default function AdminPanelPage() {
               {gateways.map((gw) => (
                 <div 
                   key={gw.id} 
-                  className={`glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/10 flex flex-col justify-between space-y-4 ${
+                  className={`clay-card rounded-3xl p-5 flex flex-col justify-between space-y-4 ${
                     !gw.is_active ? 'opacity-60 bg-slate-100/10' : ''
                   }`}
                 >
@@ -479,7 +479,7 @@ export default function AdminPanelPage() {
                     </div>
                   </div>
 
-                  <div className="pt-2 border-t border-slate-100 dark:border-white/5 flex items-center justify-between">
+                  <div className="pt-2 border-t border-slate-200/20 flex items-center justify-between">
                     <div>
                       <div className="text-[10px] text-slate-400 uppercase font-semibold">Load Split Weight</div>
                       <div className="text-lg font-black text-brand-primary font-mono">{gw.weight}%</div>
@@ -513,7 +513,7 @@ export default function AdminPanelPage() {
                 </div>
               ))}
               {gateways.length === 0 && (
-                <div className="col-span-full text-center py-16 glass-card rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.01]">
+                <div className="col-span-full text-center py-16 clay-card rounded-3xl">
                   <Cpu className="w-10 h-10 text-slate-300 dark:text-gray-600 mx-auto mb-3" />
                   <p className="text-sm font-medium text-slate-900 dark:text-white mb-1">No API Gateways configured</p>
                   <p className="text-xs text-slate-500 dark:text-gray-400 max-w-sm mx-auto">Configure custom SMS Gateway endpoints with percentage allocations to distribute outgoing dispatches.</p>
@@ -529,13 +529,13 @@ export default function AdminPanelPage() {
         {isCreditModalOpen && selectedUser && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsCreditModalOpen(false)} className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" />
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="glass-card w-full max-w-md rounded-2xl border border-slate-200 dark:border-white/10 p-6 relative z-10 text-left bg-white dark:bg-[#0c0f1d] shadow-2xl">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4 mb-4">
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="clay-card w-full max-w-md rounded-3xl p-6 relative z-10 text-left dark:bg-[#0c0f1d] dark:border dark:border-white/10 shadow-2xl">
+              <div className="flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-4 mb-4">
                 <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2"><Coins className="w-5 h-5 text-amber-500" /><span>Adjust Wallet Credits</span></h3>
                 <button onClick={() => setIsCreditModalOpen(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"><X className="w-4 h-4" /></button>
               </div>
 
-              <div className="bg-slate-50 dark:bg-white/[0.01] border border-slate-200 dark:border-white/5 rounded-xl p-3 mb-4 text-xs space-y-1">
+              <div className="clay-inset rounded-2xl p-3 mb-4 text-xs space-y-1">
                 <div>User: <span className="font-bold text-slate-900 dark:text-white">{selectedUser.full_name}</span></div>
                 <div>Email: <span className="font-mono text-slate-500 dark:text-gray-400">{selectedUser.email}</span></div>
                 <div>Current Balance: <span className="font-bold text-brand-emerald font-mono">{selectedUser.sms_balance.toLocaleString()} credits</span></div>
@@ -544,13 +544,13 @@ export default function AdminPanelPage() {
               <form onSubmit={handleAdjustCredits} className="space-y-4">
                 <div className="space-y-1.5 text-left">
                   <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Adjustment Amount (credits)</label>
-                  <input type="text" value={creditAmount} onChange={e => setCreditAmount(e.target.value)} placeholder="Use positive numbers to add, negative (e.g. -500) to deduct" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.02] text-slate-900 dark:text-white text-xs focus:outline-none focus:border-brand-primary" required />
+                  <input type="text" value={creditAmount} onChange={e => setCreditAmount(e.target.value)} placeholder="Use positive numbers to add, negative (e.g. -500) to deduct" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
                 </div>
                 <div className="space-y-1.5 text-left">
                   <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Audit Description</label>
-                  <textarea value={creditDesc} onChange={e => setCreditDesc(e.target.value)} placeholder="Enter audit reference or refund note..." rows={3} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.02] text-slate-900 dark:text-white text-xs focus:outline-none focus:border-brand-primary" />
+                  <textarea value={creditDesc} onChange={e => setCreditDesc(e.target.value)} placeholder="Enter audit reference or refund note..." rows={3} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
                 </div>
-                <button type="submit" disabled={submittingCredits || !creditAmount} className="w-full py-3 rounded-xl bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-bold cursor-pointer shadow-lg shadow-brand-primary/20 transition-all flex items-center justify-center gap-2">
+                <button type="submit" disabled={submittingCredits || !creditAmount} className="clay-button-primary w-full py-3 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2">
                   {submittingCredits ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <span>Apply Credit Adjustment</span>}
                 </button>
               </form>
@@ -564,13 +564,13 @@ export default function AdminPanelPage() {
         {isRateModalOpen && selectedRateUser && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsRateModalOpen(false)} className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" />
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="glass-card w-full max-w-md rounded-2xl border border-slate-200 dark:border-white/10 p-6 relative z-10 text-left bg-white dark:bg-[#0c0f1d] shadow-2xl">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4 mb-4">
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="clay-card w-full max-w-md rounded-3xl p-6 relative z-10 text-left dark:bg-[#0c0f1d] dark:border dark:border-white/10 shadow-2xl">
+              <div className="flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-4 mb-4">
                 <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2"><Sliders className="w-5 h-5 text-amber-500" /><span>Set Account SMS Rate</span></h3>
                 <button onClick={() => setIsRateModalOpen(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"><X className="w-4 h-4" /></button>
               </div>
 
-              <div className="bg-slate-50 dark:bg-white/[0.01] border border-slate-200 dark:border-white/5 rounded-xl p-3 mb-4 text-xs space-y-1">
+              <div className="clay-inset rounded-2xl p-3 mb-4 text-xs space-y-1">
                 <div>User: <span className="font-bold text-slate-900 dark:text-white">{selectedRateUser.full_name}</span></div>
                 <div>Email: <span className="font-mono text-slate-500 dark:text-gray-400">{selectedRateUser.email}</span></div>
                 <div>Current Rate: <span className="font-bold text-amber-500 font-mono">{selectedRateUser.credit_rate.toFixed(2)} cr/SMS</span></div>
@@ -579,10 +579,10 @@ export default function AdminPanelPage() {
               <form onSubmit={handleUpdateRate} className="space-y-4">
                 <div className="space-y-1.5 text-left">
                   <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Rate Multiplier (credits per SMS)</label>
-                  <input type="number" step="0.01" min="0.01" value={customRate} onChange={e => setCustomRate(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.02] text-slate-900 dark:text-white text-xs focus:outline-none focus:border-brand-primary" required />
+                  <input type="number" step="0.01" min="0.01" value={customRate} onChange={e => setCustomRate(e.target.value)} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
                   <p className="text-[10px] text-slate-400">Default rate is 1.00 (1 SMS = 1 credit). Use smaller values for custom wholesale discounts (e.g. 0.70 cr/SMS).</p>
                 </div>
-                <button type="submit" disabled={submittingRate || !customRate} className="w-full py-3 rounded-xl bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-bold cursor-pointer shadow-lg shadow-brand-primary/20 transition-all flex items-center justify-center gap-2">
+                <button type="submit" disabled={submittingRate || !customRate} className="clay-button-primary w-full py-3 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2">
                   {submittingRate ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <span>Update Custom Rate</span>}
                 </button>
               </form>
@@ -596,8 +596,8 @@ export default function AdminPanelPage() {
         {isGatewayModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsGatewayModalOpen(false)} className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" />
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="glass-card w-full max-w-md rounded-2xl border border-slate-200 dark:border-white/10 p-6 relative z-10 text-left bg-white dark:bg-[#0c0f1d] shadow-2xl">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4 mb-4">
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="clay-card w-full max-w-md rounded-3xl p-6 relative z-10 text-left dark:bg-[#0c0f1d] dark:border dark:border-white/10 shadow-2xl">
+              <div className="flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-4 mb-4">
                 <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
                   <Cpu className="w-5 h-5 text-brand-primary" />
                   <span>{selectedGateway ? 'Edit API Gateway' : 'Add API Gateway'}</span>
@@ -608,17 +608,17 @@ export default function AdminPanelPage() {
               <form onSubmit={handleSaveGateway} className="space-y-4">
                 <div className="space-y-1.5 text-left">
                   <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Gateway Provider Name</label>
-                  <input type="text" value={gwName} onChange={e => setGwName(e.target.value)} placeholder="e.g. Africa's Talking API, Twilio Endpoint" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.02] text-slate-900 dark:text-white text-xs focus:outline-none focus:border-brand-primary" required />
+                  <input type="text" value={gwName} onChange={e => setGwName(e.target.value)} placeholder="e.g. Africa's Talking API, Twilio Endpoint" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
                 </div>
 
                 <div className="space-y-1.5 text-left">
                   <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">API URL Connection Endpoint</label>
-                  <input type="url" value={gwUrl} onChange={e => setGwUrl(e.target.value)} placeholder="https://api.gateway.com/v1/sms" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.02] text-slate-900 dark:text-white text-xs focus:outline-none focus:border-brand-primary" required />
+                  <input type="url" value={gwUrl} onChange={e => setGwUrl(e.target.value)} placeholder="https://api.gateway.com/v1/sms" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
                 </div>
 
                 <div className="space-y-1.5 text-left">
                   <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Secret Security Token / Auth Key</label>
-                  <input type="text" value={gwKey} onChange={e => setGwKey(e.target.value)} placeholder="Enter API authentication password or credentials token" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.02] text-slate-900 dark:text-white text-xs focus:outline-none focus:border-brand-primary" required />
+                  <input type="text" value={gwKey} onChange={e => setGwKey(e.target.value)} placeholder="Enter API authentication password or credentials token" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
                 </div>
 
                 <div className="space-y-1.5 text-left">
@@ -637,7 +637,7 @@ export default function AdminPanelPage() {
                   <p className="text-[10px] text-slate-400">Determines the percentage probability of outgoing messages being routed to this node compared to other active endpoints.</p>
                 </div>
 
-                <div className="flex items-center justify-between py-2 border-t border-b border-slate-100 dark:border-white/5">
+                <div className="flex items-center justify-between py-2 border-t border-b border-slate-200/20 dark:border-white/5">
                   <span className="text-xs font-semibold text-slate-700 dark:text-gray-300">Gateway Active Status</span>
                   <button 
                     type="button" 
@@ -648,7 +648,7 @@ export default function AdminPanelPage() {
                   </button>
                 </div>
 
-                <button type="submit" disabled={submittingGateway} className="w-full py-3 rounded-xl bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-bold cursor-pointer shadow-lg shadow-brand-primary/20 transition-all flex items-center justify-center gap-2">
+                <button type="submit" disabled={submittingGateway} className="clay-button-primary w-full py-3 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2">
                   {submittingGateway ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <span>Save API Gateway</span>}
                 </button>
               </form>

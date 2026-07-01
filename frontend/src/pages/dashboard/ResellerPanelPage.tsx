@@ -165,8 +165,8 @@ export default function ResellerPanelPage() {
               { label: 'My Sub-accounts', value: stats?.total_clients || 0, desc: 'Registered tenant integrations', icon: Users, color: 'text-brand-accent', bg: 'bg-brand-accent/10' },
               { label: 'Client Messages Sent', value: stats?.total_sms_sent?.toLocaleString() || 0, desc: 'Aggregated reseller dispatches', icon: Megaphone, color: 'text-brand-emerald', bg: 'bg-brand-emerald/10' },
             ].map((card, idx) => (
-              <div key={idx} className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/10 flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-xl ${card.bg} flex items-center justify-center shrink-0`}><card.icon className={`w-6 h-6 ${card.color}`} /></div>
+              <div key={idx} className="clay-stat rounded-3xl p-5 flex items-center gap-4">
+                <div className={`w-12 h-12 rounded-2xl ${card.bg} flex items-center justify-center shrink-0`}><card.icon className={`w-6 h-6 ${card.color}`} /></div>
                 <div className="space-y-0.5 text-left">
                   <div className="text-[10px] text-slate-400 dark:text-gray-500 font-semibold uppercase tracking-wider">{card.label}</div>
                   <div className="text-2xl font-black text-slate-900 dark:text-white font-mono leading-none">{card.value}</div>
@@ -206,7 +206,7 @@ export default function ResellerPanelPage() {
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Business Sub-accounts</h3>
                 <button
                   onClick={() => setIsCreateOpen(true)}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-brand-primary hover:bg-brand-primary-hover text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer"
+                  className="clay-button-primary flex items-center gap-1.5 px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Register Sub-account</span>
@@ -214,11 +214,11 @@ export default function ResellerPanelPage() {
               </div>
 
               {/* Clients Table */}
-              <div className="glass-card rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10">
+              <div className="clay-card rounded-3xl overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left">
                     <thead>
-                      <tr className="border-b border-slate-200 dark:border-white/6 bg-slate-50/50 dark:bg-white/[0.01]">
+                      <tr className="border-b border-slate-200/20 dark:border-white/6 clay-inset">
                         <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Client User</th>
                         <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Company</th>
                         <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">SMS Balance</th>
@@ -245,7 +245,7 @@ export default function ResellerPanelPage() {
                           <td className="px-5 py-3 text-right">
                             <button
                               onClick={() => { setSelectedUser(u); setIsTransferOpen(true); }}
-                              className="px-3 py-1.5 rounded-lg bg-brand-primary/10 hover:bg-brand-primary text-brand-primary hover:text-white text-xs font-semibold cursor-pointer transition-all"
+                              className="clay-button-secondary px-3 py-1.5 rounded-2xl text-brand-primary text-xs font-semibold cursor-pointer transition-all"
                             >
                               Allocate Credits
                             </button>
@@ -275,11 +275,11 @@ export default function ResellerPanelPage() {
               </h3>
 
               {/* Logs Table */}
-              <div className="glass-card rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10">
+              <div className="clay-card rounded-3xl overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left">
                     <thead>
-                      <tr className="border-b border-slate-200 dark:border-white/6 bg-slate-50/50 dark:bg-white/[0.01]">
+                      <tr className="border-b border-slate-200/20 dark:border-white/6 clay-inset">
                         <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Sub-User Account</th>
                         <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Recipient</th>
                         <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Message</th>
@@ -327,8 +327,8 @@ export default function ResellerPanelPage() {
         {isTransferOpen && selectedUser && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsTransferOpen(false)} className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" />
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="glass-card w-full max-w-md rounded-2xl border border-slate-200 dark:border-white/10 p-6 relative z-10 text-left bg-white dark:bg-[#0c0f1d] shadow-2xl">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4 mb-4">
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="clay-card w-full max-w-md rounded-3xl p-6 relative z-10 text-left dark:bg-[#0c0f1d] dark:border dark:border-white/10 shadow-2xl">
+              <div className="flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-4 mb-4">
                 <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
                   <Coins className="w-5 h-5 text-brand-primary" />
                   <span>Transfer Credits</span>
@@ -336,7 +336,7 @@ export default function ResellerPanelPage() {
                 <button onClick={() => setIsTransferOpen(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"><X className="w-4 h-4" /></button>
               </div>
 
-              <div className="bg-slate-50 dark:bg-white/[0.01] border border-slate-200 dark:border-white/5 rounded-xl p-3 mb-4 text-xs space-y-1">
+              <div className="clay-inset rounded-2xl p-3 mb-4 text-xs space-y-1">
                 <div>Client: <span className="font-bold text-slate-900 dark:text-white">{selectedUser.full_name}</span></div>
                 <div>Email: <span className="font-mono text-slate-500 dark:text-gray-400">{selectedUser.email}</span></div>
                 <div>Client Current Balance: <span className="font-bold text-brand-emerald font-mono">{selectedUser.sms_balance.toLocaleString()} credits</span></div>
@@ -347,9 +347,9 @@ export default function ResellerPanelPage() {
               <form onSubmit={handleTransfer} className="space-y-4">
                 <div className="space-y-1.5 text-left">
                   <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Credits to Transfer</label>
-                  <input type="number" min="1" max={stats?.reseller_balance || 0} value={transferAmount} onChange={e => setTransferAmount(e.target.value)} placeholder="Enter amount of credits to allocate..." className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.02] text-slate-900 dark:text-white text-xs focus:outline-none focus:border-brand-primary" required />
+                  <input type="number" min="1" max={stats?.reseller_balance || 0} value={transferAmount} onChange={e => setTransferAmount(e.target.value)} placeholder="Enter amount of credits to allocate..." className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
                 </div>
-                <button type="submit" disabled={submittingTransfer || !transferAmount} className="w-full py-3 rounded-xl bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-bold cursor-pointer shadow-lg shadow-brand-primary/20 transition-all flex items-center justify-center gap-2">
+                <button type="submit" disabled={submittingTransfer || !transferAmount} className="clay-button-primary w-full py-3 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2">
                   {submittingTransfer ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <span>Confirm Transfer</span>}
                 </button>
               </form>
@@ -363,8 +363,8 @@ export default function ResellerPanelPage() {
         {isCreateOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsCreateOpen(false)} className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" />
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="glass-card w-full max-w-md rounded-2xl border border-slate-200 dark:border-white/10 p-6 relative z-10 text-left bg-white dark:bg-[#0c0f1d] shadow-2xl">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4 mb-4">
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="clay-card w-full max-w-md rounded-3xl p-6 relative z-10 text-left dark:bg-[#0c0f1d] dark:border dark:border-white/10 shadow-2xl">
+              <div className="flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-4 mb-4">
                 <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
                   <Plus className="w-5 h-5 text-brand-primary" />
                   <span>Register Sub-account</span>
@@ -377,31 +377,31 @@ export default function ResellerPanelPage() {
               <form onSubmit={handleCreateChild} className="space-y-4">
                 <div className="space-y-1.5 text-left">
                   <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Client Full Name</label>
-                  <input type="text" value={childName} onChange={e => setChildName(e.target.value)} placeholder="James Mwangi" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.02] text-slate-900 dark:text-white text-xs focus:outline-none focus:border-brand-primary" required />
+                  <input type="text" value={childName} onChange={e => setChildName(e.target.value)} placeholder="James Mwangi" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
                 </div>
 
                 <div className="space-y-1.5 text-left">
                   <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Client Email Address</label>
-                  <input type="email" value={childEmail} onChange={e => setChildEmail(e.target.value)} placeholder="james@company.co.ke" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.02] text-slate-900 dark:text-white text-xs focus:outline-none focus:border-brand-primary" required />
+                  <input type="email" value={childEmail} onChange={e => setChildEmail(e.target.value)} placeholder="james@company.co.ke" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5 text-left">
                     <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Phone (Optional)</label>
-                    <input type="tel" value={childPhone} onChange={e => setChildPhone(e.target.value)} placeholder="0712345678" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.02] text-slate-900 dark:text-white text-xs focus:outline-none focus:border-brand-primary" />
+                    <input type="tel" value={childPhone} onChange={e => setChildPhone(e.target.value)} placeholder="0712345678" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
                   </div>
                   <div className="space-y-1.5 text-left">
                     <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Company (Optional)</label>
-                    <input type="text" value={childCompany} onChange={e => setChildCompany(e.target.value)} placeholder="Mwangi Builders" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.02] text-slate-900 dark:text-white text-xs focus:outline-none focus:border-brand-primary" />
+                    <input type="text" value={childCompany} onChange={e => setChildCompany(e.target.value)} placeholder="Mwangi Builders" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
                   </div>
                 </div>
 
                 <div className="space-y-1.5 text-left">
                   <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Login Password</label>
-                  <input type="password" value={childPassword} onChange={e => setChildPassword(e.target.value)} placeholder="••••••••" className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.02] text-slate-900 dark:text-white text-xs focus:outline-none focus:border-brand-primary" required />
+                  <input type="password" value={childPassword} onChange={e => setChildPassword(e.target.value)} placeholder="••••••••" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
                 </div>
 
-                <button type="submit" disabled={submittingCreate} className="w-full py-3 rounded-xl bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-bold cursor-pointer shadow-lg shadow-brand-primary/20 transition-all flex items-center justify-center gap-2">
+                <button type="submit" disabled={submittingCreate} className="clay-button-primary w-full py-3 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2">
                   {submittingCreate ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <span>Create Client Account</span>}
                 </button>
               </form>

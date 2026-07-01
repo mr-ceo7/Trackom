@@ -103,7 +103,8 @@ async def create_campaign(
     )
 
     db.add(campaign)
-    await db.flush()
+    await db.commit()
+    await db.refresh(campaign)
 
     # Trigger campaign processing in the background if it is not scheduled for later
     if not data.scheduled_at:

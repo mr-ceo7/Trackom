@@ -104,8 +104,8 @@ export default function ReportsPage() {
           { label: 'Carrier Delivery', value: '99.2%', icon: Clock, color: 'text-amber-500', bg: 'bg-amber-500/10' },
           { label: 'Credit Rate', value: `${user?.credit_rate?.toFixed(2) || '1.00'} cr/SMS`, icon: Coins, color: 'text-purple-500', bg: 'bg-purple-500/10' },
         ].map(s => (
-          <div key={s.label} className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/10 flex items-center gap-4">
-            <div className={`w-11 h-11 rounded-xl ${s.bg} flex items-center justify-center shrink-0`}><s.icon className={`w-5 h-5 ${s.color}`} /></div>
+          <div key={s.label} className="clay-stat rounded-3xl p-5 dark:border-white/10 flex items-center gap-4">
+            <div className={`w-11 h-11 rounded-2xl ${s.bg} flex items-center justify-center shrink-0`}><s.icon className={`w-5 h-5 ${s.color}`} /></div>
             <div className="space-y-0.5">
               <div className="text-2xl font-bold text-slate-900 dark:text-white font-mono leading-none">{s.value}</div>
               <div className="text-[11px] text-slate-500 dark:text-gray-400 font-medium">{s.label}</div>
@@ -123,7 +123,7 @@ export default function ReportsPage() {
               type="text" 
               value={batchFilter} 
               onChange={e => { setBatchFilter(e.target.value); setPage(1); }} 
-              className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary text-xs transition-all" 
+              className="w-full pl-11 pr-4 py-2.5 rounded-2xl clay-input text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary text-xs transition-all" 
               placeholder="Filter by Batch Tracking Number..." 
             />
           </div>
@@ -131,21 +131,21 @@ export default function ReportsPage() {
           <div className="inline-flex gap-2 shrink-0">
             <button
               onClick={() => handleExport('csv')}
-              className="flex items-center gap-1.5 px-3 py-2 border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 rounded-xl text-xs font-semibold text-slate-600 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-white/10 cursor-pointer transition-all"
+              className="flex items-center gap-1.5 px-3 py-2 clay-button-secondary rounded-2xl text-xs font-semibold text-slate-600 dark:text-gray-300 cursor-pointer transition-all"
             >
               <Download className="w-3.5 h-3.5" />
               <span>CSV</span>
             </button>
             <button
               onClick={() => handleExport('xlsx')}
-              className="flex items-center gap-1.5 px-3 py-2 border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 rounded-xl text-xs font-semibold text-slate-600 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-white/10 cursor-pointer transition-all"
+              className="flex items-center gap-1.5 px-3 py-2 clay-button-secondary rounded-2xl text-xs font-semibold text-slate-600 dark:text-gray-300 cursor-pointer transition-all"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Excel</span>
             </button>
             <button
               onClick={() => handleExport('pdf')}
-              className="flex items-center gap-1.5 px-3 py-2 bg-brand-primary text-white rounded-xl text-xs font-semibold hover:bg-brand-primary-hover cursor-pointer transition-all shadow-md shadow-brand-primary/10"
+              className="flex items-center gap-1.5 px-3 py-2 clay-button-primary rounded-2xl text-xs font-semibold cursor-pointer transition-all"
             >
               <Download className="w-3.5 h-3.5" />
               <span>PDF / Print</span>
@@ -157,11 +157,11 @@ export default function ReportsPage() {
         {loading ? (
           <div className="text-center py-16"><Loader2 className="w-8 h-8 text-brand-primary animate-spin mx-auto" /></div>
         ) : (
-          <div className="glass-card rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10">
+          <div className="clay-card rounded-3xl overflow-hidden dark:border-white/10">
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="border-b border-slate-200 dark:border-white/6 bg-slate-50/50 dark:bg-white/[0.01]">
+                  <tr className="border-b border-slate-200/20 dark:border-white/6 clay-inset">
                     <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Recipient</th>
                     <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Message Content</th>
                     <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Sender & Batch</th>
@@ -174,7 +174,7 @@ export default function ReportsPage() {
                   {messages.map((m) => (
                     <tr 
                       key={m.id} 
-                      className="border-b border-slate-100 dark:border-white/[0.03] last:border-0 hover:bg-slate-50 dark:hover:bg-white/[0.01] transition-colors"
+                      className="border-b border-slate-100 dark:border-white/[0.03] last:border-0 clay-row-hover hover:bg-slate-50 dark:hover:bg-white/[0.01] transition-colors"
                     >
                       <td className="px-5 py-3 text-xs font-mono font-bold text-slate-900 dark:text-white">
                         {m.recipient}
@@ -219,11 +219,11 @@ export default function ReportsPage() {
             </div>
 
             {/* Pagination footer */}
-            <div className="px-5 py-3 border-t border-slate-200 dark:border-white/6 flex items-center justify-between text-xs text-slate-500">
+            <div className="px-5 py-3 border-t border-slate-200/20 dark:border-white/6 flex items-center justify-between text-xs text-slate-500">
               <button 
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-white/10 hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
+                className="px-3 py-1.5 rounded-xl clay-button-secondary disabled:opacity-50 cursor-pointer"
               >
                 Previous
               </button>
@@ -231,7 +231,7 @@ export default function ReportsPage() {
               <button 
                 onClick={() => setPage(p => p + 1)}
                 disabled={messages.length < limit}
-                className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-white/10 hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
+                className="px-3 py-1.5 rounded-xl clay-button-secondary disabled:opacity-50 cursor-pointer"
               >
                 Next
               </button>

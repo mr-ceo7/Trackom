@@ -263,6 +263,7 @@ export default function ContactsPage() {
   return (
     <div className="max-w-6xl space-y-6">
       {/* Header */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-display font-bold text-slate-900 dark:text-white">Contacts & Groups</h1>
@@ -273,21 +274,21 @@ export default function ContactsPage() {
         <div className="flex flex-wrap gap-2">
           <button 
             onClick={() => { setImportResult(null); setShowImport(true); }}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-gray-300 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 cursor-pointer transition-all"
+            className="clay-button-secondary flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-semibold text-slate-600 dark:text-gray-300 cursor-pointer transition-all"
           >
             <Upload className="w-3.5 h-3.5" />
             Import CSV
           </button>
           <button 
             onClick={() => setShowAddGroup(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-gray-300 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 cursor-pointer transition-all"
+            className="clay-button-secondary flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-semibold text-slate-600 dark:text-gray-300 cursor-pointer transition-all"
           >
             <FolderPlus className="w-3.5 h-3.5" />
             New Group
           </button>
           <button 
             onClick={() => setShowAddContact(true)} 
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-brand-primary hover:bg-brand-primary-hover cursor-pointer shadow-lg shadow-brand-primary/20 transition-all"
+            className="clay-button-primary flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-semibold text-white cursor-pointer transition-all"
           >
             <Plus className="w-3.5 h-3.5" />
             Add Contact
@@ -320,7 +321,7 @@ export default function ContactsPage() {
               type="text" 
               value={search} 
               onChange={e => setSearch(e.target.value)} 
-              className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 text-sm transition-all" 
+              className="clay-input w-full pl-11 pr-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" 
               placeholder="Search contacts..." 
             />
           </div>
@@ -328,11 +329,11 @@ export default function ContactsPage() {
           {loadingContacts ? (
             <div className="text-center py-16"><Loader2 className="w-8 h-8 text-brand-primary animate-spin mx-auto" /></div>
           ) : (
-            <div className="glass-card rounded-2xl overflow-hidden">
+            <div className="clay-card rounded-3xl overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
-                    <tr className="border-b border-slate-200 dark:border-white/6">
+                    <tr className="border-b border-slate-200/20 dark:border-white/6 clay-inset">
                       <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Name</th>
                       <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Phone</th>
                       <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider hidden sm:table-cell">Email</th>
@@ -346,7 +347,7 @@ export default function ContactsPage() {
                         initial={{ opacity: 0 }} 
                         animate={{ opacity: 1 }} 
                         transition={{ delay: Math.min(i * 0.015, 0.5) }} 
-                        className="border-b border-slate-100 dark:border-white/[0.03] last:border-0 hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors"
+                        className="clay-row-hover border-b border-slate-100 dark:border-white/[0.03] last:border-0 hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors"
                       >
                         <td className="px-5 py-3">
                           <div className="flex items-center gap-3">
@@ -379,7 +380,7 @@ export default function ContactsPage() {
               )}
 
               {totalContactsCount > 0 && (
-                <div className="px-5 py-4 bg-slate-50 dark:bg-white/[0.01] border-t border-slate-200 dark:border-white/6 flex items-center justify-between flex-wrap gap-4 text-xs font-semibold text-slate-500 dark:text-gray-400">
+                <div className="clay-inset px-5 py-4 border-t border-slate-200/20 dark:border-white/6 flex items-center justify-between flex-wrap gap-4 text-xs font-semibold text-slate-500 dark:text-gray-400 rounded-b-3xl">
                   <div>
                     Showing <span className="text-slate-900 dark:text-white font-bold">{((page - 1) * limit) + 1}</span> to{' '}
                     <span className="text-slate-900 dark:text-white font-bold">{Math.min(page * limit, totalContactsCount)}</span> of{' '}
@@ -389,14 +390,14 @@ export default function ContactsPage() {
                     <button
                       onClick={() => setPage(p => Math.max(p - 1, 1))}
                       disabled={page === 1}
-                      className="px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
+                      className="clay-button-secondary px-3 py-2 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
                     >
                       Previous
                     </button>
                     <button
                       onClick={() => setPage(p => p + 1)}
                       disabled={page * limit >= totalContactsCount}
-                      className="px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
+                      className="clay-button-secondary px-3 py-2 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
                     >
                       Next
                     </button>
@@ -414,7 +415,7 @@ export default function ContactsPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {groups.map((g) => (
-                <div key={g.id} className="glass-card rounded-2xl p-5 flex flex-col justify-between border border-slate-200 dark:border-white/10 relative overflow-hidden">
+                <div key={g.id} className="clay-card clay-card-hover rounded-3xl p-5 flex flex-col justify-between dark:border-white/10 relative overflow-hidden">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <Layers className="w-4 h-4 text-brand-primary" />
@@ -424,7 +425,7 @@ export default function ContactsPage() {
                       {g.description || 'No description provided.'}
                     </p>
                   </div>
-                  <div className="flex items-center justify-between border-t border-slate-100 dark:border-white/5 mt-4 pt-3 text-[11px] text-slate-400">
+                  <div className="flex items-center justify-between border-t border-slate-200/20 dark:border-white/5 mt-4 pt-3 text-[11px] text-slate-400">
                     <span>Created {new Date(g.created_at).toLocaleDateString()}</span>
                     <button 
                       onClick={() => handleDeleteGroup(g.id)}
@@ -452,7 +453,7 @@ export default function ContactsPage() {
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-50" onClick={() => setShowImport(false)} />
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <div className="bg-white dark:bg-surface-card rounded-2xl border border-slate-200 dark:border-white/10 shadow-2xl w-full max-w-md p-6 space-y-5" onClick={e => e.stopPropagation()}>
+              <div className="clay-card rounded-3xl dark:border dark:border-white/10 w-full max-w-md p-6 space-y-5" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <FileSpreadsheet className="w-5 h-5 text-brand-primary" />Import Contacts (CSV)
@@ -508,7 +509,7 @@ export default function ContactsPage() {
                         onChange={handleFileChange} 
                         accept=".csv"
                         required
-                        className="w-full px-3 py-2 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-white/[0.03] text-sm text-slate-800 dark:text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-primary/10 file:text-brand-primary hover:file:bg-brand-primary/20"
+                        className="clay-input w-full px-3 py-2 rounded-2xl text-sm text-slate-800 dark:text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-primary/10 file:text-brand-primary hover:file:bg-brand-primary/20"
                       />
                       <p className="text-[10px] text-slate-400">Headers like 'name', 'phone' and 'email' are auto-detected. Format Kenya numbers as +254... or 07...</p>
                     </div>
@@ -518,7 +519,7 @@ export default function ContactsPage() {
                       <select
                         value={importGroupId}
                         onChange={e => setImportGroupId(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary text-sm cursor-pointer"
+                        className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm cursor-pointer"
                       >
                         <option value="">— No group (All Contacts) —</option>
                         {groups.map(g => (
@@ -527,7 +528,7 @@ export default function ContactsPage() {
                       </select>
                     </div>
 
-                    <div className="bg-slate-100 dark:bg-white/5 rounded-xl p-3.5 text-[11px] text-slate-500 leading-normal flex gap-2">
+                    <div className="clay-inset rounded-2xl p-3.5 text-[11px] text-slate-500 leading-normal flex gap-2">
                       <AlertCircle className="w-4 h-4 text-brand-primary shrink-0" />
                       <span>
                         <strong>Async Upload Optimizations:</strong> Large CSV files are processed asynchronously in the background. Duplicate phone numbers and empty lines are skipped automatically.
@@ -535,11 +536,11 @@ export default function ContactsPage() {
                     </div>
 
                     <div className="flex gap-3">
-                      <button type="button" onClick={() => setShowImport(false)} className="flex-1 py-3 rounded-xl text-sm font-medium text-slate-600 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 cursor-pointer transition-all">Cancel</button>
+                      <button type="button" onClick={() => setShowImport(false)} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
                       <button 
                         type="submit" 
                         disabled={importing || !selectedFile} 
-                        className="flex-1 py-3 rounded-xl text-sm font-semibold text-white bg-brand-primary hover:bg-brand-primary-hover cursor-pointer shadow-lg shadow-brand-primary/20 transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
+                        className="clay-button-primary flex-1 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
                       >
                         {importing && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                         <span>{importing ? 'Uploading...' : 'Import'}</span>
@@ -559,22 +560,22 @@ export default function ContactsPage() {
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-50" onClick={() => setShowAddContact(false)} />
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <form onSubmit={handleAddContact} className="bg-white dark:bg-surface-card rounded-2xl border border-slate-200 dark:border-white/10 shadow-2xl w-full max-w-md p-6 space-y-5" onClick={e => e.stopPropagation()}>
+              <form onSubmit={handleAddContact} className="clay-card rounded-3xl dark:border dark:border-white/10 w-full max-w-md p-6 space-y-5" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center gap-2"><UserPlus className="w-5 h-5 text-brand-primary" />Add Contact</h3>
                   <button type="button" onClick={() => setShowAddContact(false)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer"><X className="w-5 h-5" /></button>
                 </div>
                 <div className="space-y-4">
-                  <div className="space-y-1.5"><label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Full Name *</label><input type="text" value={newName} onChange={e => setNewName(e.target.value)} required className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary text-sm transition-all" placeholder="John Doe" /></div>
-                  <div className="space-y-1.5"><label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Phone *</label><input type="tel" value={newPhone} onChange={e => setNewPhone(e.target.value)} required className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary text-sm font-mono transition-all" placeholder="+254712345678" /></div>
-                  <div className="space-y-1.5"><label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Email</label><input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary text-sm transition-all" placeholder="email@example.com" /></div>
+                  <div className="space-y-1.5"><label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Full Name *</label><input type="text" value={newName} onChange={e => setNewName(e.target.value)} required className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" placeholder="John Doe" /></div>
+                  <div className="space-y-1.5"><label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Phone *</label><input type="tel" value={newPhone} onChange={e => setNewPhone(e.target.value)} required className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm font-mono transition-all" placeholder="+254712345678" /></div>
+                  <div className="space-y-1.5"><label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Email</label><input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" placeholder="email@example.com" /></div>
                   
                   <div className="space-y-1.5">
                     <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Add to Group</label>
                     <select
                       value={newContactGroupId}
                       onChange={e => setNewContactGroupId(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary text-sm cursor-pointer"
+                      className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm cursor-pointer"
                     >
                       <option value="">— No group (Unsorted) —</option>
                       {groups.map(g => (
@@ -584,8 +585,8 @@ export default function ContactsPage() {
                   </div>
                 </div>
                 <div className="flex gap-3">
-                  <button type="button" onClick={() => setShowAddContact(false)} className="flex-1 py-3 rounded-xl text-sm font-medium text-slate-600 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 cursor-pointer transition-all">Cancel</button>
-                  <button type="submit" disabled={savingContact || !newName || !newPhone} className="flex-1 py-3 rounded-xl text-sm font-semibold text-white bg-brand-primary hover:bg-brand-primary-hover cursor-pointer shadow-lg shadow-brand-primary/20 transition-all disabled:opacity-50">
+                  <button type="button" onClick={() => setShowAddContact(false)} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
+                  <button type="submit" disabled={savingContact || !newName || !newPhone} className="clay-button-primary flex-1 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-50">
                     {savingContact ? 'Saving...' : 'Save'}
                   </button>
                 </div>
@@ -601,18 +602,18 @@ export default function ContactsPage() {
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-50" onClick={() => setShowAddGroup(false)} />
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <form onSubmit={handleAddGroup} className="bg-white dark:bg-surface-card rounded-2xl border border-slate-200 dark:border-white/10 shadow-2xl w-full max-w-md p-6 space-y-5" onClick={e => e.stopPropagation()}>
+              <form onSubmit={handleAddGroup} className="clay-card rounded-3xl dark:border dark:border-white/10 w-full max-w-md p-6 space-y-5" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center gap-2"><FolderPlus className="w-5 h-5 text-brand-primary" />Create Contact Group</h3>
                   <button type="button" onClick={() => setShowAddGroup(false)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer"><X className="w-5 h-5" /></button>
                 </div>
                 <div className="space-y-4">
-                  <div className="space-y-1.5"><label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Group Name *</label><input type="text" value={newGroupName} onChange={e => setNewGroupName(e.target.value)} required className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary text-sm transition-all" placeholder="e.g. VIP Customers" /></div>
-                  <div className="space-y-1.5"><label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Description</label><textarea value={newGroupDesc} onChange={e => setNewGroupDesc(e.target.value)} rows={3} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary text-sm transition-all resize-none" placeholder="Briefly describe who is in this segment..." /></div>
+                  <div className="space-y-1.5"><label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Group Name *</label><input type="text" value={newGroupName} onChange={e => setNewGroupName(e.target.value)} required className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" placeholder="e.g. VIP Customers" /></div>
+                  <div className="space-y-1.5"><label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Description</label><textarea value={newGroupDesc} onChange={e => setNewGroupDesc(e.target.value)} rows={3} className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all resize-none" placeholder="Briefly describe who is in this segment..." /></div>
                 </div>
                 <div className="flex gap-3">
-                  <button type="button" onClick={() => setShowAddGroup(false)} className="flex-1 py-3 rounded-xl text-sm font-medium text-slate-600 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 cursor-pointer transition-all">Cancel</button>
-                  <button type="submit" disabled={savingGroup || !newGroupName} className="flex-1 py-3 rounded-xl text-sm font-semibold text-white bg-brand-primary hover:bg-brand-primary-hover cursor-pointer shadow-lg shadow-brand-primary/20 transition-all disabled:opacity-50">
+                  <button type="button" onClick={() => setShowAddGroup(false)} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
+                  <button type="submit" disabled={savingGroup || !newGroupName} className="clay-button-primary flex-1 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-50">
                     {savingGroup ? 'Creating...' : 'Create'}
                   </button>
                 </div>

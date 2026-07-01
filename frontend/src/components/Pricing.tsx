@@ -118,8 +118,8 @@ export default function Pricing() {
               style={{ transitionDelay: `${index * 100}ms` }}
             >
               <div
-                className={`glass-card rounded-2xl p-8 h-full flex flex-col relative overflow-hidden ${
-                  tier.popular ? 'border-brand-primary/30 ring-1 ring-brand-primary/10' : ''
+                className={`clay-card rounded-3xl p-8 h-full flex flex-col relative overflow-hidden ${
+                  tier.popular ? 'ring-1 ring-brand-primary/20' : ''
                 }`}
               >
                 {/* Popular badge */}
@@ -163,10 +163,8 @@ export default function Pricing() {
 
                 {/* CTA */}
                 <button
-                  className={`w-full py-3.5 rounded-xl text-sm font-semibold transition-all duration-300 cursor-pointer ${
-                    tier.popular
-                      ? 'bg-brand-primary hover:bg-brand-primary-hover text-white shadow-lg shadow-brand-primary/20'
-                      : 'bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-800 dark:text-white border border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20'
+                  className={`w-full py-3.5 rounded-2xl text-sm font-semibold transition-all duration-300 cursor-pointer ${
+                    tier.popular ? 'clay-button-primary' : 'clay-button-secondary'
                   }`}
                 >
                   {tier.cta}
@@ -179,7 +177,7 @@ export default function Pricing() {
 
       {/* RESELLER CALLOUT */}
       <div className={`scroll-animate ${isVisible ? 'is-visible' : ''}`} style={{ transitionDelay: '400ms' }}>
-        <div className="glass-card rounded-2xl p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6 border-brand-accent/20">
+        <div className="clay-card rounded-3xl p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-start gap-4 max-w-xl">
             <div className="w-12 h-12 rounded-xl bg-brand-accent/10 text-brand-accent flex items-center justify-center shrink-0">
               <Users className="w-6 h-6" />
@@ -191,7 +189,7 @@ export default function Pricing() {
               </p>
             </div>
           </div>
-          <button className="shrink-0 px-8 py-3.5 rounded-xl text-sm font-semibold bg-brand-accent hover:bg-brand-accent-hover text-white cursor-pointer shadow-lg shadow-brand-accent/20 transition-all duration-300 hover:scale-[1.02] active:scale-95">
+          <button className="clay-button-primary shrink-0 px-8 py-3.5 rounded-2xl text-sm font-semibold cursor-pointer transition-all duration-300">
             Apply for Reseller Account
           </button>
         </div>

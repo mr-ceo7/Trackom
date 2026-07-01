@@ -117,7 +117,7 @@ export default function LandingPage() {
 
         {/* Compliance Trust Banner */}
         <section className="py-16 px-4 md:px-8 max-w-7xl mx-auto border-t border-slate-200 dark:border-white/6">
-          <div className="glass-card rounded-2xl p-8 md:p-10 flex flex-col lg:flex-row items-center justify-between gap-8 text-left">
+          <div className="clay-card rounded-3xl p-8 md:p-10 flex flex-col lg:flex-row items-center justify-between gap-8 text-left">
             <div className="space-y-3 max-w-xl">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-semibold bg-brand-emerald/10 text-brand-emerald font-mono">
                 <Shield className="w-4 h-4" />

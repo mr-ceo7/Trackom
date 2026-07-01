@@ -155,7 +155,7 @@ export default function Features() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
 
         {/* CARD 1: SMART ROUTE SHUFFLER */}
-        <div className="glass-card group rounded-2xl p-8 flex flex-col justify-between overflow-hidden relative">
+        <div className="clay-card clay-card-hover group rounded-3xl p-8 flex flex-col justify-between overflow-hidden relative">
           <div className="relative z-10 max-w-md">
             <div className="p-3 rounded-xl bg-brand-primary/10 text-brand-primary w-fit mb-6 transition-transform group-hover:scale-110">
               <Shuffle className="w-6 h-6 stroke-[2]" />
@@ -181,7 +181,7 @@ export default function Features() {
         {/* RIGHT STACK */}
         <div className="flex flex-col gap-6">
           {/* CARD 2: AI COPYWRITER */}
-          <div className="glass-card group rounded-2xl p-8 flex flex-col justify-between relative">
+          <div className="clay-card clay-card-hover group rounded-3xl p-8 flex flex-col justify-between relative">
             <div>
               <div className="p-3 rounded-xl bg-brand-accent/10 text-brand-accent w-fit mb-6 transition-transform group-hover:scale-110">
                 <Cpu className="w-6 h-6 stroke-[2]" />
@@ -217,7 +217,7 @@ export default function Features() {
           </div>
 
           {/* CARD 3: ANALYTICS */}
-          <div className="glass-card group rounded-2xl p-8 flex flex-col relative">
+          <div className="clay-card clay-card-hover group rounded-3xl p-8 flex flex-col relative">
             <div className="p-3 rounded-xl bg-brand-emerald/10 text-brand-emerald w-fit mb-6 transition-transform group-hover:scale-110">
               <BarChart2 className="w-6 h-6 stroke-[2]" />
             </div>

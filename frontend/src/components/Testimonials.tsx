@@ -85,7 +85,7 @@ export default function Testimonials() {
             {[...testimonials, ...testimonials].map((t, i) => (
               <div
                 key={`${t.name}-${i}`}
-                className="glass-card rounded-2xl p-6 w-[340px] shrink-0 flex flex-col justify-between gap-4"
+                className="clay-card rounded-3xl p-6 w-[340px] shrink-0 flex flex-col justify-between gap-4"
               >
                 {/* Stars */}
                 <div className="flex gap-0.5">

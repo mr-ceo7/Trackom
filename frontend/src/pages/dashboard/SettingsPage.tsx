@@ -54,21 +54,21 @@ export default function SettingsPage() {
       )}
 
       {tab === 'profile' && (
-        <div className="glass-card rounded-2xl p-6 space-y-5">
+        <div className="clay-card rounded-3xl p-6 space-y-5">
           <h3 className="font-display font-semibold text-sm text-slate-900 dark:text-white">Profile Information</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5"><label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Full Name</label><input type="text" value={fullName} onChange={e => setFullName(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary text-sm transition-all" /></div>
-            <div className="space-y-1.5"><label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Email</label><input type="email" value={user?.email || ''} disabled className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.01] text-slate-400 dark:text-gray-500 text-sm cursor-not-allowed" /></div>
-            <div className="space-y-1.5"><label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Phone</label><input type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary text-sm font-mono transition-all" /></div>
-            <div className="space-y-1.5"><label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Company</label><input type="text" value={company} onChange={e => setCompany(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary text-sm transition-all" /></div>
+            <div className="space-y-1.5"><label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Full Name</label><input type="text" value={fullName} onChange={e => setFullName(e.target.value)} className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" /></div>
+            <div className="space-y-1.5"><label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Email</label><input type="email" value={user?.email || ''} disabled className="clay-inset w-full px-4 py-3 rounded-2xl text-slate-400 dark:text-gray-500 text-sm cursor-not-allowed" /></div>
+            <div className="space-y-1.5"><label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Phone</label><input type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm font-mono transition-all" /></div>
+            <div className="space-y-1.5"><label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Company</label><input type="text" value={company} onChange={e => setCompany(e.target.value)} className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" /></div>
             <div className="space-y-1.5 sm:col-span-2">
               <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Webhook Callback URL (Developer)</label>
-              <input type="url" value={webhookUrl} onChange={e => setWebhookUrl(e.target.value)} placeholder="https://api.yourcompany.com/sms/callback" className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary text-sm font-mono transition-all" />
+              <input type="url" value={webhookUrl} onChange={e => setWebhookUrl(e.target.value)} placeholder="https://api.yourcompany.com/sms/callback" className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm font-mono transition-all" />
               <p className="text-[10px] text-slate-400 dark:text-gray-500 mt-1">If set, we will POST real-time delivery status reports (DLR) to this endpoint for all SMS operations.</p>
             </div>
           </div>
           <div className="flex items-center gap-3 pt-2">
-            <button onClick={handleSaveProfile} disabled={saving} className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white bg-brand-primary hover:bg-brand-primary-hover cursor-pointer shadow-lg shadow-brand-primary/20 transition-all disabled:opacity-60">
+            <button onClick={handleSaveProfile} disabled={saving} className="clay-button-primary flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-60">
               {saving ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : null}
               {saving ? 'Saving...' : 'Save Changes'}
             </button>
@@ -77,19 +77,19 @@ export default function SettingsPage() {
       )}
 
       {tab === 'security' && (
-        <div className="glass-card rounded-2xl p-6 space-y-5">
+        <div className="clay-card rounded-3xl p-6 space-y-5">
           <h3 className="font-display font-semibold text-sm text-slate-900 dark:text-white">Change Password</h3>
           <div className="space-y-4 max-w-md">
             {['Current Password', 'New Password', 'Confirm Password'].map(l => (
-              <div key={l} className="space-y-1.5"><label className="block text-xs font-medium text-slate-600 dark:text-gray-400">{l}</label><input type="password" className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-900 dark:text-white focus:outline-none focus:border-brand-primary text-sm transition-all" placeholder="••••••••" /></div>
+              <div key={l} className="space-y-1.5"><label className="block text-xs font-medium text-slate-600 dark:text-gray-400">{l}</label><input type="password" className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" placeholder="••••••••" /></div>
             ))}
-            <button className="px-6 py-3 rounded-xl text-sm font-semibold text-white bg-brand-primary hover:bg-brand-primary-hover cursor-pointer shadow-lg shadow-brand-primary/20 transition-all">Update Password</button>
+            <button className="clay-button-primary px-6 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all">Update Password</button>
           </div>
         </div>
       )}
 
       {tab === 'notifications' && (
-        <div className="glass-card rounded-2xl p-6 space-y-4">
+        <div className="clay-card rounded-3xl p-6 space-y-4">
           <h3 className="font-display font-semibold text-sm text-slate-900 dark:text-white">Notification Preferences</h3>
           {['Campaign completion alerts', 'Low balance warnings', 'Weekly reports', 'API usage alerts', 'Security notifications'].map(n => (
             <label key={n} className="flex items-center justify-between py-2 cursor-pointer">
@@ -101,7 +101,7 @@ export default function SettingsPage() {
       )}
 
       {tab === 'billing' && (
-        <div className="glass-card rounded-2xl p-6 space-y-4">
+        <div className="clay-card rounded-3xl p-6 space-y-4">
           <h3 className="font-display font-semibold text-sm text-slate-900 dark:text-white">Current Plan</h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
@@ -109,11 +109,11 @@ export default function SettingsPage() {
               { name: 'Growth', price: 'KES 2,999/mo', features: ['50K credits/mo', 'Priority support', '5 Sender IDs'], current: user?.plan === 'growth' },
               { name: 'Enterprise', price: 'Custom', features: ['Unlimited credits', 'Dedicated support', 'Custom Sender IDs'], current: user?.plan === 'enterprise' },
             ].map(p => (
-              <div key={p.name} className={`rounded-xl border p-5 space-y-3 transition-all ${p.current ? 'border-brand-primary bg-brand-primary/5 ring-1 ring-brand-primary/20' : 'border-slate-200 dark:border-white/10'}`}>
+              <div key={p.name} className={`clay-card clay-card-hover rounded-3xl p-5 space-y-3 transition-all ${p.current ? 'border-brand-primary bg-brand-primary/5 ring-1 ring-brand-primary/20' : ''}`}>
                 <div className="text-sm font-bold text-slate-900 dark:text-white">{p.name}</div>
                 <div className="text-lg font-bold text-brand-primary font-mono">{p.price}</div>
                 <ul className="space-y-1">{p.features.map(f => <li key={f} className="text-xs text-slate-500 dark:text-gray-400 flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3 text-brand-emerald" />{f}</li>)}</ul>
-                <button className={`w-full py-2 rounded-lg text-xs font-semibold cursor-pointer transition-all ${p.current ? 'bg-brand-primary/10 text-brand-primary' : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-gray-400 hover:bg-brand-primary hover:text-white'}`}>{p.current ? 'Current Plan' : 'Upgrade'}</button>
+                <button className={`clay-button-secondary w-full py-2.5 rounded-2xl text-xs font-semibold cursor-pointer transition-all ${p.current ? 'clay-nav-active text-brand-primary' : ''}`}>{p.current ? 'Current Plan' : 'Upgrade'}</button>
               </div>
             ))}
           </div>
