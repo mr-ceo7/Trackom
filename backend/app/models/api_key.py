@@ -4,7 +4,7 @@ import uuid
 import secrets
 from datetime import datetime
 
-from sqlalchemy import String, Boolean, DateTime, ForeignKey, Integer
+from sqlalchemy import String, Boolean, DateTime, ForeignKey, Integer, Numeric
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -24,6 +24,7 @@ class ApiKey(Base):
     rate_limit: Mapped[int] = mapped_column(Integer, default=60, nullable=False)
     ip_whitelist: Mapped[str] = mapped_column(String(255), nullable=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+    max_credits: Mapped[float] = mapped_column(Numeric(10, 2), nullable=True)
     usage_count: Mapped[int] = mapped_column(Integer, default=0)
     last_used_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
