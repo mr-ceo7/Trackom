@@ -650,6 +650,27 @@ body {
     inset -1px -1px 3px rgba(0, 0, 0, 0.55);
 }
 
+/* ---------- Clay Icon Raised (3D button pockets for stats) ---------- */
+.clay-icon-raised {
+  background: #EEF0F8;
+  border: none !important;
+  box-shadow:
+    3px 3px 8px rgba(156, 163, 184, 0.35),
+    -3px -3px 8px rgba(255, 255, 255, 0.85),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.60);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dark .clay-icon-raised {
+  background: var(--color-surface-elevated) !important;
+  border: none !important;
+  box-shadow:
+    5px 5px 12px rgba(0, 0, 0, 0.50),
+    -4px -4px 12px rgba(255, 255, 255, 0.03),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.08),
+    inset -2px -2px 5px rgba(0, 0, 0, 0.40);
+}
+
 /* ---------- Clay Sidebar ---------- */
 .clay-sidebar {
   background: #EBEdf5;

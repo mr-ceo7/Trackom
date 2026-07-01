@@ -60,10 +60,10 @@ export default function DashboardOverview() {
   }, [statsData]);
 
   const stats = [
-    { label: 'SMS Balance', value: (user?.sms_balance || statsData.balance).toLocaleString(), icon: MessageSquare, color: 'text-brand-primary', bg: 'bg-brand-primary/10' },
-    { label: 'Messages Today', value: statsData.sent_today.toLocaleString(), icon: TrendingUp, color: 'text-brand-emerald', bg: 'bg-brand-emerald/10' },
-    { label: 'Contacts', value: contactsCount.toLocaleString(), icon: Users, color: 'text-brand-accent', bg: 'bg-brand-accent/10' },
-    { label: 'Total Sent', value: statsData.total_sent.toLocaleString(), icon: Megaphone, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+    { label: 'SMS Balance', value: (user?.sms_balance || statsData.balance).toLocaleString(), icon: MessageSquare, color: 'text-brand-primary', bg: 'clay-icon-raised', glow: 'drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]' },
+    { label: 'Messages Today', value: statsData.sent_today.toLocaleString(), icon: TrendingUp, color: 'text-brand-emerald', bg: 'clay-icon-raised', glow: 'drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]' },
+    { label: 'Contacts', value: contactsCount.toLocaleString(), icon: Users, color: 'text-brand-accent', bg: 'clay-icon-raised', glow: 'drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]' },
+    { label: 'Total Sent', value: statsData.total_sent.toLocaleString(), icon: Megaphone, color: 'text-purple-500', bg: 'clay-icon-raised', glow: 'drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]' },
   ];
 
   // Calculate rotation for speedometer needle (from -90deg to +90deg based on 0-200 throughput range)
@@ -86,7 +86,7 @@ export default function DashboardOverview() {
         {stats.map((stat) => (
           <div key={stat.label} className="clay-stat rounded-3xl p-5 flex items-start gap-4">
             <div className={`w-11 h-11 rounded-2xl ${stat.bg} flex items-center justify-center shrink-0`}>
-              <stat.icon className={`w-5 h-5 ${stat.color}`} />
+              <stat.icon className={`w-5 h-5 ${stat.color} ${stat.glow}`} />
             </div>
             <div>
               <div className="text-2xl font-bold text-slate-900 dark:text-white font-mono">{stat.value}</div>
