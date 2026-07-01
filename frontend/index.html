@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' http://localhost:8000 https://*.trackomgroup.com; img-src 'self' data: https:; frame-ancestors 'none';" />
+    
+    <!-- SEO -->
+    <title>Trackom — Enterprise Bulk SMS, USSD & Communications API | Kenya</title>
+    <meta name="description" content="Trackom is Kenya's leading enterprise bulk SMS, USSD, WhatsApp Business API, OTP verification, and communications platform. Send smarter, scale faster, deliver instantly." />
+    <meta name="keywords" content="bulk SMS Kenya, SMS API, USSD services, WhatsApp Business API, OTP verification, airtime API, Trackom, enterprise SMS" />
+    <link rel="canonical" href="https://trackomgroup.com" />
+    
+    <!-- OG Tags -->
+    <meta property="og:title" content="Trackom — Enterprise Communications Platform" />
+    <meta property="og:description" content="Kenya's #1 Bulk SMS, USSD, WhatsApp API & OTP platform. AI-powered tools, developer-first API, 99.99% uptime." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://trackomgroup.com" />
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Trackom — Enterprise Communications Platform" />
+    <meta name="twitter:description" content="Send smarter. Scale faster. Deliver instantly." />
+    
+    <!-- Preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- Theme -->
+    <meta name="theme-color" content="#6366F1" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/icons/icon-512.svg" />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Trackom",
+      "url": "https://trackomgroup.com",
+      "description": "Kenya's leading enterprise bulk SMS, USSD, WhatsApp Business API, OTP verification, and communications platform.",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer service",
+        "url": "https://trackomgroup.com/contact"
+      },
+      "sameAs": []
+    }
+    </script>
+
+    <!-- Theme Initialization Script -->
+    <script>
+      (function() {
+        const stored = localStorage.getItem('trackom-theme');
+        if (stored) {
+          if (stored === 'dark') {
+            document.documentElement.classList.add('dark');
+            document.documentElement.classList.remove('light');
+          } else {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.classList.add('light');
+          }
+        } else {
+          const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (systemDark) {
+            document.documentElement.classList.add('dark');
+            document.documentElement.classList.remove('light');
+          } else {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.classList.add('light');
+          }
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
+    </script>
+  </body>
+</html>

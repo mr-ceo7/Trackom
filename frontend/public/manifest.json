@@ -1,0 +1,28 @@
+{
+  "name": "Trackom — Enterprise Communications",
+  "short_name": "Trackom",
+  "description": "Kenya's leading enterprise SMS, USSD & WhatsApp API platform",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#F3F4FD",
+  "theme_color": "#6366F1",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "lang": "en",
+  "dir": "ltr"
+}
