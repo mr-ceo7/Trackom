@@ -2,9 +2,10 @@
  * CampaignsPage — view and create SMS campaigns with groups targeting & scheduling.
  */
 import React, { useState, useEffect, useCallback } from 'react';
-import { Megaphone, Plus, Clock, CheckCircle2, XCircle, Send, BarChart3, Loader2, X, Calendar, Users } from 'lucide-react';
+import { Megaphone, Plus, Clock, CheckCircle2, XCircle, Send, BarChart3, X, Calendar, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import api from '../../services/api';
+import Loader from '../../components/Loader';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface CampaignData {
@@ -310,7 +311,7 @@ export default function CampaignsPage() {
       </div>
 
       {loading ? (
-        <div className="text-center py-16"><Loader2 className="w-8 h-8 text-brand-primary animate-spin mx-auto" /></div>
+        <div className="text-center py-12"><Loader size="md" /></div>
       ) : (
         <div className="space-y-3">
           {campaigns.map(c => (

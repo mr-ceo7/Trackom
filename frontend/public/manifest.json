@@ -1,28 +1,75 @@
 {
   "name": "Trackom — Enterprise Communications",
   "short_name": "Trackom",
-  "description": "Kenya's leading enterprise SMS, USSD & WhatsApp API platform",
+  "description": "Kenya's leading enterprise SMS, USSD & WhatsApp API platform. Send smarter, scale faster, deliver instantly.",
   "start_url": "/dashboard",
   "display": "standalone",
-  "background_color": "#F3F4FD",
+  "background_color": "#0F1729",
   "theme_color": "#6366F1",
   "orientation": "portrait-primary",
   "scope": "/",
+  "id": "/dashboard",
   "icons": [
+    {
+      "src": "/icons/favicon-16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/favicon-32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
     {
       "src": "/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
-  "categories": ["business", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Compose SMS",
+      "short_name": "Compose",
+      "url": "/dashboard/compose",
+      "description": "Send a new SMS message",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Contacts",
+      "short_name": "Contacts",
+      "url": "/dashboard/contacts",
+      "description": "Manage your contacts",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Reports",
+      "short_name": "Reports",
+      "url": "/dashboard/reports",
+      "description": "View messaging reports",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "categories": ["business", "productivity", "utilities"],
   "lang": "en",
-  "dir": "ltr"
+  "dir": "ltr",
+  "prefer_related_applications": false
 }

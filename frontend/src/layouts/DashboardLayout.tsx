@@ -113,9 +113,9 @@ export default function DashboardLayout() {
     .toUpperCase() || '??';
 
   return (
-    <div className="min-h-screen flex bg-[#E4E8F1] dark:bg-surface-dark">
+    <div className="h-screen flex overflow-hidden bg-[#E4E8F1] dark:bg-surface-dark">
       {/* SIDEBAR — Desktop */}
-      <aside className="hidden lg:flex flex-col w-64 clay-sidebar shrink-0">
+      <aside className="hidden lg:flex flex-col w-64 h-screen clay-sidebar shrink-0">
         <div className="px-6 py-5">
           <NavLink to="/"><TrackomLogo size={24} /></NavLink>
         </div>
@@ -145,7 +145,7 @@ export default function DashboardLayout() {
           ))}
         </nav>
 
-        <div className="p-4 space-y-3">
+        <div className="p-4">
           <div className="flex items-center gap-2 px-3 py-2 rounded-2xl clay-inset">
             <MessageSquare className="w-4 h-4 text-brand-primary" />
             <div className="flex-1">
@@ -154,19 +154,6 @@ export default function DashboardLayout() {
                 {user?.sms_balance?.toLocaleString() || '0'}
               </div>
             </div>
-          </div>
-
-          <div className="flex items-center gap-3 px-3">
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-brand-primary to-brand-accent flex items-center justify-center text-white text-xs font-bold shrink-0 clay-button-primary">
-              {initials}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold text-slate-900 dark:text-white truncate">{user?.full_name}</div>
-              <div className="text-[11px] text-slate-400 dark:text-gray-500 truncate">{user?.email}</div>
-            </div>
-            <button onClick={handleLogout} className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 cursor-pointer transition-all" title="Sign out">
-              <LogOut className="w-4 h-4" />
-            </button>
           </div>
         </div>
       </aside>
@@ -197,9 +184,9 @@ export default function DashboardLayout() {
       </AnimatePresence>
 
       {/* MAIN CONTENT AREA */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         {/* TOP BAR */}
-        <header className="flex items-center justify-between px-4 sm:px-6 py-3 clay-topbar sticky top-0 z-30">
+        <header className="flex items-center justify-between px-4 sm:px-6 py-3 clay-topbar shrink-0 z-30">
           <div className="flex items-center gap-3">
             <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-2xl text-slate-500 hover:text-slate-700 dark:text-gray-400 dark:hover:text-white hover:bg-slate-200/40 dark:hover:bg-white/5 cursor-pointer transition-all">
               <Menu className="w-5 h-5" />
@@ -250,7 +237,7 @@ export default function DashboardLayout() {
         </header>
 
         {/* PAGE CONTENT */}
-        <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
+        <main className="flex-1 p-4 sm:p-6 overflow-y-auto min-h-0">
           <Outlet />
         </main>
       </div>

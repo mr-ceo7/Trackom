@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, ArrowRight, ArrowLeft, CheckCircle2, Building2, AlertCircle, Sparkles } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import Loader from './Loader';
 
 interface SignupModalProps {
   isOpen: boolean;
@@ -362,10 +363,7 @@ export default function SignupModal({ isOpen, onClose }: SignupModalProps) {
                           className="col-span-2 flex items-center justify-center gap-1.5 py-3 rounded-xl text-xs font-bold text-white bg-brand-primary hover:bg-brand-primary-hover cursor-pointer shadow-lg shadow-brand-primary/10 transition-all duration-300 disabled:opacity-60"
                         >
                           {isSubmitting ? (
-                            <span className="flex items-center gap-1.5">
-                              <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                              Creating...
-                            </span>
+                            <Loader size="sm" />
                           ) : (
                             <>
                               <span>Create Free Account</span>

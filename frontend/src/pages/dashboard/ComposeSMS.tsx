@@ -3,9 +3,10 @@
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Send, Users, Hash, MessageSquare, AlertCircle, CheckCircle2, ChevronDown, Zap, Loader2, Sliders, X } from 'lucide-react';
+import { Send, Users, Hash, MessageSquare, AlertCircle, CheckCircle2, ChevronDown, Zap, Sliders, X } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
+import Loader from '../../components/Loader';
 import { calculateSmsParts } from '../../utils';
 
 
@@ -318,7 +319,7 @@ export default function ComposeSMS() {
               />
               {loadingGroup && (
                 <div className="absolute inset-0 bg-white/20 dark:bg-black/20 backdrop-blur-[1px] flex items-center justify-center rounded-xl">
-                  <Loader2 className="w-6 h-6 text-brand-primary animate-spin" />
+                  <Loader size="sm" />
                 </div>
               )}
             </div>
@@ -487,10 +488,7 @@ export default function ComposeSMS() {
               className="clay-button-primary w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-semibold text-white transition-all duration-300 disabled:opacity-50 active:scale-[0.98]"
             >
               {isSending ? (
-                <span className="flex items-center gap-2">
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Sending...
-                </span>
+                <Loader size="sm" />
               ) : (
                 <>
                   <Send className="w-4 h-4" />
@@ -599,7 +597,7 @@ export default function ComposeSMS() {
                   />
                 </div>
                 <button type="submit" disabled={isSavingTemplate || !newTemplateName} className="clay-button-primary w-full py-3 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2">
-                  {isSavingTemplate ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <span>Save Template</span>}
+                  {isSavingTemplate ? <Loader size="sm" /> : <span>Save Template</span>}
                 </button>
               </form>
             </motion.div>

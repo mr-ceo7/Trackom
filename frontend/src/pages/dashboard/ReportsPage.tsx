@@ -2,9 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { 
   BarChart3, TrendingUp, MessageSquare, CheckCircle2, XCircle, 
-  Clock, Search, Download, Loader2, Calendar, ShieldAlert, Coins
+  Clock, Search, Download, Calendar, ShieldAlert, Coins
 } from 'lucide-react';
 import api from '../../services/api';
+import Loader from '../../components/Loader';
 
 interface MessageLog {
   id: string;
@@ -155,7 +156,7 @@ export default function ReportsPage() {
 
         {/* Logs Table */}
         {loading ? (
-          <div className="text-center py-16"><Loader2 className="w-8 h-8 text-brand-primary animate-spin mx-auto" /></div>
+          <div className="text-center py-12"><Loader size="md" /></div>
         ) : (
           <div className="clay-card rounded-3xl overflow-hidden dark:border-white/10">
             <div className="overflow-x-auto">

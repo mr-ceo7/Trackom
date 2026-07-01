@@ -5,9 +5,11 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Users, Plus, Search, Upload, Trash2, X, UserPlus, 
-  FolderPlus, Loader2, FileSpreadsheet, Layers, AlertCircle, CheckCircle2 
+  FolderPlus, FileSpreadsheet, Layers, AlertCircle, CheckCircle2,
+  FolderMinus, Download, Edit3
 } from 'lucide-react';
 import api from '../../services/api';
+import Loader from '../../components/Loader';
 
 interface Contact { 
   id: string; 
@@ -63,6 +65,26 @@ export default function ContactsPage() {
 
   const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
   const terminalEndRef = useRef<HTMLDivElement>(null);
+
+  // Mass Editing States
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectAllTotal, setSelectAllTotal] = useState(false);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showRemoveModal, setShowRemoveModal] = useState(false);
+  const [showBulkEditModal, setShowBulkEditModal] = useState(false);
+  const [bulkGroupId, setBulkGroupId] = useState('');
+  const [bulkName, setBulkName] = useState('');
+  const [bulkPhone, setBulkPhone] = useState('');
+  const [bulkEmail, setBulkEmail] = useState('');
+  const [bulkUpdating, setBulkUpdating] = useState(false);
+  const [bulkError, setBulkError] = useState<string | null>(null);
+  const [bulkSuccess, setBulkSuccess] = useState<string | null>(null);
+
+  // Clear selection on tab, search, or page navigation
+  useEffect(() => {
+    setSelectedIds([]);
+    setSelectAllTotal(false);
+  }, [activeTab, search, page]);
 
   // Auto-scroll terminal logs to bottom on update
   useEffect(() => {
@@ -137,6 +159,141 @@ export default function ContactsPage() {
       await api.delete(`/contacts/${id}`); 
       await fetchContacts(); 
     } catch { /* noop */ }
+  };
+
+  const handleBulkExport = async () => {
+    try {
+      const resp = await api.post(
+        '/contacts/export',
+        { contact_ids: selectedIds, select_all: selectAllTotal, search: search || null },
+        { responseType: 'blob' }
+      );
+      const blob = new Blob([resp.data], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'trackom_contacts_export.csv';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error('Failed to export contacts', err);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    const countToDelete = selectAllTotal ? totalContactsCount : selectedIds.length;
+    if (!confirm(`Are you sure you want to delete the ${countToDelete.toLocaleString()} selected contacts?`)) return;
+    try {
+      await api.post('/contacts/bulk-delete', { 
+        contact_ids: selectedIds, 
+        select_all: selectAllTotal, 
+        search: search || null 
+      });
+      setSelectedIds([]);
+      setSelectAllTotal(false);
+      await fetchContacts();
+    } catch (err) {
+      console.error('Failed to delete contacts', err);
+    }
+  };
+
+  const handleAssignGroup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!bulkGroupId) return;
+    setBulkUpdating(true);
+    setBulkError(null);
+    try {
+      await api.post('/contacts/bulk-assign-group', {
+        contact_ids: selectedIds,
+        group_id: bulkGroupId,
+        select_all: selectAllTotal,
+        search: search || null
+      });
+      setBulkSuccess('Contacts assigned successfully!');
+      setTimeout(() => {
+        setShowAssignModal(false);
+        setBulkSuccess(null);
+        setBulkGroupId('');
+        setSelectedIds([]);
+        setSelectAllTotal(false);
+        fetchContacts();
+      }, 1500);
+    } catch (err: any) {
+      setBulkError(err.response?.data?.detail || 'Failed to assign contacts.');
+    } finally {
+      setBulkUpdating(false);
+    }
+  };
+
+  const handleRemoveGroup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!bulkGroupId) return;
+    setBulkUpdating(true);
+    setBulkError(null);
+    try {
+      await api.post('/contacts/bulk-remove-group', {
+        contact_ids: selectedIds,
+        group_id: bulkGroupId,
+        select_all: selectAllTotal,
+        search: search || null
+      });
+      setBulkSuccess('Contacts removed successfully!');
+      setTimeout(() => {
+        setShowRemoveModal(false);
+        setBulkSuccess(null);
+        setBulkGroupId('');
+        setSelectedIds([]);
+        setSelectAllTotal(false);
+        fetchContacts();
+      }, 1500);
+    } catch (err: any) {
+      setBulkError(err.response?.data?.detail || 'Failed to remove contacts.');
+    } finally {
+      setBulkUpdating(false);
+    }
+  };
+
+  const handleBulkUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBulkUpdating(true);
+    setBulkError(null);
+    
+    const update: any = {};
+    if (bulkName.trim()) update.name = bulkName.trim();
+    if (bulkPhone.trim()) update.phone = bulkPhone.trim();
+    if (bulkEmail.trim()) update.email = bulkEmail.trim();
+
+    if (Object.keys(update).length === 0) {
+      setBulkError('Please fill in at least one field to update.');
+      setBulkUpdating(false);
+      return;
+    }
+
+    try {
+      await api.post('/contacts/bulk-update', {
+        contact_ids: selectedIds,
+        update,
+        select_all: selectAllTotal,
+        search: search || null
+      });
+      setBulkSuccess('Contacts updated successfully!');
+      setTimeout(() => {
+        setShowBulkEditModal(false);
+        setBulkSuccess(null);
+        setBulkName('');
+        setBulkPhone('');
+        setBulkEmail('');
+        setSelectedIds([]);
+        setSelectAllTotal(false);
+        fetchContacts();
+      }, 1500);
+    } catch (err: any) {
+      setBulkError(err.response?.data?.detail || 'Failed to update contacts.');
+    } finally {
+      setBulkUpdating(false);
+    }
   };
 
   // Group Actions
@@ -326,14 +483,57 @@ export default function ContactsPage() {
             />
           </div>
 
+          {selectedIds.length === contacts.length && totalContactsCount > contacts.length && (
+            <div className="clay-card rounded-2xl p-4 flex items-center justify-between gap-4 transition-all">
+              <div className="text-xs font-semibold text-slate-700 dark:text-gray-300">
+                {selectAllTotal ? (
+                  <span>All <strong>{totalContactsCount.toLocaleString()}</strong> contacts matching the query are selected.</span>
+                ) : (
+                  <span>All <strong>{contacts.length}</strong> contacts on this page are selected.</span>
+                )}
+              </div>
+              {selectAllTotal ? (
+                <button
+                  type="button"
+                  onClick={() => { setSelectedIds([]); setSelectAllTotal(false); }}
+                  className="clay-button-secondary px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-gray-300 cursor-pointer"
+                >
+                  Clear Selection
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setSelectAllTotal(true)}
+                  className="clay-button-primary px-3 py-1.5 rounded-xl text-xs font-semibold text-white cursor-pointer"
+                >
+                  Select all {totalContactsCount.toLocaleString()} contacts
+                </button>
+              )}
+            </div>
+          )}
+
           {loadingContacts ? (
-            <div className="text-center py-16"><Loader2 className="w-8 h-8 text-brand-primary animate-spin mx-auto" /></div>
+            <div className="text-center py-12"><Loader size="md" /></div>
           ) : (
             <div className="clay-card rounded-3xl overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
                     <tr className="border-b border-slate-200/20 dark:border-white/6 clay-inset">
+                      <th className="px-5 py-3.5 w-10">
+                        <input
+                          type="checkbox"
+                          className="rounded border-slate-300 dark:border-white/10 text-brand-primary focus:ring-brand-primary cursor-pointer w-4 h-4"
+                          checked={contacts.length > 0 && contacts.every(c => selectedIds.includes(c.id))}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedIds(contacts.map(c => c.id));
+                            } else {
+                              setSelectedIds([]);
+                            }
+                          }}
+                        />
+                      </th>
                       <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Name</th>
                       <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Phone</th>
                       <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider hidden sm:table-cell">Email</th>
@@ -349,6 +549,20 @@ export default function ContactsPage() {
                         transition={{ delay: Math.min(i * 0.015, 0.5) }} 
                         className="clay-row-hover border-b border-slate-100 dark:border-white/[0.03] last:border-0 hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors"
                       >
+                        <td className="px-5 py-3 w-10">
+                          <input
+                            type="checkbox"
+                            className="rounded border-slate-300 dark:border-white/10 text-brand-primary focus:ring-brand-primary cursor-pointer w-4 h-4"
+                            checked={selectedIds.includes(c.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedIds(prev => [...prev, c.id]);
+                              } else {
+                                setSelectedIds(prev => prev.filter(id => id !== c.id));
+                              }
+                            }}
+                          />
+                        </td>
                         <td className="px-5 py-3">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-primary/20 to-brand-accent/20 flex items-center justify-center text-brand-primary text-xs font-bold shrink-0">
@@ -411,7 +625,7 @@ export default function ContactsPage() {
         /* Groups View */
         <div className="space-y-4">
           {loadingGroups ? (
-            <div className="text-center py-16"><Loader2 className="w-8 h-8 text-brand-primary animate-spin mx-auto" /></div>
+            <div className="text-center py-12"><Loader size="md" /></div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {groups.map((g) => (
@@ -542,8 +756,7 @@ export default function ContactsPage() {
                         disabled={importing || !selectedFile} 
                         className="clay-button-primary flex-1 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
                       >
-                        {importing && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                        <span>{importing ? 'Uploading...' : 'Import'}</span>
+                        {importing ? <Loader size="sm" /> : <span>Import</span>}
                       </button>
                     </div>
                   </form>
@@ -587,7 +800,7 @@ export default function ContactsPage() {
                 <div className="flex gap-3">
                   <button type="button" onClick={() => setShowAddContact(false)} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
                   <button type="submit" disabled={savingContact || !newName || !newPhone} className="clay-button-primary flex-1 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-50">
-                    {savingContact ? 'Saving...' : 'Save'}
+                    {savingContact ? <Loader size="sm" /> : 'Save'}
                   </button>
                 </div>
               </form>
@@ -614,7 +827,281 @@ export default function ContactsPage() {
                 <div className="flex gap-3">
                   <button type="button" onClick={() => setShowAddGroup(false)} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
                   <button type="submit" disabled={savingGroup || !newGroupName} className="clay-button-primary flex-1 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-50">
-                    {savingGroup ? 'Creating...' : 'Create'}
+                    {savingGroup ? <Loader size="sm" /> : 'Create'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Floating Mass Action Toolbar */}
+      <AnimatePresence>
+        {selectedIds.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-full max-w-2xl px-4"
+          >
+            <div className="clay-toolbar rounded-2xl p-4 flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-2">
+                <div className="clay-inset px-2.5 py-1 rounded-lg text-xs font-bold font-mono text-brand-primary dark:text-brand-primary">
+                  {selectAllTotal ? totalContactsCount.toLocaleString() : selectedIds.length}
+                </div>
+                <span className="text-xs font-semibold text-slate-700 dark:text-gray-300">contacts selected</span>
+              </div>
+
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <button
+                  onClick={() => setShowBulkEditModal(true)}
+                  className="clay-btn-blue flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all"
+                  title="Bulk Edit"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                  <span className="hidden md:inline">Edit</span>
+                </button>
+
+                <button
+                  onClick={() => setShowAssignModal(true)}
+                  className="clay-btn-indigo flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all"
+                  title="Assign to Group"
+                >
+                  <FolderPlus className="w-3.5 h-3.5" />
+                  <span className="hidden md:inline">Assign</span>
+                </button>
+
+                <button
+                  onClick={() => setShowRemoveModal(true)}
+                  className="clay-btn-orange flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all"
+                  title="Remove from Group"
+                >
+                  <FolderMinus className="w-3.5 h-3.5" />
+                  <span className="hidden md:inline">Remove</span>
+                </button>
+
+                <button
+                  onClick={handleBulkExport}
+                  className="clay-btn-emerald flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all"
+                  title="Export CSV"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span className="hidden md:inline">Export</span>
+                </button>
+
+                <button
+                  onClick={handleBulkDelete}
+                  className="clay-btn-red flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all"
+                  title="Delete Selected"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span className="hidden md:inline">Delete</span>
+                </button>
+
+                <div className="w-px h-5 bg-slate-200 dark:bg-white/10 mx-1" />
+
+                <button
+                  onClick={() => setSelectedIds([])}
+                  className="clay-button-secondary p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer transition-all"
+                  title="Clear Selection"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Assign to Group Modal */}
+      <AnimatePresence>
+        {showAssignModal && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-50" onClick={() => { setShowAssignModal(false); setBulkError(null); setBulkSuccess(null); }} />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <form onSubmit={handleAssignGroup} className="clay-card rounded-3xl dark:border dark:border-white/10 w-full max-w-md p-6 space-y-5" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <FolderPlus className="w-5 h-5 text-brand-primary" />
+                    Assign Group ({selectedIds.length} contacts)
+                  </h3>
+                  <button type="button" onClick={() => { setShowAssignModal(false); setBulkError(null); setBulkSuccess(null); }} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {bulkError && (
+                  <div className="p-3 border border-red-500/20 bg-red-500/10 text-red-500 text-xs rounded-xl flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>{bulkError}</span>
+                  </div>
+                )}
+
+                {bulkSuccess && (
+                  <div className="p-3 border border-emerald-500/20 bg-emerald-500/10 text-emerald-500 text-xs rounded-xl flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>{bulkSuccess}</span>
+                  </div>
+                )}
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Select Group</label>
+                  <select
+                    value={bulkGroupId}
+                    onChange={e => setBulkGroupId(e.target.value)}
+                    required
+                    className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm cursor-pointer"
+                  >
+                    <option value="">— Choose a group —</option>
+                    {groups.map(g => (
+                      <option key={g.id} value={g.id}>{g.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex gap-3">
+                  <button type="button" onClick={() => { setShowAssignModal(false); setBulkError(null); setBulkSuccess(null); }} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
+                  <button type="submit" disabled={bulkUpdating || !bulkGroupId} className="clay-button-primary flex-1 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-50">
+                    {bulkUpdating ? <Loader size="sm" /> : 'Assign'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Remove from Group Modal */}
+      <AnimatePresence>
+        {showRemoveModal && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-50" onClick={() => { setShowRemoveModal(false); setBulkError(null); setBulkSuccess(null); }} />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <form onSubmit={handleRemoveGroup} className="clay-card rounded-3xl dark:border dark:border-white/10 w-full max-w-md p-6 space-y-5" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <FolderMinus className="w-5 h-5 text-orange-500" />
+                    Remove from Group ({selectedIds.length} contacts)
+                  </h3>
+                  <button type="button" onClick={() => { setShowRemoveModal(false); setBulkError(null); setBulkSuccess(null); }} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {bulkError && (
+                  <div className="p-3 border border-red-500/20 bg-red-500/10 text-red-500 text-xs rounded-xl flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>{bulkError}</span>
+                  </div>
+                )}
+
+                {bulkSuccess && (
+                  <div className="p-3 border border-emerald-500/20 bg-emerald-500/10 text-emerald-500 text-xs rounded-xl flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>{bulkSuccess}</span>
+                  </div>
+                )}
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Select Group</label>
+                  <select
+                    value={bulkGroupId}
+                    onChange={e => setBulkGroupId(e.target.value)}
+                    required
+                    className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm cursor-pointer"
+                  >
+                    <option value="">— Choose a group —</option>
+                    {groups.map(g => (
+                      <option key={g.id} value={g.id}>{g.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex gap-3">
+                  <button type="button" onClick={() => { setShowRemoveModal(false); setBulkError(null); setBulkSuccess(null); }} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
+                  <button type="submit" disabled={bulkUpdating || !bulkGroupId} className="clay-button-primary flex-1 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-50">
+                    {bulkUpdating ? <Loader size="sm" /> : 'Remove'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Bulk Edit Modal */}
+      <AnimatePresence>
+        {showBulkEditModal && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-50" onClick={() => { setShowBulkEditModal(false); setBulkError(null); setBulkSuccess(null); }} />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <form onSubmit={handleBulkUpdate} className="clay-card rounded-3xl dark:border dark:border-white/10 w-full max-w-md p-6 space-y-5" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <Edit3 className="w-5 h-5 text-blue-500" />
+                    Bulk Edit ({selectedIds.length} contacts)
+                  </h3>
+                  <button type="button" onClick={() => { setShowBulkEditModal(false); setBulkError(null); setBulkSuccess(null); }} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {bulkError && (
+                  <div className="p-3 border border-red-500/20 bg-red-500/10 text-red-500 text-xs rounded-xl flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>{bulkError}</span>
+                  </div>
+                )}
+
+                {bulkSuccess && (
+                  <div className="p-3 border border-emerald-500/20 bg-emerald-500/10 text-emerald-500 text-xs rounded-xl flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>{bulkSuccess}</span>
+                  </div>
+                )}
+
+                <div className="bg-blue-500/5 border border-blue-500/10 rounded-2xl p-3 text-[11px] text-blue-600 dark:text-blue-400 leading-normal">
+                  <strong>Note:</strong> Only filled fields will be updated across all selected contacts. Leave fields empty if you don't want to modify them.
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Full Name</label>
+                    <input
+                      type="text"
+                      value={bulkName}
+                      onChange={e => setBulkName(e.target.value)}
+                      className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all"
+                      placeholder="e.g. John Doe"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Phone</label>
+                    <input
+                      type="tel"
+                      value={bulkPhone}
+                      onChange={e => setBulkPhone(e.target.value)}
+                      className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm font-mono transition-all"
+                      placeholder="+254712345678"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Email</label>
+                    <input
+                      type="email"
+                      value={bulkEmail}
+                      onChange={e => setBulkEmail(e.target.value)}
+                      className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all"
+                      placeholder="email@example.com"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <button type="button" onClick={() => { setShowBulkEditModal(false); setBulkError(null); setBulkSuccess(null); }} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
+                  <button type="submit" disabled={bulkUpdating} className="clay-button-primary flex-1 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-50">
+                    {bulkUpdating ? <Loader size="sm" /> : 'Update'}
                   </button>
                 </div>
               </form>

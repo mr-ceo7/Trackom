@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Settings, User, Bell, Shield, CreditCard, Eye, EyeOff, CheckCircle2, AlertCircle } from 'lucide-react';
 import api from '../../services/api';
+import Loader from '../../components/Loader';
 
 export default function SettingsPage() {
   const { user, refreshUser } = useAuth();
@@ -68,9 +69,8 @@ export default function SettingsPage() {
             </div>
           </div>
           <div className="flex items-center gap-3 pt-2">
-            <button onClick={handleSaveProfile} disabled={saving} className="clay-button-primary flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-60">
-              {saving ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : null}
-              {saving ? 'Saving...' : 'Save Changes'}
+            <button onClick={handleSaveProfile} disabled={saving} className="clay-button-primary flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-60">
+              {saving ? <Loader size="sm" /> : <span>Save Changes</span>}
             </button>
           </div>
         </div>

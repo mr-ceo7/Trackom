@@ -2,10 +2,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Users, Megaphone, Zap, ShieldAlert, Search, Plus, Minus, 
-  Check, X, Ban, UserCheck, Loader2, Coins, Calendar, Sliders, 
+  Check, X, Ban, UserCheck, Coins, Calendar, Sliders, 
   Cpu, Key, Link as LinkIcon, Edit, Trash2, ToggleLeft, ToggleRight
 } from 'lucide-react';
 import api from '../../services/api';
+import Loader from '../../components/Loader';
 
 interface AdminStats {
   total_users: number;
@@ -234,7 +235,7 @@ export default function AdminPanelPage() {
 
       {/* Stats Cards */}
       {loading ? (
-        <div className="flex justify-center py-6"><Loader2 className="w-6 h-6 text-brand-primary animate-spin" /></div>
+        <div className="flex justify-center py-6"><Loader size="md" /></div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
@@ -297,7 +298,7 @@ export default function AdminPanelPage() {
 
           {/* Users Table */}
           {loadingUsers ? (
-            <div className="text-center py-16"><Loader2 className="w-8 h-8 text-brand-primary animate-spin mx-auto" /></div>
+            <div className="text-center py-12"><Loader size="md" /></div>
           ) : (
             <div className="clay-card rounded-3xl overflow-hidden">
               <div className="overflow-x-auto">
@@ -444,7 +445,7 @@ export default function AdminPanelPage() {
           </div>
 
           {loadingGateways ? (
-            <div className="text-center py-16"><Loader2 className="w-8 h-8 text-brand-primary animate-spin mx-auto" /></div>
+            <div className="text-center py-12"><Loader size="md" /></div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {gateways.map((gw) => (
@@ -551,7 +552,7 @@ export default function AdminPanelPage() {
                   <textarea value={creditDesc} onChange={e => setCreditDesc(e.target.value)} placeholder="Enter audit reference or refund note..." rows={3} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
                 </div>
                 <button type="submit" disabled={submittingCredits || !creditAmount} className="clay-button-primary w-full py-3 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2">
-                  {submittingCredits ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <span>Apply Credit Adjustment</span>}
+                  {submittingCredits ? <Loader size="sm" /> : <span>Apply Credit Adjustment</span>}
                 </button>
               </form>
             </motion.div>
@@ -583,7 +584,7 @@ export default function AdminPanelPage() {
                   <p className="text-[10px] text-slate-400">Default rate is 1.00 (1 SMS = 1 credit). Use smaller values for custom wholesale discounts (e.g. 0.70 cr/SMS).</p>
                 </div>
                 <button type="submit" disabled={submittingRate || !customRate} className="clay-button-primary w-full py-3 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2">
-                  {submittingRate ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <span>Update Custom Rate</span>}
+                  {submittingRate ? <Loader size="sm" /> : <span>Update Custom Rate</span>}
                 </button>
               </form>
             </motion.div>
@@ -649,7 +650,7 @@ export default function AdminPanelPage() {
                 </div>
 
                 <button type="submit" disabled={submittingGateway} className="clay-button-primary w-full py-3 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2">
-                  {submittingGateway ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <span>Save API Gateway</span>}
+                  {submittingGateway ? <Loader size="sm" /> : <span>Save API Gateway</span>}
                 </button>
               </form>
             </motion.div>

@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  Users, Megaphone, Coins, Loader2, Calendar, Plus, X, 
+  Users, Megaphone, Coins, Calendar, Plus, X, 
   Send, ShieldAlert, ArrowDownRight, MessageSquare, Key
 } from 'lucide-react';
 import api from '../../services/api';
+import Loader from '../../components/Loader';
 
 interface ResellerStats {
   total_clients: number;
@@ -155,7 +156,7 @@ export default function ResellerPanelPage() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 text-brand-primary animate-spin" /></div>
+        <div className="flex justify-center py-12"><Loader size="md" /></div>
       ) : (
         <>
           {/* KPI Stats Cards */}
@@ -350,7 +351,7 @@ export default function ResellerPanelPage() {
                   <input type="number" min="1" max={stats?.reseller_balance || 0} value={transferAmount} onChange={e => setTransferAmount(e.target.value)} placeholder="Enter amount of credits to allocate..." className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
                 </div>
                 <button type="submit" disabled={submittingTransfer || !transferAmount} className="clay-button-primary w-full py-3 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2">
-                  {submittingTransfer ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <span>Confirm Transfer</span>}
+                  {submittingTransfer ? <Loader size="sm" /> : <span>Confirm Transfer</span>}
                 </button>
               </form>
             </motion.div>
@@ -402,7 +403,7 @@ export default function ResellerPanelPage() {
                 </div>
 
                 <button type="submit" disabled={submittingCreate} className="clay-button-primary w-full py-3 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2">
-                  {submittingCreate ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <span>Create Client Account</span>}
+                  {submittingCreate ? <Loader size="sm" /> : <span>Create Client Account</span>}
                 </button>
               </form>
             </motion.div>

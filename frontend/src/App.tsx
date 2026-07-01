@@ -5,6 +5,7 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import Loader from './components/Loader';
 
 // Eagerly loaded (above-the-fold)
 import LandingPage from './pages/LandingPage';
@@ -40,10 +41,7 @@ const ResellerPanelPage = lazy(() => import('./pages/dashboard/ResellerPanelPage
 function PageLoader() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F3F4FD] dark:bg-surface-dark">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-10 h-10 border-4 border-brand-primary/30 border-t-brand-primary rounded-full animate-spin" />
-        <span className="text-sm text-slate-500 dark:text-gray-400 font-medium">Loading…</span>
-      </div>
+      <Loader size="lg" />
     </div>
   );
 }

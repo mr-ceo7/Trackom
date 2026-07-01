@@ -19,6 +19,7 @@ from app.middleware.auth import get_current_user
 from app.schemas.contacts import (
     ContactCreate, ContactUpdate, ContactResponse,
     ContactGroupCreate, ContactGroupResponse,
+    BulkContactIds, BulkAssignGroup, BulkUpdateContacts, BulkActionResult,
 )
 
 router = APIRouter(prefix="/contacts", tags=["Contacts"])
@@ -242,6 +243,202 @@ async def stream_import(
                 del import_queues[import_id]
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
+@router.post("/bulk-delete", response_model=BulkActionResult)
+async def bulk_delete_contacts(
+    data: BulkContactIds,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    # Soft delete: update deleted_at to current time
+    from sqlalchemy import update
+    q = update(Contact).where(
+        Contact.user_id == current_user.id,
+        Contact.deleted_at.is_(None)
+    )
+    if data.select_all:
+        if data.search:
+            q = q.where((Contact.name.ilike(f"%{data.search}%") | Contact.phone.ilike(f"%{data.search}%")))
+    else:
+        if not data.contact_ids:
+            return {"count": 0}
+        q = q.where(Contact.id.in_(data.contact_ids))
+
+    result = await db.execute(q.values(deleted_at=datetime.utcnow()))
+    await db.commit()
+    return {"count": result.rowcount}
+
+
+@router.post("/bulk-assign-group", response_model=BulkActionResult)
+async def bulk_assign_group(
+    data: BulkAssignGroup,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    group_result = await db.execute(
+        select(ContactGroup).where(
+            ContactGroup.id == data.group_id,
+            ContactGroup.user_id == current_user.id,
+            ContactGroup.deleted_at.is_(None)
+        )
+    )
+    group = group_result.scalar_one_or_none()
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+
+    q = select(Contact).options(selectinload(Contact.groups)).where(
+        Contact.user_id == current_user.id,
+        Contact.deleted_at.is_(None)
+    )
+    if data.select_all:
+        if data.search:
+            q = q.where((Contact.name.ilike(f"%{data.search}%") | Contact.phone.ilike(f"%{data.search}%")))
+    else:
+        if not data.contact_ids:
+            return {"count": 0}
+        q = q.where(Contact.id.in_(data.contact_ids))
+
+    contacts_result = await db.execute(q)
+    contacts = contacts_result.scalars().all()
+
+    assigned_count = 0
+    for contact in contacts:
+        if group not in contact.groups:
+            contact.groups.append(group)
+            assigned_count += 1
+
+    if assigned_count > 0:
+        await db.commit()
+    return {"count": assigned_count}
+
+
+@router.post("/bulk-remove-group", response_model=BulkActionResult)
+async def bulk_remove_group(
+    data: BulkAssignGroup,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    group_result = await db.execute(
+        select(ContactGroup).where(
+            ContactGroup.id == data.group_id,
+            ContactGroup.user_id == current_user.id,
+            ContactGroup.deleted_at.is_(None)
+        )
+    )
+    group = group_result.scalar_one_or_none()
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+
+    q = select(Contact).options(selectinload(Contact.groups)).where(
+        Contact.user_id == current_user.id,
+        Contact.deleted_at.is_(None)
+    )
+    if data.select_all:
+        if data.search:
+            q = q.where((Contact.name.ilike(f"%{data.search}%") | Contact.phone.ilike(f"%{data.search}%")))
+    else:
+        if not data.contact_ids:
+            return {"count": 0}
+        q = q.where(Contact.id.in_(data.contact_ids))
+
+    contacts_result = await db.execute(q)
+    contacts = contacts_result.scalars().all()
+
+    removed_count = 0
+    for contact in contacts:
+        if group in contact.groups:
+            contact.groups.remove(group)
+            removed_count += 1
+
+    if removed_count > 0:
+        await db.commit()
+    return {"count": removed_count}
+
+
+@router.post("/bulk-update", response_model=BulkActionResult)
+async def bulk_update_contacts(
+    data: BulkUpdateContacts,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    update_fields = data.update.model_dump(exclude_unset=True)
+    update_fields.pop("group_id", None)  # Ignore group_id
+    if not update_fields:
+        return {"count": 0}
+
+    q = select(Contact).where(
+        Contact.user_id == current_user.id,
+        Contact.deleted_at.is_(None)
+    )
+    if data.select_all:
+        if data.search:
+            q = q.where((Contact.name.ilike(f"%{data.search}%") | Contact.phone.ilike(f"%{data.search}%")))
+    else:
+        if not data.contact_ids:
+            return {"count": 0}
+        q = q.where(Contact.id.in_(data.contact_ids))
+
+    contacts_result = await db.execute(q)
+    contacts = contacts_result.scalars().all()
+
+    for contact in contacts:
+        for field, value in update_fields.items():
+            setattr(contact, field, value)
+
+    if contacts:
+        await db.commit()
+    return {"count": len(contacts)}
+
+
+@router.post("/export")
+async def export_contacts(
+    data: BulkContactIds,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    import io
+    import csv
+    from fastapi.responses import StreamingResponse
+
+    q = select(Contact).where(Contact.user_id == current_user.id, Contact.deleted_at.is_(None))
+    if data.select_all:
+        if data.search:
+            q = q.where((Contact.name.ilike(f"%{data.search}%") | Contact.phone.ilike(f"%{data.search}%")))
+    else:
+        if data.contact_ids:
+            q = q.where(Contact.id.in_(data.contact_ids))
+    
+    q = q.order_by(Contact.name)
+    result = await db.execute(q)
+    contacts = result.scalars().all()
+
+    def generate_csv():
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(["Name", "Phone", "Email", "Created At"])
+        yield output.getvalue()
+        output.seek(0)
+        output.truncate(0)
+
+        for contact in contacts:
+            created_str = contact.created_at.strftime("%Y-%m-%d %H:%M:%S") if contact.created_at else ""
+            writer.writerow([
+                contact.name or "",
+                contact.phone or "",
+                contact.email or "",
+                created_str
+            ])
+            yield output.getvalue()
+            output.seek(0)
+            output.truncate(0)
+
+    response = StreamingResponse(generate_csv(), media_type="text/csv")
+    response.headers["Content-Disposition"] = "attachment; filename=trackom_contacts.csv"
+    response.headers["Access-Control-Expose-Headers"] = "Content-Disposition"
+    return response
+
+
 @router.put("/{contact_id}", response_model=ContactResponse)
 async def update_contact(
     contact_id: str,

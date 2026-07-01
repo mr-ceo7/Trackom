@@ -2,9 +2,10 @@
  * ApiKeysPage — manage API keys with real backend CRUD.
  */
 import { useState, useEffect, useCallback } from 'react';
-import { Key, Plus, Copy, Trash2, CheckCircle2, Shield, Loader2, X, AlertTriangle } from 'lucide-react';
+import { Key, Plus, Copy, Trash2, CheckCircle2, Shield, X, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import api from '../../services/api';
+import Loader from '../../components/Loader';
 
 interface ApiKeyData {
   id: string;
@@ -83,7 +84,7 @@ export default function ApiKeysPage() {
       </div>
 
       {loading ? (
-        <div className="text-center py-16"><Loader2 className="w-8 h-8 text-brand-primary animate-spin mx-auto" /></div>
+        <div className="text-center py-12"><Loader size="md" /></div>
       ) : (
         <div className="space-y-3">
           {keys.map(k => (

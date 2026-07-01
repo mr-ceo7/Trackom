@@ -3,10 +3,11 @@
  */
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Mail, Phone, MapPin, Clock, MessageSquare, CheckCircle2, AlertCircle, Loader2, ArrowRight } from 'lucide-react';
+import { Mail, Phone, MapPin, Clock, MessageSquare, CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
 import Header from '../components/Header';
 import TrackomLogo from '../components/TrackomLogo';
 import api from '../services/api';
+import Loader from '../components/Loader';
 
 export default function ContactPage() {
   const [fullName, setFullName] = useState('');
@@ -196,9 +197,14 @@ export default function ContactPage() {
                   disabled={submitting} 
                   className="w-full py-3.5 rounded-xl text-sm font-semibold text-white bg-brand-primary hover:bg-brand-primary-hover cursor-pointer shadow-lg shadow-brand-primary/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                 >
-                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                  <span>{submitting ? 'Sending inquiry...' : 'Send Inquiry'}</span>
-                  <ArrowRight className="w-4 h-4" />
+                  {submitting ? (
+                    <Loader size="sm" />
+                  ) : (
+                    <>
+                      <span>Send Inquiry</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
                 </button>
               </form>
             </div>

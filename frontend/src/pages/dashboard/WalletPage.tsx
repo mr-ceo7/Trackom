@@ -2,10 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { 
   Wallet, Plus, ArrowUpRight, ArrowDownRight, CreditCard, 
-  Smartphone, Receipt, Loader2, X, CheckCircle2, ShieldAlert
+  Smartphone, Receipt, X, CheckCircle2, ShieldAlert
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import api from '../../services/api';
+import Loader from '../../components/Loader';
 
 interface TransactionData {
   id: string;
@@ -157,7 +158,7 @@ export default function WalletPage() {
         </div>
         
         {loading ? (
-          <div className="text-center py-16"><Loader2 className="w-8 h-8 text-brand-primary animate-spin mx-auto" /></div>
+          <div className="text-center py-12"><Loader size="md" /></div>
         ) : (
           <div className="divide-y divide-slate-100 dark:divide-white/[0.03]">
             {transactions.map(tx => (
@@ -275,10 +276,9 @@ export default function WalletPage() {
               )}
 
               {stkStep === 'sending' && (
-                <div className="flex flex-col items-center justify-center py-12 space-y-4 text-center">
-                  <div className="relative">
-                    <div className="w-16 h-16 border-4 border-brand-emerald/20 border-t-brand-emerald rounded-full animate-spin" />
-                    <Smartphone className="w-6 h-6 text-brand-emerald absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
+                <div className="flex flex-col items-center justify-center py-10 space-y-6 text-center">
+                  <div className="relative py-2">
+                    <Loader size="md" color="var(--color-brand-emerald)" />
                   </div>
                   <div className="space-y-1">
                     <h4 className="font-bold text-sm text-gray-200">Processing Payment...</h4>

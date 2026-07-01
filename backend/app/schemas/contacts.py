@@ -40,3 +40,27 @@ class ContactResponse(BaseModel):
     email: Optional[str]
     created_at: datetime
     model_config = {"from_attributes": True}
+
+
+class BulkContactIds(BaseModel):
+    contact_ids: List[uuid.UUID]
+    select_all: Optional[bool] = False
+    search: Optional[str] = None
+
+
+class BulkAssignGroup(BaseModel):
+    contact_ids: List[uuid.UUID]
+    group_id: uuid.UUID
+    select_all: Optional[bool] = False
+    search: Optional[str] = None
+
+
+class BulkUpdateContacts(BaseModel):
+    contact_ids: List[uuid.UUID]
+    update: ContactUpdate
+    select_all: Optional[bool] = False
+    search: Optional[str] = None
+
+
+class BulkActionResult(BaseModel):
+    count: int

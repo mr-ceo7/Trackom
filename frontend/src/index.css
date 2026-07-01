@@ -777,3 +777,165 @@ body {
     -5px -5px 14px rgba(255, 255, 255, 0.78),
     inset 1px 1px 3px rgba(255, 255, 255, 0.55);
 }
+
+/* Claymorphic Floating Toolbar */
+.clay-toolbar {
+  background: #EEF0F8;
+  border: none !important;
+  box-shadow:
+    8px 8px 24px rgba(156, 163, 184, 0.45),
+    -8px -8px 24px rgba(255, 255, 255, 0.85),
+    inset 1px 1px 3px rgba(255, 255, 255, 0.60);
+  transition: all 0.3s ease;
+}
+.dark .clay-toolbar {
+  background: #121422;
+  border: none !important;
+  box-shadow:
+    10px 10px 30px rgba(0, 0, 0, 0.65),
+    -6px -6px 20px rgba(255, 255, 255, 0.03),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.08),
+    inset -2px -2px 5px rgba(0, 0, 0, 0.55);
+}
+
+/* Colored Claymorphic Buttons */
+.clay-btn-blue {
+  background: #EFF6FF;
+  color: #1D4ED8;
+  border: none !important;
+  box-shadow:
+    2px 2px 6px rgba(59, 130, 246, 0.15),
+    -2px -2px 6px rgba(255, 255, 255, 0.70),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.60),
+    inset -1px -1px 2px rgba(59, 130, 246, 0.20);
+  transition: all 0.2s ease;
+}
+.clay-btn-blue:hover {
+  background: #DBEAFE;
+  transform: translateY(-1px);
+}
+.dark .clay-btn-blue {
+  background: #172554 !important;
+  color: #60A5FA !important;
+  box-shadow:
+    3px 3px 8px rgba(0, 0, 0, 0.40),
+    -2px -2px 6px rgba(255, 255, 255, 0.02),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.08),
+    inset -2px -2px 4px rgba(0, 0, 0, 0.45);
+}
+.dark .clay-btn-blue:hover {
+  background: #1e3a8a !important;
+}
+
+.clay-btn-indigo {
+  background: #EEF2FF;
+  color: #4F46E5;
+  border: none !important;
+  box-shadow:
+    2px 2px 6px rgba(99, 102, 241, 0.15),
+    -2px -2px 6px rgba(255, 255, 255, 0.70),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.60),
+    inset -1px -1px 2px rgba(99, 102, 241, 0.20);
+  transition: all 0.2s ease;
+}
+.clay-btn-indigo:hover {
+  background: #E0E7FF;
+  transform: translateY(-1px);
+}
+.dark .clay-btn-indigo {
+  background: #1e1b4b !important;
+  color: #818cf8 !important;
+  box-shadow:
+    3px 3px 8px rgba(0, 0, 0, 0.40),
+    -2px -2px 6px rgba(255, 255, 255, 0.02),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.08),
+    inset -2px -2px 4px rgba(0, 0, 0, 0.45);
+}
+.dark .clay-btn-indigo:hover {
+  background: #312e81 !important;
+}
+
+.clay-btn-orange {
+  background: #FFF7ED;
+  color: #EA580C;
+  border: none !important;
+  box-shadow:
+    2px 2px 6px rgba(249, 115, 22, 0.15),
+    -2px -2px 6px rgba(255, 255, 255, 0.70),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.60),
+    inset -1px -1px 2px rgba(249, 115, 22, 0.20);
+  transition: all 0.2s ease;
+}
+.clay-btn-orange:hover {
+  background: #FFEDD5;
+  transform: translateY(-1px);
+}
+.dark .clay-btn-orange {
+  background: #431407 !important;
+  color: #fb923c !important;
+  box-shadow:
+    3px 3px 8px rgba(0, 0, 0, 0.40),
+    -2px -2px 6px rgba(255, 255, 255, 0.02),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.08),
+    inset -2px -2px 4px rgba(0, 0, 0, 0.45);
+}
+.dark .clay-btn-orange:hover {
+  background: #7c2d12 !important;
+}
+
+.clay-btn-emerald {
+  background: #ECFDF5;
+  color: #059669;
+  border: none !important;
+  box-shadow:
+    2px 2px 6px rgba(16, 185, 129, 0.15),
+    -2px -2px 6px rgba(255, 255, 255, 0.70),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.60),
+    inset -1px -1px 2px rgba(16, 185, 129, 0.20);
+  transition: all 0.2s ease;
+}
+.clay-btn-emerald:hover {
+  background: #D1FAE5;
+  transform: translateY(-1px);
+}
+.dark .clay-btn-emerald {
+  background: #022c22 !important;
+  color: #34d399 !important;
+  box-shadow:
+    3px 3px 8px rgba(0, 0, 0, 0.40),
+    -2px -2px 6px rgba(255, 255, 255, 0.02),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.08),
+    inset -2px -2px 4px rgba(0, 0, 0, 0.45);
+}
+.dark .clay-btn-emerald:hover {
+  background: #064e3b !important;
+}
+
+.clay-btn-red {
+  background: #FEF2F2;
+  color: #DC2626;
+  border: none !important;
+  box-shadow:
+    2px 2px 6px rgba(239, 68, 68, 0.15),
+    -2px -2px 6px rgba(255, 255, 255, 0.70),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.60),
+    inset -1px -1px 2px rgba(239, 68, 68, 0.20);
+  transition: all 0.2s ease;
+}
+.clay-btn-red:hover {
+  background: #FEE2E2;
+  transform: translateY(-1px);
+}
+.dark .clay-btn-red {
+  background: #450a0a !important;
+  color: #f87171 !important;
+  box-shadow:
+    3px 3px 8px rgba(0, 0, 0, 0.40),
+    -2px -2px 6px rgba(255, 255, 255, 0.02),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.08),
+    inset -2px -2px 4px rgba(0, 0, 0, 0.45);
+}
+.dark .clay-btn-red:hover {
+  background: #7f1d1d !important;
+}
+
