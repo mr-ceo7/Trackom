@@ -50,6 +50,7 @@ async def create_key(
         ip_whitelist=data.ip_whitelist,
         expires_at=data.expires_at,
         max_credits=data.max_credits,
+        is_sandbox=data.is_sandbox,
     )
     db.add(api_key)
     await db.flush()
@@ -65,6 +66,7 @@ async def create_key(
         ip_whitelist=api_key.ip_whitelist,
         expires_at=api_key.expires_at,
         max_credits=api_key.max_credits,
+        is_sandbox=api_key.is_sandbox,
         last_used_at=None,
         usage_count=0,
         created_at=api_key.created_at,

@@ -13,6 +13,7 @@ class ApiKeyCreate(BaseModel):
     ip_whitelist: Optional[str] = Field(None, max_length=255)
     expires_at: Optional[datetime] = None
     max_credits: Optional[float] = Field(None, ge=0.0)
+    is_sandbox: bool = False
 
 
 class ApiKeyResponse(BaseModel):
@@ -25,6 +26,7 @@ class ApiKeyResponse(BaseModel):
     ip_whitelist: Optional[str]
     expires_at: Optional[datetime]
     max_credits: Optional[float]
+    is_sandbox: bool
     last_used_at: Optional[datetime]
     usage_count: int
     created_at: datetime

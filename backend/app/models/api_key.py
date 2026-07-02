@@ -25,6 +25,7 @@ class ApiKey(Base):
     ip_whitelist: Mapped[str] = mapped_column(String(255), nullable=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     max_credits: Mapped[float] = mapped_column(Numeric(10, 2), nullable=True)
+    is_sandbox: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     usage_count: Mapped[int] = mapped_column(Integer, default=0)
     last_used_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
