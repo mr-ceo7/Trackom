@@ -43,7 +43,7 @@ export default function HowItWorks() {
           <span className="gradient-text">go live.</span>
         </h2>
         <p className="text-slate-600 dark:text-gray-400 text-base md:text-lg">
-          Sign up, load credits via M-Pesa, and send your first campaign — no technical setup required.
+          Sign up, load credits via M-Pesa, and send your first campaign - no technical setup required.
         </p>
       </div>
 

@@ -1,5 +1,5 @@
 /**
- * ContactPage — dedicated public support & sales inquiry portal.
+ * ContactPage - dedicated public support & sales inquiry portal.
  */
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';

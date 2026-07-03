@@ -8,7 +8,7 @@ const features = [
     type: 'video' as const,
     src: '/videos/animate_it.mp4',
     title: 'Dynamic Automated Journeys',
-    description: 'Build triggered sequences based on customer behavior — from M-Pesa payment confirmations to appointment reminders.',
+    description: 'Build triggered sequences based on customer behavior - from M-Pesa payment confirmations to appointment reminders.',
   },
   {
     type: 'image' as const,
@@ -56,7 +56,7 @@ function MobileDeck({ onOpenSignup }: { onOpenSignup: () => void }) {
           Automate Campaigns. Personalize Every Message.
         </h2>
         <p className="text-slate-600 dark:text-gray-400 text-xs leading-relaxed">
-          From M-Pesa payment confirmations to flash sale alerts — build data-driven customer journeys that convert.
+          From M-Pesa payment confirmations to flash sale alerts - build data-driven customer journeys that convert.
         </p>
       </div>
 
@@ -119,7 +119,7 @@ function DesktopBentoGrid({ onOpenSignup }: { onOpenSignup: () => void }) {
   return (
     <div ref={gridRef} className={`hidden md:block mb-8 scroll-animate ${gridVisible ? 'is-visible' : ''}`}>
       <div className="grid md:grid-cols-3 md:grid-rows-2 gap-5 lg:gap-6">
-        {/* Hero card — col 1-2, row 1-2 */}
+        {/* Hero card - col 1-2, row 1-2 */}
         <div className="md:col-span-2 md:row-span-2 flex">
           <div className="flex-1 flex flex-col rounded-2xl overflow-hidden bg-white dark:bg-[#0e1422] border border-slate-200 dark:border-blue-500/10 shadow-lg shadow-slate-200/50 dark:shadow-black/20 group hover:scale-[1.01] transition-transform duration-500 relative min-h-[550px]">
             {/* Background Video */}
@@ -299,7 +299,7 @@ export default function FeatureShowcase({ onOpenSignup }: FeatureShowcaseProps) 
             Automate Campaigns.{' '}<br className="hidden sm:block" />Personalize Every Message.
           </h2>
           <p className="text-slate-600 dark:text-gray-400 text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
-            From M-Pesa payment confirmations to flash sale alerts — build data-driven customer journeys that convert across Kenya's mobile-first market.
+            From M-Pesa payment confirmations to flash sale alerts - build data-driven customer journeys that convert across Kenya's mobile-first market.
           </p>
         </div>
 

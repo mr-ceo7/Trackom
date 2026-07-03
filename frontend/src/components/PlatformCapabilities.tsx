@@ -7,7 +7,7 @@ const capabilityCards = [
   {
     src: '/images/screenn/Gemini_Generated_Image_o3oecqo3oecqo3oe (Edited).png',
     title: 'VISUAL JOURNEY BUILDER',
-    description: 'Visually construct and automate personalized customer paths — from first touchpoint to conversion.',
+    description: 'Visually construct and automate personalized customer paths - from first touchpoint to conversion.',
     bgClass: 'bg-white dark:bg-[#0f1523]',
     borderClass: 'border-slate-200 dark:border-blue-500/10',
     checkmarks: [
@@ -196,7 +196,7 @@ export default function PlatformCapabilities({ onOpenSignup }: PlatformCapabilit
             Built for Scale. Designed for Kenya.
           </h2>
           <p className="text-slate-600 dark:text-gray-400 text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
-            Enterprise-grade tools trusted by 5,000+ Kenyan businesses — from Nairobi fintechs to county government health programs.
+            Enterprise-grade tools trusted by 5,000+ Kenyan businesses - from Nairobi fintechs to county government health programs.
           </p>
         </div>
 
@@ -209,7 +209,7 @@ export default function PlatformCapabilities({ onOpenSignup }: PlatformCapabilit
           </h3>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full sm:w-auto">
             <button onClick={onOpenSignup} className="w-full sm:w-auto h-12 px-8 rounded-full text-sm font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none flex items-center justify-center border border-transparent">
-              Start Free — No Card Needed
+              Start Free - No Card Needed
             </button>
             <button onClick={onOpenSignup} className="w-full sm:w-auto h-12 px-8 rounded-full text-sm font-semibold text-slate-800 dark:text-white border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 cursor-pointer hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none flex items-center justify-center">
               Talk to Our Kenya Team

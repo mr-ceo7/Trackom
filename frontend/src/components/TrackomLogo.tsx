@@ -9,7 +9,7 @@ interface TrackomLogoProps {
 export default function TrackomLogo({ size = 32, className = '', showText = true, glowing = false, textColorClass = 'text-slate-900 dark:text-white' }: TrackomLogoProps) {
   return (
     <div className={`flex items-center gap-3 ${className}`}>
-      {/* Speech Bubble Icon — extracted from brand video */}
+      {/* Speech Bubble Icon - extracted from brand video */}
       <div className={`relative flex items-center justify-center ${glowing ? 'animate-pulse-glow' : ''}`} style={{ width: size, height: size }}>
         {/* Glow layer */}
         {glowing && (

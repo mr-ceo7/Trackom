@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, Star, Zap, Building2, Users } from 'lucide-react';
+import { Check, Star, Sparkles, Building2, Users } from 'lucide-react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
 const tiers = [
@@ -18,7 +18,7 @@ const tiers = [
     ],
     cta: 'Get Started',
     popular: false,
-    icon: <Zap className="w-5 h-5" />,
+    icon: <Sparkles className="w-5 h-5" />,
   },
   {
     name: 'Growth',
@@ -80,7 +80,7 @@ export default function Pricing() {
           <span className="gradient-text">no hidden fees.</span>
         </h2>
         <p className="text-slate-600 dark:text-gray-400 text-base md:text-lg">
-          Pay per SMS via M-Pesa — volume discounts applied automatically. Cancel anytime, no contracts.
+          Pay per SMS via M-Pesa - volume discounts applied automatically. Cancel anytime, no contracts.
         </p>
 
         {/* Currency toggle */}

@@ -1,5 +1,5 @@
 /**
- * DashboardOverview — real-time overview stats, live gateway throughput gauge, and carrier monitors.
+ * DashboardOverview - real-time overview stats, live gateway throughput gauge, and carrier monitors.
  */
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';

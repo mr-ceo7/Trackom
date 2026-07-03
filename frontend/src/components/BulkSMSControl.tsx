@@ -23,7 +23,7 @@ const controlFeatures = [
     type: 'image' as const,
     src: '/images/Gemini_Generated_Image_jac908jac908jac9 (Edited).png',
     title: 'Deep Analytics & Insights Dashboard',
-    description: 'Go beyond delivery stats — track ROI per campaign, analyze engagement heatmaps, and optimize message content.',
+    description: 'Go beyond delivery stats - track ROI per campaign, analyze engagement heatmaps, and optimize message content.',
     bgClass: 'bg-white dark:bg-[#1a2433]',
     borderClass: 'border-slate-200 dark:border-violet-500/10',
   },
@@ -59,7 +59,7 @@ function MobileDeck({ onOpenSignup }: { onOpenSignup: () => void }) {
             Command Your Bulk SMS Campaigns
           </h2>
           <p className="text-slate-600 dark:text-gray-400 text-xs leading-relaxed">
-            Segment audiences, automate drip campaigns, and track every shilling of ROI — built for Kenyan businesses.
+            Segment audiences, automate drip campaigns, and track every shilling of ROI - built for Kenyan businesses.
           </p>
         </div>
 
@@ -142,7 +142,7 @@ function DesktopBentoGrid() {
           </div>
         </div>
 
-        {/* Hero card — col 2-3, row 1-2 (Deep Analytics — right side) */}
+        {/* Hero card - col 2-3, row 1-2 (Deep Analytics - right side) */}
         <div className="md:col-span-2 md:row-span-2 flex">
           <div className={`flex-1 flex flex-col rounded-2xl overflow-hidden shadow-lg shadow-slate-200/50 dark:shadow-black/20 border group hover:scale-[1.01] transition-transform duration-500 ${controlFeatures[2].bgClass} ${controlFeatures[2].borderClass}`}>
             <div className="p-8 pb-5 flex-grow-0">
@@ -224,7 +224,7 @@ export default function BulkSMSControl({ onOpenSignup }: BulkSMSControlProps) {
             Command Your Bulk SMS Campaigns{' '}<br className="hidden sm:block" />with Enterprise-Grade Control
           </h2>
           <p className="text-slate-600 dark:text-gray-400 text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
-            Segment audiences by county, automate drip campaigns via M-Pesa triggers, and track every shilling of ROI — all from one dashboard built for Kenyan businesses.
+            Segment audiences by county, automate drip campaigns via M-Pesa triggers, and track every shilling of ROI - all from one dashboard built for Kenyan businesses.
           </p>
         </div>
 

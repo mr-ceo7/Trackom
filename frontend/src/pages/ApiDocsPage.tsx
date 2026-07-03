@@ -1,9 +1,9 @@
 /**
- * ApiDocsPage — Stripe-style interactive API reference.
+ * ApiDocsPage - Stripe-style interactive API reference.
  */
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Code2, Copy, CheckCircle2, Terminal, Zap, Lock, Globe } from 'lucide-react';
+import { Code2, Copy, CheckCircle2, Terminal, Cpu, Lock, Globe } from 'lucide-react';
 import Header from '../components/Header';
 import TrackomLogo from '../components/TrackomLogo';
 
@@ -72,7 +72,7 @@ export default function ApiDocsPage() {
           <div className="flex items-center justify-center gap-6 mt-6 text-xs text-slate-500 dark:text-gray-400">
             <span className="flex items-center gap-1.5"><Globe className="w-3.5 h-3.5" />Base URL: <code className="font-mono text-brand-primary">https://api.trackom.co.ke</code></span>
             <span className="flex items-center gap-1.5"><Lock className="w-3.5 h-3.5" />Auth: Bearer JWT</span>
-            <span className="flex items-center gap-1.5"><Zap className="w-3.5 h-3.5" />JSON / REST</span>
+            <span className="flex items-center gap-1.5"><Cpu className="w-3.5 h-3.5" />JSON / REST</span>
           </div>
         </motion.div>
 

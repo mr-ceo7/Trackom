@@ -217,7 +217,7 @@ export default function APIIntegration({ onOpenSignup }: APIIntegrationProps) {
         >
           {/* Desktop bento: 3 cols, hero spans 2 cols + 2 rows */}
           <div className="hidden md:grid md:grid-cols-3 md:grid-rows-2 gap-5 lg:gap-6" style={{ gridTemplateRows: 'auto auto' }}>
-            {/* Hero card — col 1-2, row 1-2 (Developer Tools & SDKs) */}
+            {/* Hero card - col 1-2, row 1-2 (Developer Tools & SDKs) */}
             <div className="md:col-span-2 md:row-span-2 flex" style={{ transitionDelay: '0ms' }}>
               <div className="flex-1 flex">
                 <BentoCard card={integrationCards[1]} isHero delay={0} onOpenSignup={onOpenSignup} />

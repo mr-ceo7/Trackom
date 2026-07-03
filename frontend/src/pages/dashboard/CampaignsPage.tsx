@@ -1,5 +1,5 @@
 /**
- * CampaignsPage — view and create SMS campaigns with groups targeting & scheduling.
+ * CampaignsPage - view and create SMS campaigns with groups targeting & scheduling.
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import { Megaphone, Plus, Clock, CheckCircle2, XCircle, Send, BarChart3, X, Calendar, Users } from 'lucide-react';
@@ -360,7 +360,7 @@ export default function CampaignsPage() {
                       onChange={e => setSelectedGroupId(e.target.value)}
                       className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm cursor-pointer"
                     >
-                      <option value="">— All Contacts —</option>
+                      <option value="">All Contacts</option>
                       {groups.map(g => (
                         <option key={g.id} value={g.id}>{g.name}</option>
                       ))}
@@ -384,7 +384,7 @@ export default function CampaignsPage() {
                         }}
                         className="clay-input px-2 py-1 rounded-xl text-slate-900 dark:text-white focus:outline-none text-[10px] cursor-pointer"
                       >
-                        <option value="">— Use Template —</option>
+                        <option value="">Use Template</option>
                         {templates.map(t => (
                           <option key={t.id} value={t.id}>{t.name}</option>
                         ))}

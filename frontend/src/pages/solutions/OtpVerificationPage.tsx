@@ -3,7 +3,7 @@ import Header from '../../components/Header';
 import TrackomLogo from '../../components/TrackomLogo';
 import SignupModal from '../../components/SignupModal';
 import ParticleCanvas from '../../components/ParticleCanvas';
-import { ShieldCheck, ArrowRight, Shield, Zap, Lock, RefreshCw } from 'lucide-react';
+import { ShieldCheck, ArrowRight, Shield, Cpu, Lock, RefreshCw } from 'lucide-react';
 
 export default function OtpVerificationPage() {
   const [isSignupOpen, setIsSignupOpen] = useState(false);
@@ -54,7 +54,7 @@ export default function OtpVerificationPage() {
             </p>
             
             <div className="flex gap-4 font-mono text-[10px] text-slate-400">
-              <span className="flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-brand-emerald animate-pulse" /> Direct Operator Bind</span>
+              <span className="flex items-center gap-1.5"><Cpu className="w-3.5 h-3.5 text-brand-emerald animate-pulse" /> Direct Operator Bind</span>
               <span className="flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-brand-primary" /> ISO-27001 Secure</span>
             </div>
           </div>

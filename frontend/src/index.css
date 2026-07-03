@@ -440,7 +440,7 @@ body {
 /* ==========================================================================
    3D CLAYMORPHIC DESIGN SYSTEM
    Soft, puffy 3D elements with multi-layered shadows and pastel tones.
-   Light mode only — dark mode retains existing glassmorphic/flat style.
+   Light mode only - dark mode retains existing glassmorphic/flat style.
    ========================================================================== */
 
 /* ---------- Clay Card (main elevated container) ---------- */
@@ -483,7 +483,7 @@ body {
   transform: translateY(-2px);
 }
 
-/* ---------- Clay Stat (KPI cards — slightly puffier) ---------- */
+/* ---------- Clay Stat (KPI cards - slightly puffier) ---------- */
 .clay-stat {
   background: #FFFFFF;
   border: none !important;

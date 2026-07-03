@@ -1,5 +1,5 @@
 /**
- * ForgotPasswordPage — email input → success confirmation.
+ * ForgotPasswordPage - email input → success confirmation.
  */
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -20,7 +20,7 @@ export default function ForgotPasswordPage() {
     try {
       await api.post('/auth/forgot-password', { email });
     } catch {
-      // Ignore errors — always show success to prevent enumeration
+      // Ignore errors - always show success to prevent enumeration
     }
     setIsSubmitting(false);
     setIsSent(true);

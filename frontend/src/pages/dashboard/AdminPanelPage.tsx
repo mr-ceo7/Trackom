@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  Users, Megaphone, Zap, ShieldAlert, Search, Plus, Minus, 
+  Users, Megaphone, Send, ShieldAlert, Search, Plus, Minus, 
   Check, X, Ban, UserCheck, Coins, Calendar, Sliders, 
   Cpu, Key, Link as LinkIcon, Edit, Trash2, ToggleLeft, ToggleRight
 } from 'lucide-react';
@@ -241,7 +241,7 @@ export default function AdminPanelPage() {
           {[
             { label: 'Total Clients', value: stats?.total_users || 0, desc: `${stats?.active_users || 0} active SaaS tenants`, icon: Users, color: 'text-brand-primary', bg: 'clay-icon-raised', glow: 'drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]' },
             { label: 'Total Campaigns', value: stats?.total_campaigns || 0, desc: 'Dispatches initialized', icon: Megaphone, color: 'text-brand-accent', bg: 'clay-icon-raised', glow: 'drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]' },
-            { label: 'Overall SMS Sent', value: stats?.total_sms_sent?.toLocaleString() || 0, desc: `Success Rate: ${stats?.success_rate || 100}%`, icon: Zap, color: 'text-brand-emerald', bg: 'clay-icon-raised', glow: 'drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]' },
+            { label: 'Overall SMS Sent', value: stats?.total_sms_sent?.toLocaleString() || 0, desc: `Success Rate: ${stats?.success_rate || 100}%`, icon: Send, color: 'text-brand-emerald', bg: 'clay-icon-raised', glow: 'drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]' },
             { label: 'Gateway API Pool', value: `${stats?.system_balance?.toLocaleString() || 0} cr`, desc: 'Global wholesale credits', icon: Coins, color: 'text-amber-500', bg: 'clay-icon-raised', glow: 'drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]' },
           ].map((card, idx) => (
             <div key={idx} className="clay-stat rounded-3xl p-5 flex items-center gap-4">

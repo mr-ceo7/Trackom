@@ -3,7 +3,7 @@ import Header from '../../components/Header';
 import TrackomLogo from '../../components/TrackomLogo';
 import SignupModal from '../../components/SignupModal';
 import ParticleCanvas from '../../components/ParticleCanvas';
-import { MessageSquare, Shield, CheckCircle2, ArrowRight, BarChart3, Users, Zap } from 'lucide-react';
+import { MessageSquare, Shield, CheckCircle2, ArrowRight, BarChart3, Users, Sparkles } from 'lucide-react';
 
 export default function SmsMarketingPage() {
   const [isSignupOpen, setIsSignupOpen] = useState(false);
@@ -44,7 +44,7 @@ export default function SmsMarketingPage() {
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
             { title: 'Excel/CSV Smart Import', desc: 'Drag and drop bulk contact spreadsheets. Uniquely sanitizes country codes and removes duplicates instantly.', icon: Users, color: 'text-brand-primary', bg: 'bg-brand-primary/10' },
-            { title: 'Personalized Placeholders', desc: 'Address subscribers by name, custom variables, or custom balances to double click-through rates.', icon: Zap, color: 'text-brand-accent', bg: 'bg-brand-accent/10' },
+            { title: 'Personalized Placeholders', desc: 'Address subscribers by name, custom variables, or custom balances to double click-through rates.', icon: Sparkles, color: 'text-brand-accent', bg: 'bg-brand-accent/10' },
             { title: 'Campaign Analytics', desc: 'Real-time monitoring of dispatches, delivery callbacks, and carrier response latencies.', icon: BarChart3, color: 'text-brand-emerald', bg: 'bg-brand-emerald/10' },
           ].map((f) => (
             <div key={f.title} className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/10 space-y-4">

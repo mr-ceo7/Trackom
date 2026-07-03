@@ -236,7 +236,7 @@ export default function ResellerPanelPage() {
                               <div className="text-[10px] text-slate-400 font-mono mt-0.5">{u.email}</div>
                             </div>
                           </td>
-                          <td className="px-5 py-3 text-xs text-slate-600 dark:text-gray-400">{u.company || '—'}</td>
+                          <td className="px-5 py-3 text-xs text-slate-600 dark:text-gray-400">{u.company || ' - '}</td>
                           <td className="px-5 py-3 font-bold font-mono text-slate-900 dark:text-white">
                             {u.sms_balance.toLocaleString()} cr
                           </td>

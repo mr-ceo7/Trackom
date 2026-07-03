@@ -247,7 +247,7 @@ export default function ReportsPage() {
                       </td>
 
                       <td className="px-5 py-3 text-xs text-slate-500 dark:text-gray-400 font-mono">
-                        {m.sent_at ? new Date(m.sent_at).toLocaleTimeString() : '—'}
+                        {m.sent_at ? new Date(m.sent_at).toLocaleTimeString() : ' - '}
                       </td>
                     </tr>
                   ))}

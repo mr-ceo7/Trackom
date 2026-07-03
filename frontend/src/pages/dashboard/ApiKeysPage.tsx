@@ -1,8 +1,8 @@
 /**
- * ApiKeysPage — manage API keys with real backend CRUD.
+ * ApiKeysPage - manage API keys with real backend CRUD.
  */
 import { useState, useEffect, useCallback } from 'react';
-import { Key, Plus, Copy, Trash2, CheckCircle2, Shield, X, AlertTriangle, Sliders, Calendar, Globe, Zap, ShieldAlert, BookOpen, ExternalLink } from 'lucide-react';
+import { Key, Plus, Copy, Trash2, CheckCircle2, Shield, X, AlertTriangle, Sliders, Calendar, Globe, Activity, ShieldAlert, BookOpen, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import api from '../../services/api';
 import Loader from '../../components/Loader';
@@ -378,7 +378,7 @@ export default function ApiKeysPage() {
                               <div key={idx} className="flex-1 flex flex-col items-center group relative cursor-pointer h-full justify-end">
                                 <div className="absolute bottom-full mb-2 hidden group-hover:block bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur border border-white/5 text-white text-[10px] p-2.5 rounded-xl shadow-xl z-20 whitespace-nowrap pointer-events-none">
                                   <div className="font-bold text-brand-primary">{d.date}</div>
-                                  <div className="flex items-center gap-1 mt-0.5"><Zap className="w-3 h-3 text-cyan-400" /> {d.requests} requests</div>
+                                  <div className="flex items-center gap-1 mt-0.5"><Activity className="w-3 h-3 text-cyan-400" /> {d.requests} requests</div>
                                   <div className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-brand-emerald" /> {d.credits.toFixed(2)} KES cost</div>
                                 </div>
                                 <div 

@@ -1,5 +1,5 @@
 /**
- * LoginPage — split layout with branded panel + login form.
+ * LoginPage - split layout with branded panel + login form.
  */
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';

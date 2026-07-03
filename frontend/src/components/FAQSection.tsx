@@ -72,7 +72,7 @@ export default function FAQSection() {
           <span className="gradient-text">We've got you covered.</span>
         </h2>
         <p className="text-slate-600 dark:text-gray-400 text-sm md:text-base">
-          Everything Kenyan businesses ask about Trackom — from M-Pesa payments to carrier coverage and API limits.
+          Everything Kenyan businesses ask about Trackom - from M-Pesa payments to carrier coverage and API limits.
         </p>
 
         {/* SEARCH BAR */}

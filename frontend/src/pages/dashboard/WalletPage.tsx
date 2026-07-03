@@ -176,7 +176,7 @@ export default function WalletPage() {
                   </div>
                   <div>
                     <div className="text-sm font-medium text-slate-900 dark:text-white">{tx.description || tx.type.replace('_', ' ')}</div>
-                    <div className="text-[11px] text-slate-400 dark:text-gray-500 font-mono">{tx.reference || '—'} · {new Date(tx.created_at).toLocaleDateString()}</div>
+                    <div className="text-[11px] text-slate-400 dark:text-gray-500 font-mono">{tx.reference || ' - '} · {new Date(tx.created_at).toLocaleDateString()}</div>
                   </div>
                 </div>
                 <div className="text-right">

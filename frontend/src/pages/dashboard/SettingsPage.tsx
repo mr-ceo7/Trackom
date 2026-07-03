@@ -1,5 +1,5 @@
 /**
- * SettingsPage — profile, notifications, and plan settings.
+ * SettingsPage - profile, notifications, and plan settings.
  */
 import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';

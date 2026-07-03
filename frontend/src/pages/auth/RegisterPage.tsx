@@ -1,5 +1,5 @@
 /**
- * RegisterPage — multi-step registration form.
+ * RegisterPage - multi-step registration form.
  */
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -91,7 +91,7 @@ export default function RegisterPage() {
           <div className="clay-card rounded-3xl p-6 sm:p-8 space-y-6">
             <div>
               <h2 className="text-2xl font-display font-bold text-slate-900 dark:text-white">Create your account</h2>
-              <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">Step {step} of 3 — {steps[step - 1]}</p>
+              <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">Step {step} of 3 - {steps[step - 1]}</p>
             </div>
 
             {/* Progress bar */}

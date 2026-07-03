@@ -1,5 +1,5 @@
 /**
- * App.tsx — Router-based application root with code-split lazy loading.
+ * App.tsx - Router-based application root with code-split lazy loading.
  */
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';

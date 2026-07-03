@@ -36,7 +36,7 @@ export default function CTABanner({ onOpenSignup }: CTABannerProps) {
               Ready to reach every customer in Kenya?
             </h2>
             <p className="text-white/80 text-lg mb-8 max-w-lg">
-              Join 5,000+ businesses already sending millions of messages monthly. Start free with 10,000 SMS credits — no card required.
+              Join 5,000+ businesses already sending millions of messages monthly. Start free with 10,000 SMS credits - no card required.
             </p>
             <button
               onClick={onOpenSignup}

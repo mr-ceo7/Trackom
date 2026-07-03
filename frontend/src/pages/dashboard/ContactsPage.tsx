@@ -1,5 +1,5 @@
 /**
- * ContactsPage — contact management with CSV import and Group segmenting.
+ * ContactsPage - contact management with CSV import and Group segmenting.
  */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -83,6 +83,23 @@ export default function ContactsPage() {
   const [bulkUpdating, setBulkUpdating] = useState(false);
   const [bulkError, setBulkError] = useState<string | null>(null);
   const [bulkSuccess, setBulkSuccess] = useState<string | null>(null);
+
+  const [showTooltip, setShowTooltip] = useState(false);
+  const tooltipShownRef = useRef(false);
+
+  useEffect(() => {
+    if (!loadingContacts && !tooltipShownRef.current) {
+      tooltipShownRef.current = true;
+      const timer = setTimeout(() => {
+        setShowTooltip(true);
+        const hideTimer = setTimeout(() => {
+          setShowTooltip(false);
+        }, 12000);
+        return () => clearTimeout(hideTimer);
+      }, 1200);
+      return () => clearTimeout(timer);
+    }
+  }, [loadingContacts]);
 
   // Clear selection on tab, search, page navigation, or filter change
   useEffect(() => {
@@ -327,6 +344,18 @@ export default function ContactsPage() {
     } catch { /* noop */ }
   };
 
+  const handleDownloadTemplate = () => {
+    const csvContent = "name,phone,email\nJohn Doe,0712345678,john@example.com\nJane Smith,+254723456789,jane@example.com\n";
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "trackom_contacts_template.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // CSV Import Actions
   const handleCloseImport = () => {
     setShowImport(false);
@@ -469,7 +498,52 @@ export default function ContactsPage() {
             {activeTab === 'contacts' ? `${totalContactsCount.toLocaleString()} contacts total` : `${groups.length} lists/segments`}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 items-center">
+          <div className="relative">
+            <button 
+              onClick={handleDownloadTemplate}
+              className="clay-button-secondary flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-semibold text-slate-600 dark:text-gray-300 cursor-pointer transition-all"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Download Template
+            </button>
+            <AnimatePresence>
+              {showTooltip && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  className="absolute left-1/2 -translate-x-1/2 top-full mt-2.5 z-30 w-56 bg-brand-primary text-white text-xs p-3 rounded-2xl shadow-xl flex flex-col gap-1.5 pointer-events-auto"
+                >
+                  <div className="flex justify-between items-start">
+                    <span className="font-bold flex items-center gap-1">✨ Import Guide</span>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setShowTooltip(false); }}
+                      className="text-white/80 hover:text-white cursor-pointer p-0.5"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-white/90 leading-normal text-left font-normal">
+                    First time importing? Download our standard CSV template to format your list correctly.
+                  </p>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDownloadTemplate();
+                      setShowTooltip(false);
+                    }}
+                    className="mt-1 bg-white text-brand-primary font-bold text-[10px] py-1 px-2.5 rounded-lg hover:bg-slate-50 transition-all text-center self-start cursor-pointer"
+                  >
+                    Get CSV Template
+                  </button>
+                  <div className="absolute left-1/2 -translate-x-1/2 -top-1 w-2.5 h-2.5 bg-brand-primary rotate-45" />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           <button 
             onClick={() => { setImportResult(null); setShowImport(true); }}
             className="clay-button-secondary flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-semibold text-slate-600 dark:text-gray-300 cursor-pointer transition-all"
@@ -626,7 +700,7 @@ export default function ContactsPage() {
                           </div>
                         </td>
                         <td className="px-5 py-3 text-sm text-slate-600 dark:text-gray-400 font-mono">{c.phone}</td>
-                        <td className="px-5 py-3 text-sm text-slate-500 hidden sm:table-cell">{c.email || '—'}</td>
+                        <td className="px-5 py-3 text-sm text-slate-500 hidden sm:table-cell">{c.email || ' - '}</td>
                         <td className="px-5 py-3 text-right">
                           <button 
                             onClick={() => handleDeleteContact(c.id)} 
@@ -776,10 +850,19 @@ export default function ContactsPage() {
                     </div>
                   </div>
                 ) : (
-                  /* STANDARD IMPORT FORM */
+                   /* STANDARD IMPORT FORM */
                   <form onSubmit={handleImportCSV} className="space-y-4">
                     <div className="space-y-1.5">
-                      <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Select CSV File</label>
+                      <div className="flex justify-between items-center">
+                        <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Select CSV File</label>
+                        <button 
+                          type="button" 
+                          onClick={handleDownloadTemplate} 
+                          className="text-[11px] font-semibold text-brand-primary hover:text-brand-primary-hover flex items-center gap-1 cursor-pointer transition-all"
+                        >
+                          <Download className="w-3 h-3" /> Download Template
+                        </button>
+                      </div>
                       <input 
                         type="file" 
                         ref={fileInputRef}
@@ -798,7 +881,7 @@ export default function ContactsPage() {
                         onChange={e => setImportGroupId(e.target.value)}
                         className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm cursor-pointer"
                       >
-                        <option value="">— No group (All Contacts) —</option>
+                        <option value=""> - No group (All Contacts) - </option>
                         {groups.map(g => (
                           <option key={g.id} value={g.id}>{g.name}</option>
                         ))}
@@ -884,7 +967,7 @@ export default function ContactsPage() {
                       onChange={e => setNewContactGroupId(e.target.value)}
                       className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm cursor-pointer"
                     >
-                      <option value="">— No group (Unsorted) —</option>
+                      <option value=""> - No group (Unsorted) - </option>
                       {groups.map(g => (
                         <option key={g.id} value={g.id}>{g.name}</option>
                       ))}
@@ -1047,7 +1130,7 @@ export default function ContactsPage() {
                     required
                     className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm cursor-pointer"
                   >
-                    <option value="">— Choose a group —</option>
+                    <option value=""> - Choose a group - </option>
                     {groups.map(g => (
                       <option key={g.id} value={g.id}>{g.name}</option>
                     ))}
@@ -1105,7 +1188,7 @@ export default function ContactsPage() {
                     required
                     className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm cursor-pointer"
                   >
-                    <option value="">— Choose a group —</option>
+                    <option value=""> - Choose a group - </option>
                     {groups.map(g => (
                       <option key={g.id} value={g.id}>{g.name}</option>
                     ))}

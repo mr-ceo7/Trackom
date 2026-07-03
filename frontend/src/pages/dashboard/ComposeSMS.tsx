@@ -1,9 +1,9 @@
 /**
- * ComposeSMS — send SMS to individual numbers or contact groups.
+ * ComposeSMS - send SMS to individual numbers or contact groups.
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Send, Users, Hash, MessageSquare, AlertCircle, CheckCircle2, ChevronDown, Zap, Sliders, X } from 'lucide-react';
+import { Send, Users, Hash, MessageSquare, AlertCircle, CheckCircle2, ChevronDown, Clock, Sliders, X } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
 import Loader from '../../components/Loader';
@@ -243,7 +243,7 @@ export default function ComposeSMS() {
       </AnimatePresence>
 
       <form onSubmit={handleSend} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left — Message form */}
+        {/* Left - Message form */}
         <div className="lg:col-span-2 space-y-5">
           {/* Sender ID */}
           <div className="clay-card rounded-3xl p-5 space-y-4">
@@ -291,8 +291,8 @@ export default function ComposeSMS() {
                   onChange={(e) => setSelectedGroupId(e.target.value)}
                   className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm cursor-pointer"
                 >
-                  <option value="">— Select a group —</option>
-                  <option value="all-contacts">— All Contacts —</option>
+                  <option value="">Select a group</option>
+                  <option value="all-contacts">All Contacts</option>
                   {groups.map((g) => (
                     <option key={g.id} value={g.id}>
                       {g.name}
@@ -353,7 +353,7 @@ export default function ComposeSMS() {
                   onChange={(e) => handleTemplateSelect(e.target.value)}
                   className="clay-input px-3 py-1.5 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-xs cursor-pointer max-w-[150px] sm:max-w-none"
                 >
-                  <option value="">— Select Template —</option>
+                  <option value=""> - Select Template - </option>
                   {templates.map(t => (
                     <option key={t.id} value={t.id}>{t.name}</option>
                   ))}
@@ -449,7 +449,7 @@ export default function ComposeSMS() {
           </div>
         </div>
 
-        {/* Right — Summary & Send */}
+        {/* Right - Summary & Send */}
         <div className="space-y-5">
           <div className="clay-card rounded-3xl p-5 space-y-4 sticky top-20">
             <h3 className="font-display font-semibold text-sm text-slate-900 dark:text-white">Summary</h3>
@@ -498,7 +498,7 @@ export default function ComposeSMS() {
             </button>
 
             <div className="flex items-center gap-2 text-[11px] text-slate-400 dark:text-gray-500">
-              <Zap className="w-3 h-3" />
+              <Clock className="w-3 h-3" />
               <span>Delivery typically under 3 seconds</span>
             </div>
           </div>

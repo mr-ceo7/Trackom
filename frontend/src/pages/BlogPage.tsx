@@ -1,5 +1,5 @@
 /**
- * BlogPage — public blog listing with category filters.
+ * BlogPage - public blog listing with category filters.
  */
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';

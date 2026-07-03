@@ -10,7 +10,7 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Request interceptor — attach access token
+// Request interceptor - attach access token
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('trackom_access_token');
   if (token) {
@@ -19,7 +19,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Response interceptor — handle 401 with token refresh
+// Response interceptor - handle 401 with token refresh
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -40,7 +40,7 @@ api.interceptors.response.use(
           originalRequest.headers.Authorization = `Bearer ${access_token}`;
           return api(originalRequest);
         } catch {
-          // Refresh failed — clear tokens
+          // Refresh failed - clear tokens
           localStorage.removeItem('trackom_access_token');
           localStorage.removeItem('trackom_refresh_token');
           window.location.href = '/login';

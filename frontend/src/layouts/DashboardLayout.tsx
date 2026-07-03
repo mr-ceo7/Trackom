@@ -1,5 +1,5 @@
 /**
- * DashboardLayout — sidebar + topbar + main content area + notification drawer.
+ * DashboardLayout - sidebar + topbar + main content area + notification drawer.
  */
 import { useState, useEffect, useCallback } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
@@ -115,7 +115,7 @@ export default function DashboardLayout() {
 
   return (
     <div className="h-screen flex overflow-hidden light-dashboard-bg dark:bg-surface-dark">
-      {/* SIDEBAR — Desktop */}
+      {/* SIDEBAR - Desktop */}
       <aside className="hidden lg:flex flex-col w-64 h-screen clay-sidebar shrink-0">
         <div className="px-6 py-5">
           <NavLink to="/"><TrackomLogo size={24} /></NavLink>

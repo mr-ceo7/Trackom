@@ -212,7 +212,7 @@ export default function Hero({ onOpenSignup }: HeroProps) {
                     onClick={onOpenSignup}
                     className="w-full sm:w-auto h-12 px-8 rounded-full text-sm font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none flex items-center justify-center gap-2 border border-transparent"
                   >
-                    <span>Start Sending — It's Free</span>
+                    <span>Start Sending - It's Free</span>
                     <Rocket className="w-4 h-4" />
                   </button>
 

@@ -1,5 +1,5 @@
 /**
- * Auth context — provides authentication state and actions across the app.
+ * Auth context - provides authentication state and actions across the app.
  */
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import api from '../services/api';

@@ -70,7 +70,7 @@ export default function Testimonials() {
           <span className="gradient-text">across Kenya.</span>
         </h2>
         <p className="text-slate-600 dark:text-gray-400 text-base md:text-lg">
-          From banks to hospitals, e-commerce to SACCOs — see why enterprises choose Trackom.
+          From banks to hospitals, e-commerce to SACCOs - see why enterprises choose Trackom.
         </p>
       </div>
 

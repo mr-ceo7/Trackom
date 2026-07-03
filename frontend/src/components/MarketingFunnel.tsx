@@ -80,10 +80,10 @@ function MobileDeck() {
         {/* Header */}
         <div className="text-center px-2 mb-6">
           <h2 className="font-display font-bold text-slate-900 dark:text-white text-2xl leading-[1.15] tracking-tight text-balance mb-2">
-            Your Complete Customer Journey — Automated
+            Your Complete Customer Journey - Automated
           </h2>
           <p className="text-slate-600 dark:text-gray-400 text-xs leading-relaxed max-w-[280px] mx-auto">
-            From first contact to repeat purchase — orchestrate SMS, WhatsApp, USSD, and voice campaigns that drive results.
+            From first contact to repeat purchase - orchestrate SMS, WhatsApp, USSD, and voice campaigns that drive results.
           </p>
         </div>
 
@@ -255,7 +255,7 @@ export default function MarketingFunnel({ onOpenSignup }: MarketingFunnelProps) 
           className={`hidden md:flex flex-col gap-4 text-center max-w-3xl mx-auto mb-20 scroll-animate ${headerVisible ? 'is-visible' : ''}`}
         >
           <h2 className="font-display font-bold text-slate-900 dark:text-white text-3xl sm:text-4xl md:text-5xl lg:text-[3.25rem] leading-[1.1] tracking-tight text-balance">
-            Your Complete Customer Journey — Automated
+            Your Complete Customer Journey - Automated
           </h2>
           <p className="text-slate-600 dark:text-gray-400 text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
             Deliver high-impact multi-channel messaging and automate client interactions across Kenya's mobile-first economy.

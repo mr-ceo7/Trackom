@@ -21,7 +21,7 @@ const categories = [
       {
         icon: <Send className="w-5 h-5" />,
         title: 'WhatsApp Business API',
-        description: 'Rich media messaging at scale — images, documents, buttons, and templates.',
+        description: 'Rich media messaging at scale - images, documents, buttons, and templates.',
       },
       {
         icon: <MessageSquare className="w-5 h-5" />,
@@ -326,7 +326,7 @@ export default function Services() {
           <span className="gradient-text">Maximum Impact.</span>
         </h2>
         <p className="text-slate-600 dark:text-gray-400 text-base md:text-lg">
-          Bulk SMS, WhatsApp Business, USSD menus, voice calls, OTP, and airtime rewards — reach every Kenyan customer on their preferred channel.
+          Bulk SMS, WhatsApp Business, USSD menus, voice calls, OTP, and airtime rewards - reach every Kenyan customer on their preferred channel.
         </p>
       </div>
 
@@ -419,7 +419,7 @@ export default function Services() {
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-emerald" />
               </span>
               <span className="text-[10px] font-mono font-semibold text-slate-500 dark:text-gray-500 uppercase tracking-widest">
-                Live Preview — {activeCategory.label}
+                Live Preview - {activeCategory.label}
               </span>
             </div>
 

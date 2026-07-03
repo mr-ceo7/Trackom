@@ -1,5 +1,5 @@
 /**
- * SignupModal — Premium 2-Step interactive signup wizard.
+ * SignupModal - Premium 2-Step interactive signup wizard.
  * Fits perfectly on all viewports without scrolling or overflow clipping.
  */
 import React, { useState, useEffect } from 'react';
