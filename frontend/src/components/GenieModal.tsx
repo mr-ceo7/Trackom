@@ -1,5 +1,5 @@
-import React, { useRef, useEffect } from 'react';
-import { motion, useMotionValue, useTransform, animate, usePresence } from 'motion/react';
+import React from 'react';
+import { motion } from 'motion/react';
 
 // Track the coordinates and bounding rect of the last clicked interactive element
 let lastClickRect: DOMRect | null = null;
@@ -85,12 +85,6 @@ export default function GenieModal({
   children,
   ...props
 }: GenieModalProps) {
-  const modalRef = useRef<HTMLDivElement>(null);
-  const [isPresent, safeToRemove] = usePresence();
-  
-  // 0 = closed/sucked at trigger, 1 = fully open at center
-  const progress = useMotionValue(0);
-
   // Compute button center coordinates
   const buttonRect = getTriggerRect();
   const buttonCX = buttonRect.left + buttonRect.width / 2;
@@ -102,41 +96,6 @@ export default function GenieModal({
   // Translate from button center relative to viewport center
   const initialX = buttonCX - viewportW / 2;
   const initialY = buttonCY - viewportH / 2;
-
-  // GPU-accelerated motion transforms (eliminates laggy clipPath calculations)
-  const x = useTransform(progress, [0, 1], [initialX, 0]);
-  const y = useTransform(progress, [0, 1], [initialY, 0]);
-  const scaleX = useTransform(progress, [0, 1], [0.02, 1]);
-  const scaleY = useTransform(progress, [0, 1], [0.02, 1]);
-  const opacity = useTransform(progress, [0, 0.15, 1], [0, 1, 1]);
-  const contentOpacity = useTransform(progress, [0, 0.35, 1], [0, 0, 1]);
-
-  // Rotational swing to simulate movement weight
-  const rotate = useTransform(progress, [0, 0.5, 1], [
-    initialX < 0 ? -6 : 6,
-    initialX < 0 ? -1.5 : 1.5,
-    0
-  ]);
-
-  useEffect(() => {
-    if (isPresent) {
-      progress.set(0);
-      const controls = animate(progress, 1, {
-        duration: 0.52,
-        ease: [0.34, 1.56, 0.64, 1], // macOS-like elastic overshoot
-      });
-      return () => controls.stop();
-    } else {
-      const controls = animate(progress, 0, {
-        duration: 0.38,
-        ease: [0.25, 1, 0.5, 1],
-        onComplete: () => {
-          safeToRemove();
-        },
-      });
-      return () => controls.stop();
-    }
-  }, [isPresent]);
 
   const Component = as as any;
 
@@ -154,14 +113,35 @@ export default function GenieModal({
 
       {/* Warp/Genie container card */}
       <motion.div
-        ref={modalRef}
-        style={{
-          x,
-          y,
-          scaleX,
-          scaleY,
-          rotate,
-          opacity,
+        initial={{
+          x: initialX,
+          y: initialY,
+          scaleX: 0.05,
+          scaleY: 0.05,
+          rotate: initialX < 0 ? -6 : 6,
+          opacity: 0,
+        }}
+        animate={{
+          x: 0,
+          y: 0,
+          scaleX: 1,
+          scaleY: 1,
+          rotate: 0,
+          opacity: 1,
+        }}
+        exit={{
+          x: initialX,
+          y: initialY,
+          scaleX: 0.05,
+          scaleY: 0.05,
+          rotate: initialX < 0 ? -6 : 6,
+          opacity: 0,
+        }}
+        transition={{
+          type: 'spring',
+          stiffness: 150,
+          damping: 19,
+          mass: 0.85,
         }}
         className="w-full max-w-md relative z-10 text-left"
       >
@@ -171,7 +151,13 @@ export default function GenieModal({
           className={`clay-card rounded-3xl dark:bg-[#0c0f1d] dark:border dark:border-white/10 shadow-2xl w-full max-h-[90vh] overflow-y-auto ${className}`}
           {...props}
         >
-          <motion.div style={{ opacity: contentOpacity }} className="w-full h-full">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ delay: 0.12, duration: 0.22 }}
+            className="w-full h-full"
+          >
             {children}
           </motion.div>
         </Component>
