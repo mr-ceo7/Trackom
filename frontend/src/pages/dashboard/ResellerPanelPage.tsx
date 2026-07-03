@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 import Loader from '../../components/Loader';
+import GenieModal from '../../components/GenieModal';
+
 
 interface ResellerStats {
   total_clients: number;
@@ -326,88 +328,82 @@ export default function ResellerPanelPage() {
       {/* Credit Transfer Modal */}
       <AnimatePresence>
         {isTransferOpen && selectedUser && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsTransferOpen(false)} className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" />
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="clay-card w-full max-w-md rounded-3xl p-6 relative z-10 text-left dark:bg-[#0c0f1d] dark:border dark:border-white/10 shadow-2xl">
-              <div className="flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-4 mb-4">
-                <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
-                  <Coins className="w-5 h-5 text-brand-primary" />
-                  <span>Transfer Credits</span>
-                </h3>
-                <button onClick={() => setIsTransferOpen(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"><X className="w-4 h-4" /></button>
-              </div>
+          <GenieModal onClose={() => setIsTransferOpen(false)} className="p-6">
+            <div className="flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-4 mb-4">
+              <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                <Coins className="w-5 h-5 text-brand-primary" />
+                <span>Transfer Credits</span>
+              </h3>
+              <button onClick={() => setIsTransferOpen(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"><X className="w-4 h-4" /></button>
+            </div>
 
-              <div className="clay-inset rounded-2xl p-3 mb-4 text-xs space-y-1">
-                <div>Client: <span className="font-bold text-slate-900 dark:text-white">{selectedUser.full_name}</span></div>
-                <div>Email: <span className="font-mono text-slate-500 dark:text-gray-400">{selectedUser.email}</span></div>
-                <div>Client Current Balance: <span className="font-bold text-brand-emerald font-mono">{selectedUser.sms_balance.toLocaleString()} credits</span></div>
-                <div className="h-px bg-slate-200 dark:bg-white/6 my-2" />
-                <div>My Pool Balance: <span className="font-bold text-brand-primary font-mono">{stats?.reseller_balance?.toLocaleString() || 0} credits available</span></div>
-              </div>
+            <div className="clay-inset rounded-2xl p-3 mb-4 text-xs space-y-1">
+              <div>Client: <span className="font-bold text-slate-900 dark:text-white">{selectedUser.full_name}</span></div>
+              <div>Email: <span className="font-mono text-slate-500 dark:text-gray-400">{selectedUser.email}</span></div>
+              <div>Client Current Balance: <span className="font-bold text-brand-emerald font-mono">{selectedUser.sms_balance.toLocaleString()} credits</span></div>
+              <div className="h-px bg-slate-200 dark:bg-white/6 my-2" />
+              <div>My Pool Balance: <span className="font-bold text-brand-primary font-mono">{stats?.reseller_balance?.toLocaleString() || 0} credits available</span></div>
+            </div>
 
-              <form onSubmit={handleTransfer} className="space-y-4">
-                <div className="space-y-1.5 text-left">
-                  <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Credits to Transfer</label>
-                  <input type="number" min="1" max={stats?.reseller_balance || 0} value={transferAmount} onChange={e => setTransferAmount(e.target.value)} placeholder="Enter amount of credits to allocate..." className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
-                </div>
-                <button type="submit" disabled={submittingTransfer || !transferAmount} className="clay-button-primary w-full py-3 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2">
-                  {submittingTransfer ? <Loader size="sm" /> : <span>Confirm Transfer</span>}
-                </button>
-              </form>
-            </motion.div>
-          </div>
+            <form onSubmit={handleTransfer} className="space-y-4">
+              <div className="space-y-1.5 text-left">
+                <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Credits to Transfer</label>
+                <input type="number" min="1" max={stats?.reseller_balance || 0} value={transferAmount} onChange={e => setTransferAmount(e.target.value)} placeholder="Enter amount of credits to allocate..." className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
+              </div>
+              <button type="submit" disabled={submittingTransfer || !transferAmount} className="clay-button-primary w-full py-3 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2">
+                {submittingTransfer ? <Loader size="sm" /> : <span>Confirm Transfer</span>}
+              </button>
+            </form>
+          </GenieModal>
         )}
       </AnimatePresence>
 
       {/* Register Sub-account Modal */}
       <AnimatePresence>
         {isCreateOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsCreateOpen(false)} className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" />
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="clay-card w-full max-w-md rounded-3xl p-6 relative z-10 text-left dark:bg-[#0c0f1d] dark:border dark:border-white/10 shadow-2xl">
-              <div className="flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-4 mb-4">
-                <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
-                  <Plus className="w-5 h-5 text-brand-primary" />
-                  <span>Register Sub-account</span>
-                </h3>
-                <button onClick={() => setIsCreateOpen(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"><X className="w-4 h-4" /></button>
+          <GenieModal onClose={() => setIsCreateOpen(false)} className="p-6">
+            <div className="flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-4 mb-4">
+              <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                <Plus className="w-5 h-5 text-brand-primary" />
+                <span>Register Sub-account</span>
+              </h3>
+              <button onClick={() => setIsCreateOpen(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"><X className="w-4 h-4" /></button>
+            </div>
+
+            {createError && <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-xs rounded-xl mb-4">{createError}</div>}
+
+            <form onSubmit={handleCreateChild} className="space-y-4">
+              <div className="space-y-1.5 text-left">
+                <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Client Full Name</label>
+                <input type="text" value={childName} onChange={e => setChildName(e.target.value)} placeholder="James Mwangi" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
               </div>
 
-              {createError && <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-xs rounded-xl mb-4">{createError}</div>}
+              <div className="space-y-1.5 text-left">
+                <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Client Email Address</label>
+                <input type="email" value={childEmail} onChange={e => setChildEmail(e.target.value)} placeholder="james@company.co.ke" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
+              </div>
 
-              <form onSubmit={handleCreateChild} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5 text-left">
-                  <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Client Full Name</label>
-                  <input type="text" value={childName} onChange={e => setChildName(e.target.value)} placeholder="James Mwangi" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
+                  <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Phone (Optional)</label>
+                  <input type="tel" value={childPhone} onChange={e => setChildPhone(e.target.value)} placeholder="0712345678" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
                 </div>
-
                 <div className="space-y-1.5 text-left">
-                  <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Client Email Address</label>
-                  <input type="email" value={childEmail} onChange={e => setChildEmail(e.target.value)} placeholder="james@company.co.ke" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
+                  <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Company (Optional)</label>
+                  <input type="text" value={childCompany} onChange={e => setChildCompany(e.target.value)} placeholder="Mwangi Builders" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
                 </div>
+              </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5 text-left">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Phone (Optional)</label>
-                    <input type="tel" value={childPhone} onChange={e => setChildPhone(e.target.value)} placeholder="0712345678" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
-                  </div>
-                  <div className="space-y-1.5 text-left">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Company (Optional)</label>
-                    <input type="text" value={childCompany} onChange={e => setChildCompany(e.target.value)} placeholder="Mwangi Builders" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
-                  </div>
-                </div>
+              <div className="space-y-1.5 text-left">
+                <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Login Password</label>
+                <input type="password" value={childPassword} onChange={e => setChildPassword(e.target.value)} placeholder="••••••••" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
+              </div>
 
-                <div className="space-y-1.5 text-left">
-                  <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Login Password</label>
-                  <input type="password" value={childPassword} onChange={e => setChildPassword(e.target.value)} placeholder="••••••••" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
-                </div>
-
-                <button type="submit" disabled={submittingCreate} className="clay-button-primary w-full py-3 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2">
-                  {submittingCreate ? <Loader size="sm" /> : <span>Create Client Account</span>}
-                </button>
-              </form>
-            </motion.div>
-          </div>
+              <button type="submit" disabled={submittingCreate} className="clay-button-primary w-full py-3 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2">
+                {submittingCreate ? <Loader size="sm" /> : <span>Create Client Account</span>}
+              </button>
+            </form>
+          </GenieModal>
         )}
       </AnimatePresence>
     </div>

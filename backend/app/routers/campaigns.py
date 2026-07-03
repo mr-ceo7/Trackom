@@ -84,6 +84,10 @@ async def create_campaign(
             detail=f"Insufficient balance. Need {total_cost} credits, have {current_user.sms_balance}."
         )
 
+    db_scheduled_at = None
+    if data.scheduled_at is not None:
+        db_scheduled_at = data.scheduled_at.replace(tzinfo=None)
+
     # Create campaign in draft or scheduled status
     campaign = Campaign(
         user_id=current_user.id,
@@ -96,7 +100,7 @@ async def create_campaign(
         delivered_count=0,
         failed_count=0,
         total_cost=total_cost,
-        scheduled_at=data.scheduled_at,
+        scheduled_at=db_scheduled_at,
         group_id=data.group_id,
         started_at=None,
         completed_at=None,

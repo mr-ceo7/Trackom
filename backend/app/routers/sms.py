@@ -49,6 +49,10 @@ async def send_sms(
     # Check if scheduled
     is_scheduled = data.scheduled_at is not None
     initial_status = "scheduled" if is_scheduled else "queued"
+    
+    db_scheduled_at = None
+    if data.scheduled_at is not None:
+        db_scheduled_at = data.scheduled_at.replace(tzinfo=None)
 
     messages_to_send = []
     for phone in data.recipients:
@@ -60,7 +64,7 @@ async def send_sms(
             status=initial_status,
             cost=per_message_cost,
             batch_number=data.batch_number,
-            scheduled_at=data.scheduled_at,
+            scheduled_at=db_scheduled_at,
             sent_at=None if is_scheduled else now,
         )
         db.add(msg)
@@ -126,19 +130,23 @@ async def message_history(
     page: int = Query(1, ge=1),
     limit: int = Query(50, ge=1, le=200),
     batch_number: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get SMS send history for the current user, optionally filtered by batch and date range."""
+    """Get SMS send history for the current user, optionally filtered by batch, status, and date range."""
     q = (
         select(SmsMessage)
         .where(SmsMessage.user_id == current_user.id, SmsMessage.deleted_at.is_(None))
     )
     
     if batch_number:
-        q = q.where(SmsMessage.batch_number == batch_number)
+        q = q.where(SmsMessage.batch_number.ilike(f"%{batch_number}%"))
+        
+    if status:
+        q = q.where(SmsMessage.status == status.lower())
         
     q = filter_by_date(q, start_date, end_date)
         
@@ -182,7 +190,7 @@ async def export_csv(
     """Export SMS history as CSV."""
     q = select(SmsMessage).where(SmsMessage.user_id == current_user.id, SmsMessage.deleted_at.is_(None))
     if batch_number:
-        q = q.where(SmsMessage.batch_number == batch_number)
+        q = q.where(SmsMessage.batch_number.ilike(f"%{batch_number}%"))
     q = filter_by_date(q, start_date, end_date)
     q = q.order_by(SmsMessage.created_at.desc())
     res = await db.execute(q)
@@ -222,7 +230,7 @@ async def export_xlsx(
     """Export SMS history as XML/Excel XLS compatible spreadsheet."""
     q = select(SmsMessage).where(SmsMessage.user_id == current_user.id, SmsMessage.deleted_at.is_(None))
     if batch_number:
-        q = q.where(SmsMessage.batch_number == batch_number)
+        q = q.where(SmsMessage.batch_number.ilike(f"%{batch_number}%"))
     q = filter_by_date(q, start_date, end_date)
     q = q.order_by(SmsMessage.created_at.desc())
     res = await db.execute(q)
@@ -251,7 +259,7 @@ async def export_pdf(
     """Export SMS history as print-ready HTML template (which browsers print/save as PDF)."""
     q = select(SmsMessage).where(SmsMessage.user_id == current_user.id, SmsMessage.deleted_at.is_(None))
     if batch_number:
-        q = q.where(SmsMessage.batch_number == batch_number)
+        q = q.where(SmsMessage.batch_number.ilike(f"%{batch_number}%"))
     q = filter_by_date(q, start_date, end_date)
     q = q.order_by(SmsMessage.created_at.desc())
     res = await db.execute(q)
@@ -311,3 +319,34 @@ async def export_pdf(
         media_type="text/html",
         headers={"Content-Disposition": "attachment; filename=sms_report.html"}
     )
+
+
+@router.delete("/scheduled/{message_id}")
+async def cancel_scheduled_message(
+    message_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Cancel a scheduled SMS message by setting its deleted_at timestamp and refunding credits."""
+    try:
+        msg_uuid = uuid_mod.UUID(message_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid message ID format.")
+    
+    q = select(SmsMessage).where(
+        SmsMessage.id == msg_uuid,
+        SmsMessage.user_id == current_user.id,
+        SmsMessage.status == "scheduled",
+        SmsMessage.deleted_at.is_(None)
+    )
+    res = await db.execute(q)
+    msg = res.scalar_one_or_none()
+    if not msg:
+        raise HTTPException(status_code=404, detail="Scheduled message not found or already sent/cancelled.")
+        
+    msg.deleted_at = datetime.utcnow()
+    # Refund the user
+    refund_amount = int(math.ceil(msg.cost))
+    current_user.sms_balance += refund_amount
+    await db.commit()
+    return {"message": "Scheduled message cancelled successfully.", "refunded_credits": refund_amount}

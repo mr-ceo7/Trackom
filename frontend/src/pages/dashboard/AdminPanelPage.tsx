@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 import Loader from '../../components/Loader';
+import GenieModal from '../../components/GenieModal';
+
 
 interface AdminStats {
   total_users: number;
@@ -52,8 +54,17 @@ export default function AdminPanelPage() {
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [loadingGateways, setLoadingGateways] = useState(false);
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [page, setPage] = useState(1);
   const [limit] = useState(25);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(handler);
+  }, [search]);
   
   // Credit Modal state
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
@@ -95,13 +106,13 @@ export default function AdminPanelPage() {
         params: {
           page,
           limit,
-          ...(search ? { search } : {})
+          ...(debouncedSearch ? { search: debouncedSearch } : {})
         }
       });
       setUsers(resp.data);
     } catch { /* noop */ }
     finally { setLoadingUsers(false); }
-  }, [page, limit, search]);
+  }, [page, limit, debouncedSearch]);
 
   // Fetch gateways list
   const fetchGateways = useCallback(async () => {
@@ -290,7 +301,7 @@ export default function AdminPanelPage() {
             <input 
               type="text" 
               value={search} 
-              onChange={e => { setSearch(e.target.value); setPage(1); }} 
+              onChange={e => setSearch(e.target.value)} 
               className="clay-input w-full pl-11 pr-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" 
               placeholder="Search tenant emails, names, or companies..." 
             />
@@ -528,135 +539,127 @@ export default function AdminPanelPage() {
       {/* Credit Adjustment Popup Modal */}
       <AnimatePresence>
         {isCreditModalOpen && selectedUser && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsCreditModalOpen(false)} className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" />
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="clay-card w-full max-w-md rounded-3xl p-6 relative z-10 text-left dark:bg-[#0c0f1d] dark:border dark:border-white/10 shadow-2xl">
-              <div className="flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-4 mb-4">
-                <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2"><Coins className="w-5 h-5 text-amber-500" /><span>Adjust Wallet Credits</span></h3>
-                <button onClick={() => setIsCreditModalOpen(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"><X className="w-4 h-4" /></button>
-              </div>
+          <GenieModal onClose={() => setIsCreditModalOpen(false)} className="p-6">
+            <div className="flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-4 mb-4">
+              <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2"><Coins className="w-5 h-5 text-amber-500" /><span>Adjust Wallet Credits</span></h3>
+              <button onClick={() => setIsCreditModalOpen(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"><X className="w-4 h-4" /></button>
+            </div>
 
-              <div className="clay-inset rounded-2xl p-3 mb-4 text-xs space-y-1">
-                <div>User: <span className="font-bold text-slate-900 dark:text-white">{selectedUser.full_name}</span></div>
-                <div>Email: <span className="font-mono text-slate-500 dark:text-gray-400">{selectedUser.email}</span></div>
-                <div>Current Balance: <span className="font-bold text-brand-emerald font-mono">{selectedUser.sms_balance.toLocaleString()} credits</span></div>
-              </div>
+            <div className="clay-inset rounded-2xl p-3 mb-4 text-xs space-y-1">
+              <div>User: <span className="font-bold text-slate-900 dark:text-white">{selectedUser.full_name}</span></div>
+              <div>Email: <span className="font-mono text-slate-500 dark:text-gray-400">{selectedUser.email}</span></div>
+              <div>Current Balance: <span className="font-bold text-brand-emerald font-mono">{selectedUser.sms_balance.toLocaleString()} credits</span></div>
+            </div>
 
-              <form onSubmit={handleAdjustCredits} className="space-y-4">
-                <div className="space-y-1.5 text-left">
-                  <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Adjustment Amount (credits)</label>
-                  <input type="text" value={creditAmount} onChange={e => setCreditAmount(e.target.value)} placeholder="Use positive numbers to add, negative (e.g. -500) to deduct" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
-                </div>
-                <div className="space-y-1.5 text-left">
-                  <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Audit Description</label>
-                  <textarea value={creditDesc} onChange={e => setCreditDesc(e.target.value)} placeholder="Enter audit reference or refund note..." rows={3} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
-                </div>
-                <button type="submit" disabled={submittingCredits || !creditAmount} className="clay-button-primary w-full py-3 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2">
-                  {submittingCredits ? <Loader size="sm" /> : <span>Apply Credit Adjustment</span>}
-                </button>
-              </form>
-            </motion.div>
-          </div>
+            <form onSubmit={handleAdjustCredits} className="space-y-4">
+              <div className="space-y-1.5 text-left">
+                <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Adjustment Amount (credits)</label>
+                <input type="text" value={creditAmount} onChange={e => setCreditAmount(e.target.value)} placeholder="Use positive numbers to add, negative (e.g. -500) to deduct" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
+              </div>
+              <div className="space-y-1.5 text-left">
+                <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Audit Description</label>
+                <textarea value={creditDesc} onChange={e => setCreditDesc(e.target.value)} placeholder="Enter audit reference or refund note..." rows={3} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
+              </div>
+              <button type="submit" disabled={submittingCredits || !creditAmount} className="clay-button-primary w-full py-3 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2">
+                {submittingCredits ? <Loader size="sm" /> : <span>Apply Credit Adjustment</span>}
+              </button>
+            </form>
+          </GenieModal>
         )}
       </AnimatePresence>
 
       {/* SMS Rate Modal */}
       <AnimatePresence>
         {isRateModalOpen && selectedRateUser && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsRateModalOpen(false)} className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" />
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="clay-card w-full max-w-md rounded-3xl p-6 relative z-10 text-left dark:bg-[#0c0f1d] dark:border dark:border-white/10 shadow-2xl">
-              <div className="flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-4 mb-4">
-                <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2"><Sliders className="w-5 h-5 text-amber-500" /><span>Set Account SMS Rate</span></h3>
-                <button onClick={() => setIsRateModalOpen(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"><X className="w-4 h-4" /></button>
-              </div>
+          <GenieModal onClose={() => setIsRateModalOpen(false)} className="p-6">
+            <div className="flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-4 mb-4">
+              <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2"><Sliders className="w-5 h-5 text-amber-500" /><span>Set Account SMS Rate</span></h3>
+              <button onClick={() => setIsRateModalOpen(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"><X className="w-4 h-4" /></button>
+            </div>
 
-              <div className="clay-inset rounded-2xl p-3 mb-4 text-xs space-y-1">
-                <div>User: <span className="font-bold text-slate-900 dark:text-white">{selectedRateUser.full_name}</span></div>
-                <div>Email: <span className="font-mono text-slate-500 dark:text-gray-400">{selectedRateUser.email}</span></div>
-                <div>Current Rate: <span className="font-bold text-amber-500 font-mono">{selectedRateUser.credit_rate.toFixed(2)} cr/SMS</span></div>
-              </div>
+            <div className="clay-inset rounded-2xl p-3 mb-4 text-xs space-y-1">
+              <div>User: <span className="font-bold text-slate-900 dark:text-white">{selectedRateUser.full_name}</span></div>
+              <div>Email: <span className="font-mono text-slate-500 dark:text-gray-400">{selectedRateUser.email}</span></div>
+              <div>Current Rate: <span className="font-bold text-amber-500 font-mono">{selectedRateUser.credit_rate.toFixed(2)} cr/SMS</span></div>
+            </div>
 
-              <form onSubmit={handleUpdateRate} className="space-y-4">
-                <div className="space-y-1.5 text-left">
-                  <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Rate Multiplier (credits per SMS)</label>
-                  <input type="number" step="0.01" min="0.01" value={customRate} onChange={e => setCustomRate(e.target.value)} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
-                  <p className="text-[10px] text-slate-400">Default rate is 1.00 (1 SMS = 1 credit). Use smaller values for custom wholesale discounts (e.g. 0.70 cr/SMS).</p>
-                </div>
-                <button type="submit" disabled={submittingRate || !customRate} className="clay-button-primary w-full py-3 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2">
-                  {submittingRate ? <Loader size="sm" /> : <span>Update Custom Rate</span>}
-                </button>
-              </form>
-            </motion.div>
-          </div>
+            <form onSubmit={handleUpdateRate} className="space-y-4">
+              <div className="space-y-1.5 text-left">
+                <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Rate Multiplier (credits per SMS)</label>
+                <input type="number" step="0.01" min="0.01" value={customRate} onChange={e => setCustomRate(e.target.value)} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
+                <p className="text-[10px] text-slate-400">Default rate is 1.00 (1 SMS = 1 credit). Use smaller values for custom wholesale discounts (e.g. 0.70 cr/SMS).</p>
+              </div>
+              <button type="submit" disabled={submittingRate || !customRate} className="clay-button-primary w-full py-3 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2">
+                {submittingRate ? <Loader size="sm" /> : <span>Update Custom Rate</span>}
+              </button>
+            </form>
+          </GenieModal>
         )}
       </AnimatePresence>
 
       {/* Gateway API Configuration Modal */}
       <AnimatePresence>
         {isGatewayModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsGatewayModalOpen(false)} className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" />
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="clay-card w-full max-w-md rounded-3xl p-6 relative z-10 text-left dark:bg-[#0c0f1d] dark:border dark:border-white/10 shadow-2xl">
-              <div className="flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-4 mb-4">
-                <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
-                  <Cpu className="w-5 h-5 text-brand-primary" />
-                  <span>{selectedGateway ? 'Edit API Gateway' : 'Add API Gateway'}</span>
-                </h3>
-                <button onClick={() => setIsGatewayModalOpen(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"><X className="w-4 h-4" /></button>
+          <GenieModal onClose={() => setIsGatewayModalOpen(false)} className="p-6">
+            <div className="flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-4 mb-4">
+              <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                <Cpu className="w-5 h-5 text-brand-primary" />
+                <span>{selectedGateway ? 'Edit API Gateway' : 'Add API Gateway'}</span>
+              </h3>
+              <button onClick={() => setIsGatewayModalOpen(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"><X className="w-4 h-4" /></button>
+            </div>
+
+            <form onSubmit={handleSaveGateway} className="space-y-4">
+              <div className="space-y-1.5 text-left">
+                <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Gateway Provider Name</label>
+                <input type="text" value={gwName} onChange={e => setGwName(e.target.value)} placeholder="e.g. Africa's Talking API, Twilio Endpoint" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
               </div>
 
-              <form onSubmit={handleSaveGateway} className="space-y-4">
-                <div className="space-y-1.5 text-left">
-                  <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Gateway Provider Name</label>
-                  <input type="text" value={gwName} onChange={e => setGwName(e.target.value)} placeholder="e.g. Africa's Talking API, Twilio Endpoint" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
-                </div>
+              <div className="space-y-1.5 text-left">
+                <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">API URL Connection Endpoint</label>
+                <input type="url" value={gwUrl} onChange={e => setGwUrl(e.target.value)} placeholder="https://api.gateway.com/v1/sms" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
+              </div>
 
-                <div className="space-y-1.5 text-left">
-                  <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">API URL Connection Endpoint</label>
-                  <input type="url" value={gwUrl} onChange={e => setGwUrl(e.target.value)} placeholder="https://api.gateway.com/v1/sms" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
-                </div>
+              <div className="space-y-1.5 text-left">
+                <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Secret Security Token / Auth Key</label>
+                <input type="text" value={gwKey} onChange={e => setGwKey(e.target.value)} placeholder="Enter API authentication password or credentials token" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
+              </div>
 
-                <div className="space-y-1.5 text-left">
-                  <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Secret Security Token / Auth Key</label>
-                  <input type="text" value={gwKey} onChange={e => setGwKey(e.target.value)} placeholder="Enter API authentication password or credentials token" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
+              <div className="space-y-1.5 text-left">
+                <div className="flex justify-between items-center">
+                  <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Load Splitting Weight (%)</label>
+                  <span className="text-sm font-bold text-brand-primary font-mono">{gwWeight}%</span>
                 </div>
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="100" 
+                  value={gwWeight} 
+                  onChange={e => setGwWeight(Number(e.target.value))} 
+                  className="w-full h-2 bg-slate-200 dark:bg-white/10 rounded-lg appearance-none cursor-pointer accent-brand-primary" 
+                />
+                <p className="text-[10px] text-slate-400">Determines the percentage probability of outgoing messages being routed to this node compared to other active endpoints.</p>
+              </div>
 
-                <div className="space-y-1.5 text-left">
-                  <div className="flex justify-between items-center">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Load Splitting Weight (%)</label>
-                    <span className="text-sm font-bold text-brand-primary font-mono">{gwWeight}%</span>
-                  </div>
-                  <input 
-                    type="range" 
-                    min="0" 
-                    max="100" 
-                    value={gwWeight} 
-                    onChange={e => setGwWeight(Number(e.target.value))} 
-                    className="w-full h-2 bg-slate-200 dark:bg-white/10 rounded-lg appearance-none cursor-pointer accent-brand-primary" 
-                  />
-                  <p className="text-[10px] text-slate-400">Determines the percentage probability of outgoing messages being routed to this node compared to other active endpoints.</p>
-                </div>
-
-                <div className="flex items-center justify-between py-2 border-t border-b border-slate-200/20 dark:border-white/5">
-                  <span className="text-xs font-semibold text-slate-700 dark:text-gray-300">Gateway Active Status</span>
-                  <button 
-                    type="button" 
-                    onClick={() => setGwActive(!gwActive)}
-                    className="text-brand-primary cursor-pointer hover:scale-105 transition-all"
-                  >
-                    {gwActive ? <ToggleRight className="w-9 h-9" /> : <ToggleLeft className="w-9 h-9 text-slate-400" />}
-                  </button>
-                </div>
-
-                <button type="submit" disabled={submittingGateway} className="clay-button-primary w-full py-3 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2">
-                  {submittingGateway ? <Loader size="sm" /> : <span>Save API Gateway</span>}
+              <div className="flex items-center justify-between py-2 border-t border-b border-slate-200/20 dark:border-white/5">
+                <span className="text-xs font-semibold text-slate-700 dark:text-gray-300">Gateway Active Status</span>
+                <button 
+                  type="button" 
+                  onClick={() => setGwActive(!gwActive)}
+                  className="text-brand-primary cursor-pointer hover:scale-105 transition-all"
+                >
+                  {gwActive ? <ToggleRight className="w-9 h-9" /> : <ToggleLeft className="w-9 h-9 text-slate-400" />}
                 </button>
-              </form>
-            </motion.div>
-          </div>
+              </div>
+
+              <button type="submit" disabled={submittingGateway} className="clay-button-primary w-full py-3 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2">
+                {submittingGateway ? <Loader size="sm" /> : <span>Save API Gateway</span>}
+              </button>
+            </form>
+          </GenieModal>
         )}
       </AnimatePresence>
+
     </div>
   );
 }

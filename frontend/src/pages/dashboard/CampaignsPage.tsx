@@ -6,6 +6,8 @@ import { Megaphone, Plus, Clock, CheckCircle2, XCircle, Send, BarChart3, X, Cale
 import { motion, AnimatePresence } from 'motion/react';
 import api from '../../services/api';
 import Loader from '../../components/Loader';
+import GenieModal from '../../components/GenieModal';
+
 import { useAuth } from '../../contexts/AuthContext';
 
 interface CampaignData {
@@ -199,6 +201,7 @@ export default function CampaignsPage() {
   const [campaignName, setCampaignName] = useState('');
   const [messageContent, setMessageContent] = useState('');
   const [senderId, setSenderId] = useState('TRACKOM');
+  const [senderIds, setSenderIds] = useState<string[]>(['TRACKOM']);
   const [selectedGroupId, setSelectedGroupId] = useState('');
   const [isScheduled, setIsScheduled] = useState(false);
   const [scheduledAt, setScheduledAt] = useState('');
@@ -232,11 +235,22 @@ export default function CampaignsPage() {
     } catch { /* noop */ }
   }, []);
 
+  const fetchSenderIds = useCallback(async () => {
+    try {
+      const resp = await api.get('/sender-ids/approved');
+      setSenderIds(resp.data);
+      if (resp.data && resp.data.length > 0) {
+        setSenderId(resp.data[0]);
+      }
+    } catch { /* noop */ }
+  }, []);
+
   useEffect(() => {
     fetchCampaigns();
     fetchGroups();
     fetchTemplates();
-  }, [fetchCampaigns, fetchGroups, fetchTemplates]);
+    fetchSenderIds();
+  }, [fetchCampaigns, fetchGroups, fetchTemplates, fetchSenderIds]);
 
   // Poll active campaigns
   useEffect(() => {
@@ -329,116 +343,120 @@ export default function CampaignsPage() {
       {/* Create Campaign Modal */}
       <AnimatePresence>
         {showCreate && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-50" onClick={() => setShowCreate(false)} />
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <form onSubmit={handleCreate} className="clay-card rounded-3xl dark:border dark:border-white/10 w-full max-w-md p-6 space-y-5" onClick={e => e.stopPropagation()}>
+          <GenieModal as="form" onSubmit={handleCreate} onClose={() => setShowCreate(false)} className="p-6 space-y-5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center gap-2"><Megaphone className="w-5 h-5 text-brand-primary" />New Campaign</h3>
+              <button type="button" onClick={() => setShowCreate(false)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer"><X className="w-5 h-5" /></button>
+            </div>
+
+            {errorMsg && (
+              <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-xs rounded-xl">{errorMsg}</div>
+            )}
+
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Campaign Name</label>
+                <input type="text" value={campaignName} onChange={e => setCampaignName(e.target.value)} required className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" placeholder="e.g. June Flash Sale" />
+              </div>
+              
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Sender ID</label>
+                <select
+                  value={senderId}
+                  onChange={e => setSenderId(e.target.value)}
+                  required
+                  className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm font-mono transition-all cursor-pointer"
+                >
+                  {senderIds.map(id => (
+                    <option key={id} value={id}>{id}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Target Segment</label>
+                <select
+                  value={selectedGroupId}
+                  onChange={e => setSelectedGroupId(e.target.value)}
+                  className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm cursor-pointer"
+                >
+                  <option value="">All Contacts</option>
+                  {groups.map(g => (
+                    <option key={g.id} value={g.id}>{g.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center gap-2"><Megaphone className="w-5 h-5 text-brand-primary" />New Campaign</h3>
-                  <button type="button" onClick={() => setShowCreate(false)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer"><X className="w-5 h-5" /></button>
+                  <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Message Content</label>
+                  <select
+                    value={selectedTemplateId}
+                    onChange={e => {
+                      const id = e.target.value;
+                      setSelectedTemplateId(id);
+                      if (id === '') {
+                        setMessageContent('');
+                      } else {
+                        const match = templates.find(t => t.id === id);
+                        if (match) setMessageContent(match.content);
+                      }
+                    }}
+                    className="clay-input px-2 py-1 rounded-xl text-slate-900 dark:text-white focus:outline-none text-[10px] cursor-pointer"
+                  >
+                    <option value="">Use Template</option>
+                    {templates.map(t => (
+                      <option key={t.id} value={t.id}>{t.name}</option>
+                    ))}
+                  </select>
                 </div>
+                <textarea 
+                  value={messageContent} 
+                  onChange={e => {
+                    setMessageContent(e.target.value);
+                    setSelectedTemplateId('');
+                  }} 
+                  required 
+                  rows={4} 
+                  className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all resize-none" 
+                  placeholder="Type your marketing or notification message here..." 
+                />
+              </div>
 
-                {errorMsg && (
-                  <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-xs rounded-xl">{errorMsg}</div>
-                )}
+              {/* Scheduling Section */}
+              <div className="clay-inset space-y-3 p-3.5 rounded-2xl">
+                <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-gray-300 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={isScheduled} 
+                    onChange={e => setIsScheduled(e.target.checked)} 
+                    className="rounded border-slate-300 dark:border-white/10 text-brand-primary focus:ring-brand-primary w-4 h-4 cursor-pointer"
+                  />
+                  <span>Schedule for a later time</span>
+                </label>
 
-                <div className="space-y-4">
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Campaign Name</label>
-                    <input type="text" value={campaignName} onChange={e => setCampaignName(e.target.value)} required className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" placeholder="e.g. June Flash Sale" />
-                  </div>
-                  
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Sender ID</label>
-                    <input type="text" value={senderId} onChange={e => setSenderId(e.target.value)} required className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm font-mono transition-all" placeholder="TRACKOM" />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Target Segment</label>
-                    <select
-                      value={selectedGroupId}
-                      onChange={e => setSelectedGroupId(e.target.value)}
-                      className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm cursor-pointer"
-                    >
-                      <option value="">All Contacts</option>
-                      {groups.map(g => (
-                        <option key={g.id} value={g.id}>{g.name}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Message Content</label>
-                      <select
-                        value={selectedTemplateId}
-                        onChange={e => {
-                          const id = e.target.value;
-                          setSelectedTemplateId(id);
-                          if (id === '') {
-                            setMessageContent('');
-                          } else {
-                            const match = templates.find(t => t.id === id);
-                            if (match) setMessageContent(match.content);
-                          }
-                        }}
-                        className="clay-input px-2 py-1 rounded-xl text-slate-900 dark:text-white focus:outline-none text-[10px] cursor-pointer"
-                      >
-                        <option value="">Use Template</option>
-                        {templates.map(t => (
-                          <option key={t.id} value={t.id}>{t.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <textarea 
-                      value={messageContent} 
-                      onChange={e => {
-                        setMessageContent(e.target.value);
-                        setSelectedTemplateId('');
-                      }} 
-                      required 
-                      rows={4} 
-                      className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all resize-none" 
-                      placeholder="Type your marketing or notification message here..." 
+                {isScheduled && (
+                  <div className="space-y-1">
+                    <label className="block text-[10px] uppercase font-bold text-slate-400">Scheduled Date & Time</label>
+                    <input 
+                      type="datetime-local" 
+                      value={scheduledAt} 
+                      onChange={e => setScheduledAt(e.target.value)}
+                      required={isScheduled}
+                      className="clay-input w-full px-3 py-2 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-xs"
                     />
                   </div>
+                )}
+              </div>
 
-                  {/* Scheduling Section */}
-                  <div className="clay-inset space-y-3 p-3.5 rounded-2xl">
-                    <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-gray-300 cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        checked={isScheduled} 
-                        onChange={e => setIsScheduled(e.target.checked)} 
-                        className="rounded border-slate-300 dark:border-white/10 text-brand-primary focus:ring-brand-primary w-4 h-4 cursor-pointer"
-                      />
-                      <span>Schedule for a later time</span>
-                    </label>
-
-                    {isScheduled && (
-                      <div className="space-y-1">
-                        <label className="block text-[10px] uppercase font-bold text-slate-400">Scheduled Date & Time</label>
-                        <input 
-                          type="datetime-local" 
-                          value={scheduledAt} 
-                          onChange={e => setScheduledAt(e.target.value)}
-                          required={isScheduled}
-                          className="clay-input w-full px-3 py-2 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-xs"
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex gap-3">
-                    <button type="button" onClick={() => setShowCreate(false)} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
-                    <button type="submit" disabled={saving || !campaignName.trim() || !messageContent.trim()} className="clay-button-primary flex-1 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-50">
-                      {saving ? 'Creating...' : isScheduled ? 'Schedule Campaign' : 'Launch Campaign'}
-                    </button>
-                  </div>
-                </div>
-              </form>
-            </motion.div>
-          </>
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setShowCreate(false)} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
+                <button type="submit" disabled={saving || !campaignName.trim() || !messageContent.trim()} className="clay-button-primary flex-1 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-50">
+                  {saving ? 'Creating...' : isScheduled ? 'Schedule Campaign' : 'Launch Campaign'}
+                </button>
+              </div>
+            </div>
+          </GenieModal>
         )}
       </AnimatePresence>
     </div>

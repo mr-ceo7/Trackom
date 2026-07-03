@@ -10,6 +10,8 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 import Loader from '../../components/Loader';
+import GenieModal from '../../components/GenieModal';
+
 
 interface Contact { 
   id: string; 
@@ -31,6 +33,15 @@ export default function ContactsPage() {
   const [activeTab, setActiveTab] = useState<'contacts' | 'groups'>('contacts');
   const [filterGroupId, setFilterGroupId] = useState('');
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(handler);
+  }, [search]);
   
   // Contacts states
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -47,7 +58,7 @@ export default function ContactsPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, filterGroupId]);
+  }, [filterGroupId]);
 
   // Groups states
   const [groups, setGroups] = useState<Group[]>([]);
@@ -105,7 +116,7 @@ export default function ContactsPage() {
   useEffect(() => {
     setSelectedIds([]);
     setSelectAllTotal(false);
-  }, [activeTab, search, page, filterGroupId]);
+  }, [activeTab, debouncedSearch, page, filterGroupId]);
 
   // Auto-scroll terminal logs to bottom on update
   useEffect(() => {
@@ -121,7 +132,7 @@ export default function ContactsPage() {
         params: {
           page,
           limit,
-          ...(search ? { search } : {}),
+          ...(debouncedSearch ? { search: debouncedSearch } : {}),
           ...(filterGroupId ? { group_id: filterGroupId } : {})
         } 
       });
@@ -134,7 +145,7 @@ export default function ContactsPage() {
       }
     } catch { /* noop */ }
     finally { setLoadingContacts(false); }
-  }, [page, limit, search, filterGroupId]);
+  }, [page, limit, debouncedSearch, filterGroupId]);
 
   const fetchGroups = useCallback(async () => {
     setLoadingGroups(true);
@@ -187,7 +198,7 @@ export default function ContactsPage() {
     try {
       const resp = await api.post(
         '/contacts/export',
-        { contact_ids: selectedIds, select_all: selectAllTotal, search: search || null },
+        { contact_ids: selectedIds, select_all: selectAllTotal, search: debouncedSearch || null },
         { responseType: 'blob' }
       );
       const blob = new Blob([resp.data], { type: 'text/csv' });
@@ -211,7 +222,7 @@ export default function ContactsPage() {
       await api.post('/contacts/bulk-delete', { 
         contact_ids: selectedIds, 
         select_all: selectAllTotal, 
-        search: search || null 
+        search: debouncedSearch || null 
       });
       setSelectedIds([]);
       setSelectAllTotal(false);
@@ -221,23 +232,47 @@ export default function ContactsPage() {
     }
   };
 
+  const handleCloseAssignModal = () => {
+    setShowAssignModal(false);
+    setBulkError(null);
+    setBulkSuccess(null);
+    setBulkGroupId('');
+    setInlineGroupName('');
+    setInlineGroupDesc('');
+  };
+
   const handleAssignGroup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!bulkGroupId) return;
     setBulkUpdating(true);
     setBulkError(null);
+    
+    let targetGroupId = bulkGroupId;
+    
     try {
+      if (bulkGroupId === 'create_new_group') {
+        if (!inlineGroupName.trim()) {
+          setBulkError('New group name is required.');
+          setBulkUpdating(false);
+          return;
+        }
+        const groupResp = await api.post('/contacts/groups', {
+          name: inlineGroupName,
+          description: inlineGroupDesc || null
+        });
+        targetGroupId = groupResp.data.id;
+        await fetchGroups(); // Refresh group list
+      }
+
       await api.post('/contacts/bulk-assign-group', {
         contact_ids: selectedIds,
-        group_id: bulkGroupId,
+        group_id: targetGroupId,
         select_all: selectAllTotal,
-        search: search || null
+        search: debouncedSearch || null
       });
       setBulkSuccess('Contacts assigned successfully!');
       setTimeout(() => {
-        setShowAssignModal(false);
-        setBulkSuccess(null);
-        setBulkGroupId('');
+        handleCloseAssignModal();
         setSelectedIds([]);
         setSelectAllTotal(false);
         fetchContacts();
@@ -259,7 +294,7 @@ export default function ContactsPage() {
         contact_ids: selectedIds,
         group_id: bulkGroupId,
         select_all: selectAllTotal,
-        search: search || null
+        search: debouncedSearch || null
       });
       setBulkSuccess('Contacts removed successfully!');
       setTimeout(() => {
@@ -298,7 +333,7 @@ export default function ContactsPage() {
         contact_ids: selectedIds,
         update,
         select_all: selectAllTotal,
-        search: search || null
+        search: debouncedSearch || null
       });
       setBulkSuccess('Contacts updated successfully!');
       setTimeout(() => {
@@ -801,215 +836,200 @@ export default function ContactsPage() {
       {/* CSV Import Modal */}
       <AnimatePresence>
         {showImport && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-50" onClick={handleCloseImport} />
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <div className="clay-card rounded-3xl dark:border dark:border-white/10 w-full max-w-md p-6 space-y-5" onClick={e => e.stopPropagation()}>
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <FileSpreadsheet className="w-5 h-5 text-brand-primary" />Import Contacts (CSV)
-                  </h3>
-                  <button onClick={handleCloseImport} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer"><X className="w-5 h-5" /></button>
+          <GenieModal onClose={handleCloseImport} className="p-6 space-y-5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <FileSpreadsheet className="w-5 h-5 text-brand-primary" />Import Contacts (CSV)
+              </h3>
+              <button onClick={handleCloseImport} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer"><X className="w-5 h-5" /></button>
+            </div>
+
+            {importResult && (
+              <div className={`p-3 border text-xs rounded-xl flex items-start gap-2 ${
+                importResult.type === 'success' 
+                  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' 
+                  : 'bg-red-500/10 border-red-500/20 text-red-500'
+              }`}>
+                {importResult.type === 'success' ? <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" /> : <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />}
+                <span>{importResult.text}</span>
+              </div>
+            )}
+
+            {importing || (importResult?.type === 'success' && terminalLogs.length > 0) ? (
+              /* TERMINAL LOG STREAM VIEW */
+              <div className="space-y-4">
+                <div className="bg-slate-950 border border-emerald-500/20 rounded-xl p-4 font-mono text-[10px] text-emerald-400 h-64 overflow-y-auto space-y-1 custom-scrollbar">
+                  {terminalLogs.map((log, index) => (
+                    <div 
+                      key={index} 
+                      className={
+                        log.startsWith('⚠️') 
+                          ? 'text-yellow-500' 
+                          : log.startsWith('⚡') || log.startsWith('✨') 
+                          ? 'text-cyan-400 font-bold' 
+                          : log.startsWith('❌') 
+                          ? 'text-red-500 font-bold' 
+                          : 'text-emerald-400'
+                      }
+                    >
+                      {log}
+                    </div>
+                  ))}
+                  <div ref={terminalEndRef} />
+                </div>
+                <div className="text-[10px] text-slate-400 text-center font-mono animate-pulse">
+                  {importing ? '⚡ Sanity check streaming in progress...' : '✨ Upload stream verified successfully.'}
+                </div>
+              </div>
+            ) : (
+               /* STANDARD IMPORT FORM */
+              <form onSubmit={handleImportCSV} className="space-y-4">
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-center">
+                    <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Select CSV File</label>
+                    <button 
+                      type="button" 
+                      onClick={handleDownloadTemplate} 
+                      className="text-[11px] font-semibold text-brand-primary hover:text-brand-primary-hover flex items-center gap-1 cursor-pointer transition-all"
+                    >
+                      <Download className="w-3 h-3" /> Download Template
+                    </button>
+                  </div>
+                  <input 
+                    type="file" 
+                    ref={fileInputRef}
+                    onChange={handleFileChange} 
+                    accept=".csv"
+                    required
+                    className="clay-input w-full px-3 py-2 rounded-2xl text-sm text-slate-800 dark:text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-primary/10 file:text-brand-primary hover:file:bg-brand-primary/20"
+                  />
+                  <p className="text-[10px] text-slate-400">Headers like 'name', 'phone' and 'email' are auto-detected. Format Kenya numbers as +254... or 07...</p>
                 </div>
 
-                {importResult && (
-                  <div className={`p-3 border text-xs rounded-xl flex items-start gap-2 ${
-                    importResult.type === 'success' 
-                      ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' 
-                      : 'bg-red-500/10 border-red-500/20 text-red-500'
-                  }`}>
-                    {importResult.type === 'success' ? <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" /> : <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />}
-                    <span>{importResult.text}</span>
-                  </div>
-                )}
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Target Group (Optional)</label>
+                  <select
+                    value={importGroupId}
+                    onChange={e => setImportGroupId(e.target.value)}
+                    className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm cursor-pointer"
+                  >
+                    <option value=""> - No group (All Contacts) - </option>
+                    {groups.map(g => (
+                      <option key={g.id} value={g.id}>{g.name}</option>
+                    ))}
+                    <option value="create_new_group">+ Create New Group...</option>
+                  </select>
+                </div>
 
-                {importing || (importResult?.type === 'success' && terminalLogs.length > 0) ? (
-                  /* TERMINAL LOG STREAM VIEW */
-                  <div className="space-y-4">
-                    <div className="bg-slate-950 border border-emerald-500/20 rounded-xl p-4 font-mono text-[10px] text-emerald-400 h-64 overflow-y-auto space-y-1 custom-scrollbar">
-                      {terminalLogs.map((log, index) => (
-                        <div 
-                          key={index} 
-                          className={
-                            log.startsWith('⚠️') 
-                              ? 'text-yellow-500' 
-                              : log.startsWith('⚡') || log.startsWith('✨') 
-                              ? 'text-cyan-400 font-bold' 
-                              : log.startsWith('❌') 
-                              ? 'text-red-500 font-bold' 
-                              : 'text-emerald-400'
-                          }
-                        >
-                          {log}
-                        </div>
-                      ))}
-                      <div ref={terminalEndRef} />
-                    </div>
-                    <div className="text-[10px] text-slate-400 text-center font-mono animate-pulse">
-                      {importing ? '⚡ Sanity check streaming in progress...' : '✨ Upload stream verified successfully.'}
-                    </div>
-                  </div>
-                ) : (
-                   /* STANDARD IMPORT FORM */
-                  <form onSubmit={handleImportCSV} className="space-y-4">
-                    <div className="space-y-1.5">
-                      <div className="flex justify-between items-center">
-                        <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Select CSV File</label>
-                        <button 
-                          type="button" 
-                          onClick={handleDownloadTemplate} 
-                          className="text-[11px] font-semibold text-brand-primary hover:text-brand-primary-hover flex items-center gap-1 cursor-pointer transition-all"
-                        >
-                          <Download className="w-3 h-3" /> Download Template
-                        </button>
-                      </div>
+                {importGroupId === 'create_new_group' && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }} 
+                    animate={{ opacity: 1, height: 'auto' }} 
+                    className="space-y-3 p-3 bg-brand-primary/5 rounded-2xl border border-brand-primary/10"
+                  >
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-bold uppercase text-slate-500 dark:text-gray-400">New Group Name *</label>
                       <input 
-                        type="file" 
-                        ref={fileInputRef}
-                        onChange={handleFileChange} 
-                        accept=".csv"
-                        required
-                        className="clay-input w-full px-3 py-2 rounded-2xl text-sm text-slate-800 dark:text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-primary/10 file:text-brand-primary hover:file:bg-brand-primary/20"
+                        type="text" 
+                        value={inlineGroupName} 
+                        onChange={e => setInlineGroupName(e.target.value)} 
+                        placeholder="e.g. VIP Customers" 
+                        required={importGroupId === 'create_new_group'}
+                        className="clay-input w-full px-3 py-2 rounded-xl text-slate-900 dark:text-white focus:outline-none text-xs transition-all"
                       />
-                      <p className="text-[10px] text-slate-400">Headers like 'name', 'phone' and 'email' are auto-detected. Format Kenya numbers as +254... or 07...</p>
                     </div>
-
-                    <div className="space-y-1.5">
-                      <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Target Group (Optional)</label>
-                      <select
-                        value={importGroupId}
-                        onChange={e => setImportGroupId(e.target.value)}
-                        className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm cursor-pointer"
-                      >
-                        <option value=""> - No group (All Contacts) - </option>
-                        {groups.map(g => (
-                          <option key={g.id} value={g.id}>{g.name}</option>
-                        ))}
-                        <option value="create_new_group">+ Create New Group...</option>
-                      </select>
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-bold uppercase text-slate-500 dark:text-gray-400">Description (Optional)</label>
+                      <textarea 
+                        value={inlineGroupDesc} 
+                        onChange={e => setInlineGroupDesc(e.target.value)} 
+                        placeholder="Briefly describe this group..." 
+                        rows={2}
+                        className="clay-input w-full px-3 py-2 rounded-xl text-slate-900 dark:text-white focus:outline-none text-xs transition-all resize-none"
+                      />
                     </div>
-
-                    {importGroupId === 'create_new_group' && (
-                      <motion.div 
-                        initial={{ opacity: 0, height: 0 }} 
-                        animate={{ opacity: 1, height: 'auto' }} 
-                        className="space-y-3 p-3 bg-brand-primary/5 rounded-2xl border border-brand-primary/10"
-                      >
-                        <div className="space-y-1">
-                          <label className="block text-[10px] font-bold uppercase text-slate-500 dark:text-gray-400">New Group Name *</label>
-                          <input 
-                            type="text" 
-                            value={inlineGroupName} 
-                            onChange={e => setInlineGroupName(e.target.value)} 
-                            placeholder="e.g. VIP Customers" 
-                            required={importGroupId === 'create_new_group'}
-                            className="clay-input w-full px-3 py-2 rounded-xl text-slate-900 dark:text-white focus:outline-none text-xs transition-all"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="block text-[10px] font-bold uppercase text-slate-500 dark:text-gray-400">Description (Optional)</label>
-                          <textarea 
-                            value={inlineGroupDesc} 
-                            onChange={e => setInlineGroupDesc(e.target.value)} 
-                            placeholder="Briefly describe this group..." 
-                            rows={2}
-                            className="clay-input w-full px-3 py-2 rounded-xl text-slate-900 dark:text-white focus:outline-none text-xs transition-all resize-none"
-                          />
-                        </div>
-                      </motion.div>
-                    )}
-
-                    <div className="clay-inset rounded-2xl p-3.5 text-[11px] text-slate-500 leading-normal flex gap-2">
-                      <AlertCircle className="w-4 h-4 text-brand-primary shrink-0" />
-                      <span>
-                        <strong>Async Upload Optimizations:</strong> Large CSV files are processed asynchronously in the background. Duplicate phone numbers and empty lines are skipped automatically.
-                      </span>
-                    </div>
-
-                    <div className="flex gap-3">
-                      <button type="button" onClick={handleCloseImport} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
-                      <button 
-                        type="submit" 
-                        disabled={importing || !selectedFile} 
-                        className="clay-button-primary flex-1 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
-                      >
-                        {importing ? <Loader size="sm" /> : <span>Import</span>}
-                      </button>
-                    </div>
-                  </form>
+                  </motion.div>
                 )}
-              </div>
-            </motion.div>
-          </>
+
+                <div className="clay-inset rounded-2xl p-3.5 text-[11px] text-slate-500 leading-normal flex gap-2">
+                  <AlertCircle className="w-4 h-4 text-brand-primary shrink-0" />
+                  <span>
+                    <strong>Async Upload Optimizations:</strong> Large CSV files are processed asynchronously in the background. Duplicate phone numbers and empty lines are skipped automatically.
+                  </span>
+                </div>
+
+                <div className="flex gap-3">
+                  <button type="button" onClick={handleCloseImport} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
+                  <button 
+                    type="submit" 
+                    disabled={importing || !selectedFile} 
+                    className="clay-button-primary flex-1 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
+                  >
+                    {importing ? <Loader size="sm" /> : <span>Import</span>}
+                  </button>
+                </div>
+              </form>
+            )}
+          </GenieModal>
         )}
       </AnimatePresence>
 
       {/* Add Contact Modal */}
       <AnimatePresence>
         {showAddContact && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-50" onClick={() => setShowAddContact(false)} />
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <form onSubmit={handleAddContact} className="clay-card rounded-3xl dark:border dark:border-white/10 w-full max-w-md p-6 space-y-5" onClick={e => e.stopPropagation()}>
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center gap-2"><UserPlus className="w-5 h-5 text-brand-primary" />Add Contact</h3>
-                  <button type="button" onClick={() => setShowAddContact(false)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer"><X className="w-5 h-5" /></button>
-                </div>
-                <div className="space-y-4">
-                  <div className="space-y-1.5"><label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Full Name *</label><input type="text" value={newName} onChange={e => setNewName(e.target.value)} required className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" placeholder="John Doe" /></div>
-                  <div className="space-y-1.5"><label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Phone *</label><input type="tel" value={newPhone} onChange={e => setNewPhone(e.target.value)} required className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm font-mono transition-all" placeholder="+254712345678" /></div>
-                  <div className="space-y-1.5"><label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Email</label><input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" placeholder="email@example.com" /></div>
-                  
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Add to Group</label>
-                    <select
-                      value={newContactGroupId}
-                      onChange={e => setNewContactGroupId(e.target.value)}
-                      className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm cursor-pointer"
-                    >
-                      <option value=""> - No group (Unsorted) - </option>
-                      {groups.map(g => (
-                        <option key={g.id} value={g.id}>{g.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <button type="button" onClick={() => setShowAddContact(false)} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
-                  <button type="submit" disabled={savingContact || !newName || !newPhone} className="clay-button-primary flex-1 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-50">
-                    {savingContact ? <Loader size="sm" /> : 'Save'}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </>
+          <GenieModal as="form" onSubmit={handleAddContact} onClose={() => setShowAddContact(false)} className="p-6 space-y-5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center gap-2"><UserPlus className="w-5 h-5 text-brand-primary" />Add Contact</h3>
+              <button type="button" onClick={() => setShowAddContact(false)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="space-y-4">
+              <div className="space-y-1.5"><label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Full Name *</label><input type="text" value={newName} onChange={e => setNewName(e.target.value)} required className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" placeholder="John Doe" /></div>
+              <div className="space-y-1.5"><label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Phone *</label><input type="tel" value={newPhone} onChange={e => setNewPhone(e.target.value)} required className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm font-mono transition-all" placeholder="+254712345678" /></div>
+              <div className="space-y-1.5"><label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Email</label><input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" placeholder="email@example.com" /></div>
+              
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Add to Group</label>
+                <select
+                  value={newContactGroupId}
+                  onChange={e => setNewContactGroupId(e.target.value)}
+                  className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm cursor-pointer"
+                >
+                  <option value=""> - No group (Unsorted) - </option>
+                  {groups.map(g => (
+                    <option key={g.id} value={g.id}>{g.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button type="button" onClick={() => setShowAddContact(false)} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
+              <button type="submit" disabled={savingContact || !newName || !newPhone} className="clay-button-primary flex-1 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-50">
+                {savingContact ? <Loader size="sm" /> : 'Save'}
+              </button>
+            </div>
+          </GenieModal>
         )}
       </AnimatePresence>
 
       {/* Add Group Modal */}
       <AnimatePresence>
         {showAddGroup && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-50" onClick={() => setShowAddGroup(false)} />
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <form onSubmit={handleAddGroup} className="clay-card rounded-3xl dark:border dark:border-white/10 w-full max-w-md p-6 space-y-5" onClick={e => e.stopPropagation()}>
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center gap-2"><FolderPlus className="w-5 h-5 text-brand-primary" />Create Contact Group</h3>
-                  <button type="button" onClick={() => setShowAddGroup(false)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer"><X className="w-5 h-5" /></button>
-                </div>
-                <div className="space-y-4">
-                  <div className="space-y-1.5"><label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Group Name *</label><input type="text" value={newGroupName} onChange={e => setNewGroupName(e.target.value)} required className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" placeholder="e.g. VIP Customers" /></div>
-                  <div className="space-y-1.5"><label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Description</label><textarea value={newGroupDesc} onChange={e => setNewGroupDesc(e.target.value)} rows={3} className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all resize-none" placeholder="Briefly describe who is in this segment..." /></div>
-                </div>
-                <div className="flex gap-3">
-                  <button type="button" onClick={() => setShowAddGroup(false)} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
-                  <button type="submit" disabled={savingGroup || !newGroupName} className="clay-button-primary flex-1 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-50">
-                    {savingGroup ? <Loader size="sm" /> : 'Create'}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </>
+          <GenieModal as="form" onSubmit={handleAddGroup} onClose={() => setShowAddGroup(false)} className="p-6 space-y-5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center gap-2"><FolderPlus className="w-5 h-5 text-brand-primary" />Create Contact Group</h3>
+              <button type="button" onClick={() => setShowAddGroup(false)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="space-y-4">
+              <div className="space-y-1.5"><label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Group Name *</label><input type="text" value={newGroupName} onChange={e => setNewGroupName(e.target.value)} required className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" placeholder="e.g. VIP Customers" /></div>
+              <div className="space-y-1.5"><label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Description</label><textarea value={newGroupDesc} onChange={e => setNewGroupDesc(e.target.value)} rows={3} className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all resize-none" placeholder="Briefly describe who is in this segment..." /></div>
+            </div>
+            <div className="flex gap-3">
+              <button type="button" onClick={() => setShowAddGroup(false)} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
+              <button type="submit" disabled={savingGroup || !newGroupName} className="clay-button-primary flex-1 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-50">
+                {savingGroup ? <Loader size="sm" /> : 'Create'}
+              </button>
+            </div>
+          </GenieModal>
         )}
       </AnimatePresence>
 
@@ -1094,196 +1114,214 @@ export default function ContactsPage() {
       {/* Assign to Group Modal */}
       <AnimatePresence>
         {showAssignModal && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-50" onClick={() => { setShowAssignModal(false); setBulkError(null); setBulkSuccess(null); }} />
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <form onSubmit={handleAssignGroup} className="clay-card rounded-3xl dark:border dark:border-white/10 w-full max-w-md p-6 space-y-5" onClick={e => e.stopPropagation()}>
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <FolderPlus className="w-5 h-5 text-brand-primary" />
-                    Assign Group ({selectedIds.length} contacts)
-                  </h3>
-                  <button type="button" onClick={() => { setShowAssignModal(false); setBulkError(null); setBulkSuccess(null); }} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
+          <GenieModal as="form" onSubmit={handleAssignGroup} onClose={handleCloseAssignModal} className="p-6 space-y-5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <FolderPlus className="w-5 h-5 text-brand-primary" />
+                Assign Group ({selectedIds.length} contacts)
+              </h3>
+              <button type="button" onClick={handleCloseAssignModal} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-                {bulkError && (
-                  <div className="p-3 border border-red-500/20 bg-red-500/10 text-red-500 text-xs rounded-xl flex items-start gap-2">
-                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                    <span>{bulkError}</span>
+            {bulkError && (
+              <div className="p-3 border border-red-500/20 bg-red-500/10 text-red-500 text-xs rounded-xl flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{bulkError}</span>
+              </div>
+            )}
+
+            {bulkSuccess && (
+              <div className="p-3 border border-emerald-500/20 bg-emerald-500/10 text-emerald-500 text-xs rounded-xl flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{bulkSuccess}</span>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Select Group</label>
+                <select
+                  value={bulkGroupId}
+                  onChange={e => setBulkGroupId(e.target.value)}
+                  required
+                  className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm cursor-pointer"
+                >
+                  <option value=""> - Choose a group - </option>
+                  {groups.map(g => (
+                    <option key={g.id} value={g.id}>{g.name}</option>
+                  ))}
+                  <option value="create_new_group">+ Create New Group...</option>
+                </select>
+              </div>
+
+              {bulkGroupId === 'create_new_group' && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }} 
+                  animate={{ opacity: 1, height: 'auto' }} 
+                  className="space-y-3 p-3 bg-brand-primary/5 rounded-2xl border border-brand-primary/10"
+                >
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-bold uppercase text-slate-500 dark:text-gray-400">New Group Name *</label>
+                    <input 
+                      type="text" 
+                      value={inlineGroupName} 
+                      onChange={e => setInlineGroupName(e.target.value)} 
+                      placeholder="e.g. Nairobi Clients"
+                      required={bulkGroupId === 'create_new_group'}
+                      className="clay-input w-full px-3 py-2 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none"
+                    />
                   </div>
-                )}
-
-                {bulkSuccess && (
-                  <div className="p-3 border border-emerald-500/20 bg-emerald-500/10 text-emerald-500 text-xs rounded-xl flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
-                    <span>{bulkSuccess}</span>
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-bold uppercase text-slate-500 dark:text-gray-400">Description (Optional)</label>
+                    <input 
+                      type="text" 
+                      value={inlineGroupDesc} 
+                      onChange={e => setInlineGroupDesc(e.target.value)} 
+                      placeholder="e.g. Retail shoppers from Nairobi"
+                      className="clay-input w-full px-3 py-2 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none"
+                    />
                   </div>
-                )}
+                </motion.div>
+              )}
+            </div>
 
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Select Group</label>
-                  <select
-                    value={bulkGroupId}
-                    onChange={e => setBulkGroupId(e.target.value)}
-                    required
-                    className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm cursor-pointer"
-                  >
-                    <option value=""> - Choose a group - </option>
-                    {groups.map(g => (
-                      <option key={g.id} value={g.id}>{g.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex gap-3">
-                  <button type="button" onClick={() => { setShowAssignModal(false); setBulkError(null); setBulkSuccess(null); }} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
-                  <button type="submit" disabled={bulkUpdating || !bulkGroupId} className="clay-button-primary flex-1 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-50">
-                    {bulkUpdating ? <Loader size="sm" /> : 'Assign'}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </>
+            <div className="flex gap-3">
+              <button type="button" onClick={handleCloseAssignModal} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
+              <button type="submit" disabled={bulkUpdating || !bulkGroupId} className="clay-button-primary flex-1 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-50">
+                {bulkUpdating ? <Loader size="sm" /> : 'Assign'}
+              </button>
+            </div>
+          </GenieModal>
         )}
       </AnimatePresence>
 
       {/* Remove from Group Modal */}
       <AnimatePresence>
         {showRemoveModal && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-50" onClick={() => { setShowRemoveModal(false); setBulkError(null); setBulkSuccess(null); }} />
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <form onSubmit={handleRemoveGroup} className="clay-card rounded-3xl dark:border dark:border-white/10 w-full max-w-md p-6 space-y-5" onClick={e => e.stopPropagation()}>
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <FolderMinus className="w-5 h-5 text-orange-500" />
-                    Remove from Group ({selectedIds.length} contacts)
-                  </h3>
-                  <button type="button" onClick={() => { setShowRemoveModal(false); setBulkError(null); setBulkSuccess(null); }} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
+          <GenieModal as="form" onSubmit={handleRemoveGroup} onClose={() => { setShowRemoveModal(false); setBulkError(null); setBulkSuccess(null); }} className="p-6 space-y-5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <FolderMinus className="w-5 h-5 text-orange-500" />
+                Remove from Group ({selectedIds.length} contacts)
+              </h3>
+              <button type="button" onClick={() => { setShowRemoveModal(false); setBulkError(null); setBulkSuccess(null); }} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-                {bulkError && (
-                  <div className="p-3 border border-red-500/20 bg-red-500/10 text-red-500 text-xs rounded-xl flex items-start gap-2">
-                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                    <span>{bulkError}</span>
-                  </div>
-                )}
+            {bulkError && (
+              <div className="p-3 border border-red-500/20 bg-red-500/10 text-red-500 text-xs rounded-xl flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{bulkError}</span>
+              </div>
+            )}
 
-                {bulkSuccess && (
-                  <div className="p-3 border border-emerald-500/20 bg-emerald-500/10 text-emerald-500 text-xs rounded-xl flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
-                    <span>{bulkSuccess}</span>
-                  </div>
-                )}
+            {bulkSuccess && (
+              <div className="p-3 border border-emerald-500/20 bg-emerald-500/10 text-emerald-500 text-xs rounded-xl flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{bulkSuccess}</span>
+              </div>
+            )}
 
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Select Group</label>
-                  <select
-                    value={bulkGroupId}
-                    onChange={e => setBulkGroupId(e.target.value)}
-                    required
-                    className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm cursor-pointer"
-                  >
-                    <option value=""> - Choose a group - </option>
-                    {groups.map(g => (
-                      <option key={g.id} value={g.id}>{g.name}</option>
-                    ))}
-                  </select>
-                </div>
+            <div className="space-y-1.5">
+              <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Select Group</label>
+              <select
+                value={bulkGroupId}
+                onChange={e => setBulkGroupId(e.target.value)}
+                required
+                className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm cursor-pointer"
+              >
+                <option value=""> - Choose a group - </option>
+                {groups.map(g => (
+                  <option key={g.id} value={g.id}>{g.name}</option>
+                ))}
+              </select>
+            </div>
 
-                <div className="flex gap-3">
-                  <button type="button" onClick={() => { setShowRemoveModal(false); setBulkError(null); setBulkSuccess(null); }} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
-                  <button type="submit" disabled={bulkUpdating || !bulkGroupId} className="clay-button-primary flex-1 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-50">
-                    {bulkUpdating ? <Loader size="sm" /> : 'Remove'}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </>
+            <div className="flex gap-3">
+              <button type="button" onClick={() => { setShowRemoveModal(false); setBulkError(null); setBulkSuccess(null); }} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
+              <button type="submit" disabled={bulkUpdating || !bulkGroupId} className="clay-button-primary flex-1 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-50">
+                {bulkUpdating ? <Loader size="sm" /> : 'Remove'}
+              </button>
+            </div>
+          </GenieModal>
         )}
       </AnimatePresence>
 
       {/* Bulk Edit Modal */}
       <AnimatePresence>
         {showBulkEditModal && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-50" onClick={() => { setShowBulkEditModal(false); setBulkError(null); setBulkSuccess(null); }} />
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <form onSubmit={handleBulkUpdate} className="clay-card rounded-3xl dark:border dark:border-white/10 w-full max-w-md p-6 space-y-5" onClick={e => e.stopPropagation()}>
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <Edit3 className="w-5 h-5 text-blue-500" />
-                    Bulk Edit ({selectedIds.length} contacts)
-                  </h3>
-                  <button type="button" onClick={() => { setShowBulkEditModal(false); setBulkError(null); setBulkSuccess(null); }} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
+          <GenieModal as="form" onSubmit={handleBulkUpdate} onClose={() => { setShowBulkEditModal(false); setBulkError(null); setBulkSuccess(null); }} className="p-6 space-y-5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Edit3 className="w-5 h-5 text-blue-500" />
+                Bulk Edit ({selectedIds.length} contacts)
+              </h3>
+              <button type="button" onClick={() => { setShowBulkEditModal(false); setBulkError(null); setBulkSuccess(null); }} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-                {bulkError && (
-                  <div className="p-3 border border-red-500/20 bg-red-500/10 text-red-500 text-xs rounded-xl flex items-start gap-2">
-                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                    <span>{bulkError}</span>
-                  </div>
-                )}
+            {bulkError && (
+              <div className="p-3 border border-red-500/20 bg-red-500/10 text-red-500 text-xs rounded-xl flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{bulkError}</span>
+              </div>
+            )}
 
-                {bulkSuccess && (
-                  <div className="p-3 border border-emerald-500/20 bg-emerald-500/10 text-emerald-500 text-xs rounded-xl flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
-                    <span>{bulkSuccess}</span>
-                  </div>
-                )}
+            {bulkSuccess && (
+              <div className="p-3 border border-emerald-500/20 bg-emerald-500/10 text-emerald-500 text-xs rounded-xl flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{bulkSuccess}</span>
+              </div>
+            )}
 
-                <div className="bg-blue-500/5 border border-blue-500/10 rounded-2xl p-3 text-[11px] text-blue-600 dark:text-blue-400 leading-normal">
-                  <strong>Note:</strong> Only filled fields will be updated across all selected contacts. Leave fields empty if you don't want to modify them.
-                </div>
+            <div className="bg-blue-500/5 border border-blue-500/10 rounded-2xl p-3 text-[11px] text-blue-600 dark:text-blue-400 leading-normal">
+              <strong>Note:</strong> Only filled fields will be updated across all selected contacts. Leave fields empty if you don't want to modify them.
+            </div>
 
-                <div className="space-y-4">
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Full Name</label>
-                    <input
-                      type="text"
-                      value={bulkName}
-                      onChange={e => setBulkName(e.target.value)}
-                      className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all"
-                      placeholder="e.g. John Doe"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Phone</label>
-                    <input
-                      type="tel"
-                      value={bulkPhone}
-                      onChange={e => setBulkPhone(e.target.value)}
-                      className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm font-mono transition-all"
-                      placeholder="+254712345678"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Email</label>
-                    <input
-                      type="email"
-                      value={bulkEmail}
-                      onChange={e => setBulkEmail(e.target.value)}
-                      className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all"
-                      placeholder="email@example.com"
-                    />
-                  </div>
-                </div>
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Full Name</label>
+                <input
+                  type="text"
+                  value={bulkName}
+                  onChange={e => setBulkName(e.target.value)}
+                  className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all"
+                  placeholder="e.g. John Doe"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Phone</label>
+                <input
+                  type="tel"
+                  value={bulkPhone}
+                  onChange={e => setBulkPhone(e.target.value)}
+                  className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm font-mono transition-all"
+                  placeholder="+254712345678"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Email</label>
+                <input
+                  type="email"
+                  value={bulkEmail}
+                  onChange={e => setBulkEmail(e.target.value)}
+                  className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all"
+                  placeholder="email@example.com"
+                />
+              </div>
+            </div>
 
-                <div className="flex gap-3">
-                  <button type="button" onClick={() => { setShowBulkEditModal(false); setBulkError(null); setBulkSuccess(null); }} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
-                  <button type="submit" disabled={bulkUpdating} className="clay-button-primary flex-1 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-50">
-                    {bulkUpdating ? <Loader size="sm" /> : 'Update'}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </>
+            <div className="flex gap-3">
+              <button type="button" onClick={() => { setShowBulkEditModal(false); setBulkError(null); setBulkSuccess(null); }} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
+              <button type="submit" disabled={bulkUpdating} className="clay-button-primary flex-1 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-50">
+                {bulkUpdating ? <Loader size="sm" /> : 'Update'}
+              </button>
+            </div>
+          </GenieModal>
         )}
       </AnimatePresence>
     </div>

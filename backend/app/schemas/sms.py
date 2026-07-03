@@ -45,5 +45,6 @@ class SmsMessageResponse(BaseModel):
     batch_number: Optional[str]
     sent_at: Optional[datetime]
     delivered_at: Optional[datetime]
+    scheduled_at: Optional[datetime]
     created_at: datetime
     model_config = {"from_attributes": True}

@@ -20,7 +20,7 @@ class SmsMessage(Base):
     recipient: Mapped[str] = mapped_column(String(20), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     status: Mapped[str] = mapped_column(
-        SAEnum("queued", "sent", "delivered", "failed", "rejected", name="sms_status_enum"),
+        SAEnum("queued", "sent", "delivered", "failed", "rejected", "scheduled", name="sms_status_enum"),
         default="queued",
         nullable=False,
         index=True

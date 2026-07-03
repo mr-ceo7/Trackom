@@ -7,6 +7,8 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import api from '../../services/api';
 import Loader from '../../components/Loader';
+import GenieModal from '../../components/GenieModal';
+
 
 interface TransactionData {
   id: string;
@@ -195,148 +197,133 @@ export default function WalletPage() {
       {/* STK Push Simulator Overlay Modal */}
       <AnimatePresence>
         {isStkOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsStkOpen(false)}
-              className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
-            />
-            
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="w-full max-w-sm rounded-[32px] border-4 border-slate-700 bg-[#0d0f19] text-white p-6 relative z-10 shadow-2xl overflow-hidden font-sans"
-            >
-              {/* Phone Speaker & Camera Notch */}
-              <div className="w-32 h-4 rounded-full bg-slate-800 mx-auto mb-6 flex items-center justify-center border border-slate-700/50" />
+          <GenieModal onClose={() => setIsStkOpen(false)} className="max-w-sm rounded-[32px] border-4 border-slate-700 bg-[#0d0f19] text-white p-6 relative z-10 shadow-2xl overflow-hidden font-sans">
+            {/* Phone Speaker & Camera Notch */}
+            <div className="w-32 h-4 rounded-full bg-slate-800 mx-auto mb-6 flex items-center justify-center border border-slate-700/50" />
 
-              {stkStep === 'prompt' && (
-                <div className="space-y-6 text-center">
-                  <div className="bg-[#1C2035] rounded-2xl p-4 border border-white/5 space-y-3">
-                    <div className="text-[10px] text-brand-emerald font-bold tracking-widest uppercase">M-PESA SIM TOOLKIT</div>
-                    <div className="text-sm font-semibold text-gray-200">
-                      Do you want to pay <span className="text-brand-emerald font-bold font-mono">KES {Number(topupAmount).toLocaleString()}</span> to <span className="font-bold text-white">TRACKOM B2B</span>?
-                    </div>
-                    
-                    {/* Simulated PIN Boxes */}
-                    <div className="space-y-1.5 pt-2">
-                      <div className="text-[10px] text-gray-400">Enter M-Pesa PIN</div>
-                      <div className="flex justify-center gap-3">
-                        {[0, 1, 2, 3].map((idx) => (
-                          <div 
-                            key={idx} 
-                            className={`w-8 h-8 rounded-lg border flex items-center justify-center font-bold ${
-                              stkPin.length > idx 
-                                ? 'bg-brand-emerald border-brand-emerald text-slate-950' 
-                                : 'border-white/20 bg-white/[0.02] text-white'
-                            }`}
-                          >
-                            {stkPin.length > idx ? '•' : ''}
-                          </div>
-                        ))}
-                      </div>
+            {stkStep === 'prompt' && (
+              <div className="space-y-6 text-center">
+                <div className="bg-[#1C2035] rounded-2xl p-4 border border-white/5 space-y-3">
+                  <div className="text-[10px] text-brand-emerald font-bold tracking-widest uppercase">M-PESA SIM TOOLKIT</div>
+                  <div className="text-sm font-semibold text-gray-200">
+                    Do you want to pay <span className="text-brand-emerald font-bold font-mono">KES {Number(topupAmount).toLocaleString()}</span> to <span className="font-bold text-white">TRACKOM B2B</span>?
+                  </div>
+                  
+                  {/* Simulated PIN Boxes */}
+                  <div className="space-y-1.5 pt-2">
+                    <div className="text-[10px] text-gray-400">Enter M-Pesa PIN</div>
+                    <div className="flex justify-center gap-3">
+                      {[0, 1, 2, 3].map((idx) => (
+                        <div 
+                          key={idx} 
+                          className={`w-8 h-8 rounded-lg border flex items-center justify-center font-bold ${
+                            stkPin.length > idx 
+                              ? 'bg-brand-emerald border-brand-emerald text-slate-950' 
+                              : 'border-white/20 bg-white/[0.02] text-white'
+                          }`}
+                        >
+                          {stkPin.length > idx ? '•' : ''}
+                        </div>
+                      ))}
                     </div>
                   </div>
+                </div>
 
-                  {/* Interactive Digital Keypad */}
-                  <div className="grid grid-cols-3 gap-2 px-4">
-                    {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map(num => (
-                      <button 
-                        key={num} 
-                        onClick={() => handleKeyPress(num)}
-                        className="py-3.5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] active:bg-white/[0.12] text-lg font-bold font-mono cursor-pointer transition-all border border-white/5"
-                      >
-                        {num}
-                      </button>
-                    ))}
+                {/* Interactive Digital Keypad */}
+                <div className="grid grid-cols-3 gap-2 px-4">
+                  {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map(num => (
                     <button 
-                      onClick={handleBackspace}
-                      className="py-3.5 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold cursor-pointer transition-all border border-red-500/10"
+                      key={num} 
+                      onClick={() => handleKeyPress(num)}
+                      className="py-3.5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] active:bg-white/[0.12] text-lg font-bold font-mono cursor-pointer transition-all border border-white/5"
                     >
-                      ⌫
+                      {num}
                     </button>
-                    <button 
-                      onClick={() => handleKeyPress('0')}
-                      className="py-3.5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] text-lg font-bold font-mono cursor-pointer transition-all border border-white/5"
-                    >
-                      0
-                    </button>
-                    <button 
-                      onClick={handleTriggerPayment}
-                      disabled={stkPin.length < 4}
-                      className="py-3.5 rounded-2xl bg-brand-emerald hover:bg-brand-emerald/90 text-slate-950 font-bold cursor-pointer transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-brand-emerald/10"
-                    >
-                      Send
-                    </button>
-                  </div>
-
+                  ))}
                   <button 
-                    onClick={() => setIsStkOpen(false)}
-                    className="text-xs text-gray-500 hover:text-white transition-all cursor-pointer font-medium"
+                    onClick={handleBackspace}
+                    className="py-3.5 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold cursor-pointer transition-all border border-red-500/10"
                   >
-                    Cancel Transaction
+                    ⌫
+                  </button>
+                  <button 
+                    onClick={() => handleKeyPress('0')}
+                    className="py-3.5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] text-lg font-bold font-mono cursor-pointer transition-all border border-white/5"
+                  >
+                    0
+                  </button>
+                  <button 
+                    onClick={handleTriggerPayment}
+                    disabled={stkPin.length < 4}
+                    className="py-3.5 rounded-2xl bg-brand-emerald hover:bg-brand-emerald/90 text-slate-950 font-bold cursor-pointer transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-brand-emerald/10"
+                  >
+                    Send
                   </button>
                 </div>
-              )}
 
-              {stkStep === 'sending' && (
-                <div className="flex flex-col items-center justify-center py-10 space-y-6 text-center">
-                  <div className="relative py-2">
-                    <Loader size="md" color="var(--color-brand-emerald)" />
-                  </div>
-                  <div className="space-y-1">
-                    <h4 className="font-bold text-sm text-gray-200">Processing Payment...</h4>
-                    <p className="text-[11px] text-gray-400 max-w-[200px] leading-relaxed">
-                      Verifying transaction pin and checking wallet balance. Do not close this window.
-                    </p>
-                  </div>
-                </div>
-              )}
+                <button 
+                  onClick={() => setIsStkOpen(false)}
+                  className="text-xs text-gray-500 hover:text-white transition-all cursor-pointer font-medium"
+                >
+                  Cancel Transaction
+                </button>
+              </div>
+            )}
 
-              {stkStep === 'success' && (
-                <div className="flex flex-col items-center justify-center py-10 space-y-6 text-center">
-                  <div className="w-16 h-16 rounded-full clay-icon-raised flex items-center justify-center text-brand-emerald animate-bounce">
-                    <CheckCircle2 className="w-10 h-10 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                  </div>
-                  <div className="space-y-1">
-                    <h4 className="font-bold text-base text-white">Payment Received!</h4>
-                    <p className="text-xs text-gray-400 px-4 leading-relaxed">
-                      Your transaction completed successfully. M-Pesa checkout reference updated.
-                    </p>
-                  </div>
-                  <button 
-                    onClick={() => setIsStkOpen(false)}
-                    className="px-6 py-2 rounded-xl bg-brand-emerald hover:bg-brand-emerald/90 text-slate-950 text-xs font-bold transition-all cursor-pointer"
-                  >
-                    Done
-                  </button>
+            {stkStep === 'sending' && (
+              <div className="flex flex-col items-center justify-center py-10 space-y-6 text-center">
+                <div className="relative py-2">
+                  <Loader size="md" color="var(--color-brand-emerald)" />
                 </div>
-              )}
+                <div className="space-y-1">
+                  <h4 className="font-bold text-sm text-gray-200">Processing Payment...</h4>
+                  <p className="text-[11px] text-gray-400 max-w-[200px] leading-relaxed">
+                    Verifying transaction pin and checking wallet balance. Do not close this window.
+                  </p>
+                </div>
+              </div>
+            )}
 
-              {stkStep === 'error' && (
-                <div className="flex flex-col items-center justify-center py-10 space-y-6 text-center">
-                  <div className="w-16 h-16 rounded-full clay-icon-raised flex items-center justify-center text-red-500">
-                    <ShieldAlert className="w-10 h-10 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
-                  </div>
-                  <div className="space-y-1">
-                    <h4 className="font-bold text-base text-white">Transaction Failed</h4>
-                    <p className="text-xs text-red-400 px-4 leading-relaxed font-mono">
-                      {stkError}
-                    </p>
-                  </div>
-                  <button 
-                    onClick={() => setStkStep('prompt')}
-                    className="px-6 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all cursor-pointer"
-                  >
-                    Retry
-                  </button>
+            {stkStep === 'success' && (
+              <div className="flex flex-col items-center justify-center py-10 space-y-6 text-center">
+                <div className="w-16 h-16 rounded-full clay-icon-raised flex items-center justify-center text-brand-emerald animate-bounce">
+                  <CheckCircle2 className="w-10 h-10 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
                 </div>
-              )}
-            </motion.div>
-          </div>
+                <div className="space-y-1">
+                  <h4 className="font-bold text-base text-white">Payment Received!</h4>
+                  <p className="text-xs text-gray-400 px-4 leading-relaxed">
+                    Your transaction completed successfully. M-Pesa checkout reference updated.
+                  </p>
+                </div>
+                <button 
+                  onClick={() => setIsStkOpen(false)}
+                  className="px-6 py-2 rounded-xl bg-brand-emerald hover:bg-brand-emerald/90 text-slate-950 text-xs font-bold transition-all cursor-pointer"
+                >
+                  Done
+                </button>
+              </div>
+            )}
+
+            {stkStep === 'error' && (
+              <div className="flex flex-col items-center justify-center py-10 space-y-6 text-center">
+                <div className="w-16 h-16 rounded-full clay-icon-raised flex items-center justify-center text-red-500">
+                  <ShieldAlert className="w-10 h-10 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-bold text-base text-white">Transaction Failed</h4>
+                  <p className="text-xs text-red-400 px-4 leading-relaxed font-mono">
+                    {stkError}
+                  </p>
+                </div>
+                <button 
+                  onClick={() => setStkStep('prompt')}
+                  className="px-6 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all cursor-pointer"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+          </GenieModal>
         )}
       </AnimatePresence>
     </div>
