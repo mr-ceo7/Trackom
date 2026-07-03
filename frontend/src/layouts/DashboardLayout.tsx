@@ -114,7 +114,7 @@ export default function DashboardLayout() {
     .toUpperCase() || '??';
 
   return (
-    <div className="h-screen flex overflow-hidden bg-[#CBD1E1] dark:bg-surface-dark">
+    <div className="h-screen flex overflow-hidden light-dashboard-bg dark:bg-surface-dark">
       {/* SIDEBAR — Desktop */}
       <aside className="hidden lg:flex flex-col w-64 h-screen clay-sidebar shrink-0">
         <div className="px-6 py-5">

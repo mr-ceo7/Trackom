@@ -34,20 +34,20 @@ export default function ThemeToggle({ className = '' }: ThemeToggleProps) {
     <button
       id="theme-toggle"
       onClick={() => setIsDark(!isDark)}
-      className={`flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95 relative overflow-hidden cursor-pointer ${className}`}
+      className={`flex items-center justify-center w-9 h-9 rounded-2xl transition-all duration-300 transform hover:scale-105 active:scale-95 relative overflow-hidden cursor-pointer ${className}`}
       aria-label="Toggle visual theme"
     >
       <div className="relative w-4.5 h-4.5 flex items-center justify-center">
         <span
           className={`absolute transition-all duration-400 transform ${
-            isDark ? 'rotate-90 scale-0 opacity-0' : 'rotate-0 scale-100 opacity-100 text-amber-400'
+            isDark ? 'rotate-0 scale-100 opacity-100 text-amber-400' : 'rotate-90 scale-0 opacity-0'
           }`}
         >
           <Sun size={18} className="stroke-[2]" />
         </span>
         <span
           className={`absolute transition-all duration-400 transform ${
-            isDark ? 'rotate-0 scale-100 opacity-100 text-indigo-400' : '-rotate-90 scale-0 opacity-0'
+            isDark ? '-rotate-90 scale-0 opacity-0' : 'rotate-0 scale-100 opacity-100 text-slate-700'
           }`}
         >
           <Moon size={18} className="stroke-[2]" />

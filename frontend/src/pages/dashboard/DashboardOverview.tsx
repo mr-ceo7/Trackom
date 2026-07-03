@@ -112,17 +112,17 @@ export default function DashboardOverview() {
 
           <div className="relative w-44 h-24 flex items-end justify-center mt-6 overflow-hidden">
             {/* Speed dial */}
-            <div className="absolute inset-0 rounded-t-full border-[10px] border-slate-200/20 dark:border-white/5 border-b-0" />
-            <div className="absolute inset-0 rounded-t-full border-[10px] border-brand-primary border-b-0 border-r-transparent border-l-transparent opacity-60" />
+            <div className="absolute inset-0 rounded-t-full border-[10px] border-slate-200 dark:border-white/5 border-b-0" />
+            <div className="absolute inset-0 rounded-t-full border-[10px] border-slate-800 dark:border-brand-primary border-b-0 border-r-transparent border-l-transparent dark:opacity-60" />
             
             {/* Needle */}
             <div 
-              className="absolute bottom-0 w-1.5 h-16 bg-gradient-to-t from-brand-primary to-brand-accent origin-bottom rounded-full transition-transform duration-500"
+              className="absolute bottom-0 w-1.5 h-16 bg-slate-800 dark:bg-gradient-to-t dark:from-brand-primary dark:to-brand-accent origin-bottom rounded-full transition-transform duration-500"
               style={{ transform: `rotate(${needleRotation}deg)` }}
             />
             
             {/* Hub */}
-            <div className="absolute bottom-0 w-5 h-2.5 bg-slate-900 dark:bg-white rounded-t-full dark:border-white/20" />
+            <div className="absolute bottom-0 w-5 h-2.5 bg-slate-800 dark:bg-white rounded-t-full dark:border-white/20" />
           </div>
 
           <div className="mt-2 space-y-0.5">
@@ -149,7 +149,7 @@ export default function DashboardOverview() {
                 <span className="font-mono text-slate-900 dark:text-white">72%</span>
               </div>
               <div className="w-full h-3.5 clay-inset rounded-full overflow-hidden">
-                <div className="h-full bg-brand-emerald rounded-full animate-pulse" style={{ width: '72%' }} />
+                <div className="h-full clay-progress-emerald rounded-full animate-pulse" style={{ width: '72%' }} />
               </div>
             </div>
 
@@ -162,7 +162,7 @@ export default function DashboardOverview() {
                 <span className="font-mono text-slate-900 dark:text-white">20%</span>
               </div>
               <div className="w-full h-3.5 clay-inset rounded-full overflow-hidden">
-                <div className="h-full bg-red-500 rounded-full" style={{ width: '20%' }} />
+                <div className="h-full clay-progress-red rounded-full" style={{ width: '20%' }} />
               </div>
             </div>
 
@@ -175,7 +175,7 @@ export default function DashboardOverview() {
                 <span className="font-mono text-slate-900 dark:text-white">8%</span>
               </div>
               <div className="w-full h-3.5 clay-inset rounded-full overflow-hidden">
-                <div className="h-full bg-cyan-500 rounded-full" style={{ width: '8%' }} />
+                <div className="h-full clay-progress-cyan rounded-full" style={{ width: '8%' }} />
               </div>
             </div>
           </div>
