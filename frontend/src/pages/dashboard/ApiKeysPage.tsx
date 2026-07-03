@@ -194,23 +194,23 @@ export default function ApiKeysPage() {
             href={(api.defaults.baseURL || 'http://localhost:8000/api/v1').replace('/api/v1', '/docs')}
             target="_blank" 
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-4 py-2.5 clay-button-secondary rounded-2xl text-xs font-bold text-slate-600 dark:text-gray-300 transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-2.5 bg-brand-primary/15 hover:bg-brand-primary/25 rounded-2xl text-xs font-bold text-brand-primary dark:text-brand-primary-light transition-all cursor-pointer"
           >
             <BookOpen className="w-3.5 h-3.5" />
             <span>API Docs</span>
             <ExternalLink className="w-3 h-3 opacity-60" />
           </a>
-          <button onClick={() => { setNewFullKey(null); setShowGenerate(true); }} className="clay-button-primary flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-semibold text-white cursor-pointer transition-all">
+          <button onClick={() => { setNewFullKey(null); setShowGenerate(true); }} className="bg-brand-primary hover:bg-brand-primary-hover flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-semibold text-white shadow-lg shadow-brand-primary/20 cursor-pointer transition-all">
             <Plus className="w-3.5 h-3.5" />Generate Key
           </button>
         </div>
       </div>
 
-      <div className="clay-card rounded-3xl p-5 flex items-start gap-3 border-l-4 border-brand-primary">
-        <Shield className="w-5 h-5 text-brand-primary shrink-0 mt-0.5" />
+      <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 rounded-3xl p-5 flex items-start gap-3">
+        <Shield className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
         <div>
-          <h4 className="text-sm font-semibold text-slate-900 dark:text-white">Security Notice</h4>
-          <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">API keys grant full access to your account. Never share them publicly or commit to version control. Rotate keys regularly.</p>
+          <h4 className="text-sm font-semibold text-amber-800 dark:text-amber-400">Security Notice</h4>
+          <p className="text-xs text-amber-700 dark:text-amber-500 mt-0.5">API keys grant full access to your account. Never share them publicly or commit to version control. Rotate keys regularly.</p>
         </div>
       </div>
 
@@ -314,12 +314,12 @@ export default function ApiKeysPage() {
                   >
                     <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
                       <div className="grid grid-cols-3 gap-2 flex-1 max-w-lg">
-                        <div className="clay-stat rounded-2xl p-3 flex flex-col justify-center">
-                          <span className="text-[10px] font-semibold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Requests</span>
-                          <span className="text-lg font-bold font-mono text-slate-800 dark:text-white mt-0.5">{totalReq}</span>
+                        <div className="clay-inset rounded-2xl p-3 flex flex-col justify-center">
+                          <span className="text-[10px] font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Requests</span>
+                          <span className="text-lg font-bold font-mono text-slate-900 dark:text-white mt-0.5">{totalReq}</span>
                         </div>
-                        <div className="clay-stat rounded-2xl p-3 flex flex-col justify-center">
-                          <span className="text-[10px] font-semibold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Credits Spent</span>
+                        <div className="clay-inset rounded-2xl p-3 flex flex-col justify-center">
+                          <span className="text-[10px] font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Credits Spent</span>
                           <span className="text-lg font-bold font-mono text-brand-primary mt-0.5">
                             {totalCred.toFixed(2)} KES
                             {k.max_credits ? ` / ${k.max_credits.toFixed(2)}` : ''}
@@ -339,8 +339,8 @@ export default function ApiKeysPage() {
                             </div>
                           )}
                         </div>
-                        <div className="clay-stat rounded-2xl p-3 flex flex-col justify-center">
-                          <span className="text-[10px] font-semibold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Success Rate</span>
+                        <div className="clay-inset rounded-2xl p-3 flex flex-col justify-center">
+                          <span className="text-[10px] font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Success Rate</span>
                           <span className="text-lg font-bold font-mono text-brand-emerald mt-0.5">99.2%</span>
                         </div>
                       </div>
@@ -383,7 +383,7 @@ export default function ApiKeysPage() {
                                 </div>
                                 <div 
                                   style={{ height: `${heightPct}%` }} 
-                                  className="w-full bg-brand-primary/20 group-hover:bg-brand-primary rounded-t-md transition-all duration-300 shadow-[0_0_8px_rgba(99,102,241,0.1)] group-hover:shadow-[0_0_12px_rgba(99,102,241,0.4)]"
+                                  className="w-full bg-brand-primary/60 group-hover:bg-brand-primary/90 rounded-t-md transition-all duration-300 shadow-[0_0_8px_rgba(99,102,241,0.1)] group-hover:shadow-[0_0_12px_rgba(99,102,241,0.4)]"
                                 />
                                 <span className="text-[8px] text-slate-400 dark:text-gray-500 mt-1 font-mono shrink-0">
                                   {d.date.split('-')[2]}
