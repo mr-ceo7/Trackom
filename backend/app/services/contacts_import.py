@@ -94,9 +94,11 @@ async def process_contacts_csv_import(
                 name_idx = 0
                 phone_idx = 1
                 email_idx = 2
+                headers = []
                 
                 if has_header:
                     header = next(reader, [])
+                    headers = header
                     # Lowercase columns to find indices
                     header_lower = [col.lower().strip() for col in header]
                     
@@ -176,6 +178,14 @@ async def process_contacts_csv_import(
                     # Mark phone as added in this run
                     existing_phones.add(cleaned_phone)
                     
+                    custom_attrs = {}
+                    if has_header and headers:
+                        for col_idx, val in enumerate(row):
+                            if col_idx not in (phone_idx, name_idx, email_idx) and col_idx < len(headers):
+                                col_name = headers[col_idx].strip()
+                                if col_name:
+                                    custom_attrs[col_name] = val.strip()
+
                     contact_id = uuid.uuid4()
                     contacts_batch.append({
                         "id": contact_id,
@@ -184,6 +194,7 @@ async def process_contacts_csv_import(
                         "name": name if name else "Unnamed",
                         "email": email,
                         "notes": "Imported via CSV",
+                        "custom_attributes": custom_attrs,
                         "created_at": datetime.utcnow()
                     })
 

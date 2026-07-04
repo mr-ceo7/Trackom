@@ -380,7 +380,7 @@ export default function ContactsPage() {
   };
 
   const handleDownloadTemplate = () => {
-    const csvContent = "name,phone,email\nJohn Doe,0712345678,john@example.com\nJane Smith,+254723456789,jane@example.com\n";
+    const csvContent = "name,phone,email,company,balance,due_date\nJohn Doe,0712345678,john@example.com,Acme Corp,KES 15000,2026-07-15\nJane Smith,+254723456789,jane@example.com,Global Ltd,KES 3200,2026-07-20\n";
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");

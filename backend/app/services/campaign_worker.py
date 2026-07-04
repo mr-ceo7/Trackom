@@ -17,6 +17,44 @@ from app.services.sms_gateway import get_sms_gateway
 
 logger = logging.getLogger("trackom.campaign_worker")
 
+import re
+
+def compile_template(template: str, contact: Contact) -> str:
+    """
+    Compiles message templates with dynamic placeholders and fallbacks.
+    Example template: "Hello {{name | default='there'}}, your balance is {{balance | default='0'}}."
+    """
+    contact_data = {
+        "name": contact.name or "",
+        "phone": contact.phone or "",
+        "email": contact.email or "",
+        "notes": contact.notes or "",
+    }
+    custom_attrs = getattr(contact, "custom_attributes", {}) or {}
+    
+    def replacer(match):
+        raw_token = match.group(1).strip()
+        
+        if "|" in raw_token:
+            token, fallback_part = raw_token.split("|", 1)
+            token = token.strip()
+            fallback_match = re.search(r'(?:default|fallback)\s*=\s*["\'](.*?)["\']', fallback_part)
+            fallback = fallback_match.group(1) if fallback_match else ""
+        else:
+            token = raw_token
+            fallback = ""
+            
+        val = contact_data.get(token.lower())
+        if val is None:
+            val = custom_attrs.get(token)
+            if val is None:
+                val = custom_attrs.get(token.lower())
+                
+        return str(val) if val is not None and str(val).strip() != "" else fallback
+
+    pattern = r"\{\{(.*?)\}\}"
+    return re.sub(pattern, replacer, template)
+
 
 async def trigger_user_webhook(webhook_url: str, payload: dict):
     """Deliver a status report payload to the user's registered webhook url."""
@@ -136,27 +174,35 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
 
             for i in range(0, total_recipients, batch_size):
                 batch_contacts = contacts[i:i+batch_size]
-                batch_phones = [c.phone for c in batch_contacts]
                 
-                try:
-                    gateway_results = await gateway.send_messages(
-                        sender_id=campaign.sender_id,
-                        recipients=batch_phones,
-                        message=campaign.message_content,
-                        db=db
-                    )
-                except Exception as e:
-                    logger.error(f"Gateway failed for campaign {campaign_id} batch index {i}: {e}")
-                    # Treat batch as failed
-                    gateway_results = [
-                        {
-                            "recipient": phone,
-                            "status": "failed",
-                            "message_id": None,
-                            "cost": sms_parts,
-                            "error_message": str(e)
-                        } for phone in batch_phones
-                    ]
+                async def send_to_one(contact):
+                    personalized_msg = compile_template(campaign.message_content, contact)
+                    try:
+                        res_list = await gateway.send_messages(
+                            sender_id=campaign.sender_id,
+                            recipients=[contact.phone],
+                            message=personalized_msg,
+                            db=db
+                        )
+                        if res_list:
+                            res = res_list[0]
+                            res["compiled_message"] = personalized_msg
+                            return res
+                    except Exception as e:
+                        logger.error(f"Gateway failed for contact {contact.phone}: {e}")
+                    
+                    calc_single = calculate_sms_parts(personalized_msg)
+                    return {
+                        "recipient": contact.phone,
+                        "status": "failed",
+                        "message_id": None,
+                        "cost": float(calc_single["parts"]),
+                        "error_message": str(e),
+                        "compiled_message": personalized_msg
+                    }
+
+                tasks = [send_to_one(c) for c in batch_contacts]
+                gateway_results = await asyncio.gather(*tasks)
 
                 # Map response metrics back to models
                 for res in gateway_results:
@@ -173,7 +219,7 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
                         campaign_id=campaign.id,
                         sender_id=campaign.sender_id,
                         recipient=res["recipient"],
-                        content=campaign.message_content,
+                        content=res.get("compiled_message", campaign.message_content),
                         status=status_mapped,
                         cost=res["cost"],
                         gateway_message_id=res["message_id"],

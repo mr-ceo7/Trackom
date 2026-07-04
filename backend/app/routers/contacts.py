@@ -137,7 +137,11 @@ async def create_contact(
     db: AsyncSession = Depends(get_db),
 ):
     contact = Contact(
-        user_id=current_user.id, name=data.name, phone=data.phone, email=data.email,
+        user_id=current_user.id,
+        name=data.name,
+        phone=data.phone,
+        email=data.email,
+        custom_attributes=data.custom_attributes or {},
     )
     if data.group_id:
         group_result = await db.execute(

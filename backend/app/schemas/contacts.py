@@ -25,6 +25,7 @@ class ContactCreate(BaseModel):
     phone: str = Field(..., min_length=10, max_length=20)
     email: Optional[str] = None
     group_id: Optional[uuid.UUID] = None
+    custom_attributes: Optional[dict] = Field(default_factory=dict)
 
 
 class ContactUpdate(BaseModel):
@@ -32,6 +33,7 @@ class ContactUpdate(BaseModel):
     phone: Optional[str] = Field(None, min_length=10, max_length=20)
     email: Optional[str] = None
     group_id: Optional[uuid.UUID] = None
+    custom_attributes: Optional[dict] = None
 
 
 class ContactResponse(BaseModel):
@@ -39,6 +41,7 @@ class ContactResponse(BaseModel):
     name: str
     phone: str
     email: Optional[str]
+    custom_attributes: dict = Field(default_factory=dict)
     created_at: datetime
     model_config = {"from_attributes": True}
 

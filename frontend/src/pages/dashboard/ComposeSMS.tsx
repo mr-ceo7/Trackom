@@ -1,7 +1,7 @@
 /**
  * ComposeSMS - send SMS to individual numbers or contact groups.
  */
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Send, Users, Hash, MessageSquare, AlertCircle, CheckCircle2, ChevronDown, Clock, Sliders, X } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -35,6 +35,72 @@ export default function ComposeSMS() {
   const [loadingGroup, setLoadingGroup] = useState(false);
   const [loadedContacts, setLoadedContacts] = useState<any[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // CSV Import mapping states
+  const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
+  const [csvPreviewRow, setCsvPreviewRow] = useState<Record<string, string> | null>(null);
+  const [csvUploadLoading, setCsvUploadLoading] = useState(false);
+
+  const parseCSVPreview = (file: File): Promise<{ headers: string[], preview: Record<string, string> }> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      const slice = file.slice(0, 10240); // Read first 10KB
+      reader.onload = (e) => {
+        const text = e.target?.result as string || '';
+        const lines = text.split(/\r\n|\n/).map(l => l.trim()).filter(Boolean);
+        if (lines.length === 0) {
+          resolve({ headers: [], preview: {} });
+          return;
+        }
+        const headers = lines[0].split(',').map(h => h.trim().replace(/['"]/g, ''));
+        const preview: Record<string, string> = {};
+        if (lines.length > 1) {
+          const firstRowValues = lines[1].split(',').map(v => v.trim().replace(/['"]/g, ''));
+          headers.forEach((h, idx) => {
+            if (h) preview[h] = firstRowValues[idx] || '';
+          });
+        }
+        resolve({ headers, preview });
+      };
+      reader.readAsText(slice);
+    });
+  };
+
+  const handleComposerCSVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setCsvUploadLoading(true);
+    setResult(null);
+
+    try {
+      const { headers, preview } = await parseCSVPreview(file);
+      setCsvHeaders(headers);
+      setCsvPreviewRow(preview);
+
+      const groupName = `Upload: ${file.name.replace(/\.[^/.]+$/, "")}`;
+      const groupResp = await api.post('/contacts/groups', {
+        name: groupName,
+        description: `Uploaded directly from message composer on ${new Date().toLocaleDateString()}`
+      });
+      const newGroupId = groupResp.data.id;
+
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const importId = `import-${Date.now()}`;
+      await api.post(`/contacts/import?import_id=${importId}&group_id=${newGroupId}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      setSelectedGroupIds([newGroupId]);
+      setResult({ type: 'success', text: `List '${groupName}' imported and selected successfully!` });
+    } catch (err: any) {
+      setResult({ type: 'error', text: `Failed to import list: ${err.response?.data?.detail || err.message}` });
+    } finally {
+      setCsvUploadLoading(false);
+    }
+  };
 
   // Advanced features
   const [batchNumber, setBatchNumber] = useState('');
@@ -200,17 +266,79 @@ export default function ComposeSMS() {
     }, 0);
   };
 
+  const dynamicPlaceholders = useMemo(() => {
+    const base = ['{{name}}', '{{phone}}', '{{email}}'];
+    const customKeys = new Set<string>();
+    
+    loadedContacts.forEach((contact: any) => {
+      if (contact.custom_attributes && typeof contact.custom_attributes === 'object') {
+        Object.keys(contact.custom_attributes).forEach(key => {
+          customKeys.add(key);
+        });
+      }
+    });
+
+    csvHeaders.forEach(key => {
+      if (key !== 'name' && key !== 'phone' && key !== 'email') {
+        customKeys.add(key);
+      }
+    });
+    
+    return [...base, ...Array.from(customKeys).map(key => `{{${key}}}`)];
+  }, [loadedContacts, csvHeaders]);
+
   const getPersonalizedPreview = () => {
-    if (loadedContacts.length === 0) return message;
-    const contact = loadedContacts[0];
+    let contactData: Record<string, string> = {};
+    let customAttrs: Record<string, string> = {};
+
+    if (loadedContacts.length > 0) {
+      const contact = loadedContacts[0];
+      contactData = {
+        name: contact.name || '',
+        phone: contact.phone || '',
+        email: contact.email || '',
+      };
+      customAttrs = (contact.custom_attributes as Record<string, string>) || {};
+    } else if (csvPreviewRow) {
+      contactData = {
+        name: csvPreviewRow.name || csvPreviewRow.first_name || '',
+        phone: csvPreviewRow.phone || csvPreviewRow.mobile || '',
+        email: csvPreviewRow.email || '',
+      };
+      customAttrs = csvPreviewRow;
+    } else {
+      return message;
+    }
+
     let msg = message;
-    msg = msg.replace(/\{\{name\}\}/g, contact.name || '');
-    msg = msg.replace(/\{\{phone\}\}/g, contact.phone || '');
-    msg = msg.replace(/\{\{email\}\}/g, contact.email || '');
+    msg = msg.replace(/\{\{name\}\}/g, contactData.name);
+    msg = msg.replace(/\{\{phone\}\}/g, contactData.phone);
+    msg = msg.replace(/\{\{email\}\}/g, contactData.email);
+    
+    Object.entries(customAttrs).forEach(([key, value]) => {
+      const regex = new RegExp(`\\{\\{${key}\\}\\}(?:\\s*\\|\\s*(?:default|fallback)\\s*=\\s*["'](.*?)["'])?`, 'g');
+      msg = msg.replace(regex, (match, fallback) => {
+        return value || fallback || '';
+      });
+    });
+    
+    msg = msg.replace(/\{\{name\s*\|\s*(?:default|fallback)\s*=\s*["'](.*?)["']\}\}/g, (match, fallback) => contactData.name || fallback);
+    msg = msg.replace(/\{\{phone\s*\|\s*(?:default|fallback)\s*=\s*["'](.*?)["']\}\}/g, (match, fallback) => contactData.phone || fallback);
+    msg = msg.replace(/\{\{email\s*\|\s*(?:default|fallback)\s*=\s*["'](.*?)["']\}\}/g, (match, fallback) => contactData.email || fallback);
+    
+    msg = msg.replace(/\{\{(.*?)\}\}/g, (match, token) => {
+      if (token.includes('|')) {
+        const parts = token.split('|');
+        const fbMatch = parts[1].match(/(?:default|fallback)\s*=\s*["'](.*?)["']/);
+        return fbMatch ? fbMatch[1] : '';
+      }
+      return '';
+    });
+    
     return msg;
   };
 
-  const hasPlaceholders = message.includes('{{name}}') || message.includes('{{phone}}') || message.includes('{{email}}');
+  const hasPlaceholders = /\{\{(.*?)\}\}/.test(message);
 
 
   const { parts: smsCount, charCount, isUnicode } = calculateSmsParts(message);
@@ -250,6 +378,27 @@ export default function ComposeSMS() {
         text = text.replace(/\{\{name\}\}/g, contact.name || '');
         text = text.replace(/\{\{phone\}\}/g, contact.phone || '');
         text = text.replace(/\{\{email\}\}/g, contact.email || '');
+        
+        const customAttrs = (contact.custom_attributes as Record<string, string>) || {};
+        Object.entries(customAttrs).forEach(([key, value]) => {
+          const regex = new RegExp(`\\{\\{${key}\\}\\}(?:\\s*\\|\\s*(?:default|fallback)\\s*=\\s*["'](.*?)["'])?`, 'g');
+          text = text.replace(regex, (match, fallback) => {
+            return value || fallback || '';
+          });
+        });
+        
+        text = text.replace(/\{\{name\s*\|\s*(?:default|fallback)\s*=\s*["'](.*?)["']\}\}/g, (match, fallback) => contact.name || fallback);
+        text = text.replace(/\{\{phone\s*\|\s*(?:default|fallback)\s*=\s*["'](.*?)["']\}\}/g, (match, fallback) => contact.phone || fallback);
+        text = text.replace(/\{\{email\s*\|\s*(?:default|fallback)\s*=\s*["'](.*?)["']\}\}/g, (match, fallback) => contact.email || fallback);
+        
+        text = text.replace(/\{\{(.*?)\}\}/g, (match, token) => {
+          if (token.includes('|')) {
+            const parts = token.split('|');
+            const fbMatch = parts[1].match(/(?:default|fallback)\s*=\s*["'](.*?)["']/);
+            return fbMatch ? fbMatch[1] : '';
+          }
+          return '';
+        });
         
         const calc = calculateSmsParts(text);
         const cost = calc.parts * (user?.credit_rate || 1.0);
@@ -484,6 +633,24 @@ export default function ComposeSMS() {
                 {selectedGroupIds.length === 0 && (
                   <p className="text-[10px] text-slate-400">Please select one or more groups to send message to.</p>
                 )}
+                
+                <div className="pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between gap-4">
+                  <span className="text-[10px] text-slate-400 dark:text-gray-500">Need to upload a new list?</span>
+                  <label className="clay-button-secondary text-[10px] px-2.5 py-1.5 rounded-lg font-semibold cursor-pointer transition-all flex items-center gap-1">
+                    {csvUploadLoading ? (
+                      <Loader size="sm" />
+                    ) : (
+                      <>📁 Upload CSV List</>
+                    )}
+                    <input
+                      type="file"
+                      accept=".csv"
+                      disabled={csvUploadLoading}
+                      onChange={handleComposerCSVUpload}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
               </div>
             )}
 
@@ -569,10 +736,10 @@ export default function ComposeSMS() {
               placeholder="Type your message here..."
             />
 
-            {sendMode === 'group' && loadedContacts.length > 0 && (
+            {sendMode === 'group' && (loadedContacts.length > 0 || csvPreviewRow) && (
               <div className="flex flex-wrap items-center gap-1.5 pt-1">
                 <span className="text-[10px] font-semibold text-slate-400 dark:text-gray-500 uppercase mr-1">Insert Placeholder:</span>
-                {['{{name}}', '{{phone}}', '{{email}}'].map((placeholder) => (
+                {dynamicPlaceholders.map((placeholder) => (
                   <button
                     key={placeholder}
                     type="button"
@@ -595,11 +762,13 @@ export default function ComposeSMS() {
               <span>{smsCount} SMS part(s)</span>
             </div>
 
-            {sendMode === 'group' && loadedContacts.length > 0 && (
+            {sendMode === 'group' && (loadedContacts.length > 0 || csvPreviewRow) && (
               <div className="mt-4 p-3 bg-slate-50 dark:bg-white/5 border border-slate-200/50 dark:border-white/5 rounded-2xl space-y-1.5 text-left">
                 <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase">
                   <span>📱 Live Personalization Preview</span>
-                  <span className="text-brand-primary">Recipient 1: {loadedContacts[0].name || 'Unnamed'}</span>
+                  <span className="text-brand-primary">
+                    Recipient 1: {loadedContacts[0]?.name || csvPreviewRow?.name || csvPreviewRow?.first_name || 'Unnamed'}
+                  </span>
                 </div>
                 <div className="bg-white dark:bg-slate-950 p-2.5 rounded-xl border border-slate-200/50 dark:border-slate-800 text-xs text-slate-700 dark:text-gray-300 font-sans leading-relaxed break-words whitespace-pre-wrap">
                   {getPersonalizedPreview() || <span className="text-slate-400 italic">Preview will appear here as you type...</span>}
