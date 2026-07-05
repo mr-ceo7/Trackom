@@ -30,7 +30,8 @@ async def send_sms(
     db: AsyncSession = Depends(get_db),
 ):
     """Send SMS to one or more recipients. Deducts from user's balance based on rate."""
-    calc = calculate_sms_parts(data.message)
+    full_message = data.message + "\nSTOP *456*9*5#" if (data.message and data.include_opt_out) else data.message
+    calc = calculate_sms_parts(full_message)
     sms_parts = calc["parts"]
     
     # Calculate costs using custom user credit rates
@@ -59,7 +60,7 @@ async def send_sms(
         msg = SmsMessage(
             user_id=current_user.id,
             recipient=phone.strip(),
-            content=data.message,
+            content=full_message,
             sender_id=data.sender_id,
             status=initial_status,
             cost=per_message_cost,
@@ -80,7 +81,7 @@ async def send_sms(
             results = await gateway.send_messages(
                 sender_id=data.sender_id,
                 recipients=[m.recipient for m in messages_to_send],
-                message=data.message,
+                message=full_message,
                 db=db
             )
             for msg, res in zip(messages_to_send, results):
@@ -130,13 +131,14 @@ async def message_history(
     page: int = Query(1, ge=1),
     limit: int = Query(50, ge=1, le=200),
     batch_number: Optional[str] = Query(None),
+    campaign_id: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get SMS send history for the current user, optionally filtered by batch, status, and date range."""
+    """Get SMS send history for the current user, optionally filtered by batch, campaign, status, and date range."""
     q = (
         select(SmsMessage)
         .where(SmsMessage.user_id == current_user.id, SmsMessage.deleted_at.is_(None))
@@ -144,6 +146,12 @@ async def message_history(
     
     if batch_number:
         q = q.where(SmsMessage.batch_number.ilike(f"%{batch_number}%"))
+        
+    if campaign_id:
+        try:
+            q = q.where(SmsMessage.campaign_id == uuid_mod.UUID(campaign_id))
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid campaign ID format.")
         
     if status:
         q = q.where(SmsMessage.status == status.lower())

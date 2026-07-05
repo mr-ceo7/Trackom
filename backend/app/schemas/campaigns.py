@@ -12,6 +12,16 @@ class CampaignCreate(BaseModel):
     sender_id: str = Field(default="TRACKOM", max_length=20)
     scheduled_at: Optional[datetime] = None
     group_id: Optional[uuid.UUID] = None
+    include_opt_out: bool = True
+
+
+class CampaignUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=1, max_length=255)
+    message_content: Optional[str] = Field(None, min_length=1)
+    sender_id: Optional[str] = Field(None, max_length=20)
+    scheduled_at: Optional[datetime] = None
+    group_id: Optional[uuid.UUID] = None
+    include_opt_out: Optional[bool] = None
 
 
 class CampaignResponse(BaseModel):
@@ -28,5 +38,6 @@ class CampaignResponse(BaseModel):
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     group_id: Optional[uuid.UUID] = None
+    include_opt_out: bool
     created_at: datetime
     model_config = {"from_attributes": True}

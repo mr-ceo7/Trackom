@@ -406,7 +406,16 @@ async def bulk_update_contacts(
 
     for contact in contacts:
         for field, value in update_fields.items():
-            setattr(contact, field, value)
+            if field == "custom_attributes" and isinstance(value, dict):
+                merged = dict(contact.custom_attributes or {})
+                merged.update(value)
+                # Remove keys with empty/None values
+                for k, v in list(value.items()):
+                    if v == "" or v is None:
+                        merged.pop(k, None)
+                contact.custom_attributes = merged
+            else:
+                setattr(contact, field, value)
 
     if contacts:
         await db.commit()
@@ -479,9 +488,26 @@ async def update_contact(
     if not contact:
         raise HTTPException(status_code=404, detail="Contact not found")
     update_data = data.model_dump(exclude_unset=True)
-    update_data.pop("group_id", None)  # Ignore group_id — handled via m2m
+    update_data.pop("group_id", None)
     for field, value in update_data.items():
         setattr(contact, field, value)
+        
+    if "group_id" in data.model_fields_set:
+        # Clear existing group associations and assign the new one if provided
+        contact.groups = []
+        if data.group_id:
+            group_res = await db.execute(
+                select(ContactGroup).where(
+                    ContactGroup.id == data.group_id,
+                    ContactGroup.user_id == current_user.id,
+                    ContactGroup.deleted_at.is_(None)
+                )
+            )
+            g = group_res.scalar_one_or_none()
+            if g:
+                contact.groups.append(g)
+                
+    await db.flush()
     return contact
 
 

@@ -120,13 +120,19 @@ async def process_contacts_csv_import(
                             email_idx = header_lower.index(e_name)
                             break
 
-                # Query existing contacts to prevent duplicate phones in this import
-                # Note: For massive databases, we'd query per batch, but here we can load existing phones into a set
+                # Query existing contacts to map phone to id and prevent duplicate contact creation
                 existing_res = await db.execute(
-                    select(Contact.phone).where(Contact.user_id == user_id, Contact.deleted_at.is_(None))
+                    select(Contact.id, Contact.phone).where(Contact.user_id == user_id, Contact.deleted_at.is_(None))
                 )
+                existing_contacts_map = {phone: cid for cid, phone in existing_res.all()}
 
-                existing_phones = set(existing_res.scalars().all())
+                # Query existing group members to prevent duplicate associations
+                existing_group_member_ids = set()
+                if group_id:
+                    member_res = await db.execute(
+                        select(contact_group_members.c.contact_id).where(contact_group_members.c.group_id == group_id)
+                    )
+                    existing_group_member_ids = set(member_res.scalars().all())
 
                 from app.utils.import_stream import import_queues
                 import_queue = import_queues.get(import_id) if import_id else None
@@ -167,16 +173,30 @@ async def process_contacts_csv_import(
                         row_idx += 1
                         continue
                     
-                    # Avoid duplicates
-                    if cleaned_phone in existing_phones:
-                        fail_count += 1
-                        if import_queue and row_idx <= 250:
-                            await import_queue.put(f"⚠️ [SKIP] Row {row_idx}: Duplicate number {cleaned_phone} ignored")
+                    # Handle duplicate contacts
+                    if cleaned_phone in existing_contacts_map:
+                        existing_contact_id = existing_contacts_map[cleaned_phone]
+                        if group_id and existing_contact_id not in existing_group_member_ids:
+                            group_members_batch.append({
+                                "contact_id": existing_contact_id,
+                                "group_id": group_id
+                            })
+                            existing_group_member_ids.add(existing_contact_id)
+                            success_count += 1
+                            if import_queue and row_idx <= 250:
+                                await import_queue.put(f"✔ [GROUP] Row {row_idx}: Added existing contact {name} ({cleaned_phone}) to segment")
+                        else:
+                            fail_count += 1
+                            if import_queue and row_idx <= 250:
+                                await import_queue.put(f"⚠️ [SKIP] Row {row_idx}: Duplicate number {cleaned_phone} ignored")
                         row_idx += 1
                         continue
 
                     # Mark phone as added in this run
-                    existing_phones.add(cleaned_phone)
+                    contact_id = uuid.uuid4()
+                    existing_contacts_map[cleaned_phone] = contact_id
+                    if group_id:
+                        existing_group_member_ids.add(contact_id)
                     
                     custom_attrs = {}
                     if has_header and headers:
@@ -186,7 +206,6 @@ async def process_contacts_csv_import(
                                 if col_name:
                                     custom_attrs[col_name] = val.strip()
 
-                    contact_id = uuid.uuid4()
                     contacts_batch.append({
                         "id": contact_id,
                         "user_id": user_id,
@@ -204,6 +223,8 @@ async def process_contacts_csv_import(
                             "group_id": group_id
                         })
 
+                    success_count += 1
+
                     if import_queue:
                         if row_idx <= 250:
                             await import_queue.put(f"✔ [CLEAN] Row {row_idx}: {name} -> {cleaned_phone} (Success)")
@@ -213,13 +234,13 @@ async def process_contacts_csv_import(
                     row_idx += 1
 
                     # If batch is full, execute bulk inserts
-                    if len(contacts_batch) >= batch_size:
-                        await db.execute(insert(Contact), contacts_batch)
+                    if len(contacts_batch) >= batch_size or len(group_members_batch) >= batch_size:
+                        if contacts_batch:
+                            await db.execute(insert(Contact), contacts_batch)
                         if group_members_batch:
                             await db.execute(contact_group_members.insert(), group_members_batch)
                         await db.commit()
                         
-                        success_count += len(contacts_batch)
                         contacts_batch.clear()
                         group_members_batch.clear()
                         
@@ -227,18 +248,18 @@ async def process_contacts_csv_import(
                         await asyncio.sleep(0.01)
 
                 # Insert remaining
-                if contacts_batch:
-                    await db.execute(insert(Contact), contacts_batch)
+                if contacts_batch or group_members_batch:
+                    if contacts_batch:
+                        await db.execute(insert(Contact), contacts_batch)
                     if group_members_batch:
                         await db.execute(contact_group_members.insert(), group_members_batch)
                     await db.commit()
-                    success_count += len(contacts_batch)
 
                 if import_queue:
                     await import_queue.put("⚙️ [DATABASE] Executing SQL batch bulk insert...")
                     await import_queue.put(f"💾 [BULK] Committed {success_count} records successfully!")
                     await import_queue.put("✨ [COMPLETE] Background processing completed!")
-
+ 
             logger.info(f"CSV import complete. Success: {success_count}, Skips/Fails: {fail_count}")
 
             # Send welcome notification to user

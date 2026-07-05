@@ -40,8 +40,10 @@ async def get_db() -> AsyncSession:
 
 async def init_db():
     """Create all tables (for development only; use Alembic in production)."""
+    from sqlalchemy import text
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        await conn.execute(text("ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS include_opt_out BOOLEAN DEFAULT TRUE;"))
 
 
 async def seed_demo_user():

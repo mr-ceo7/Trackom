@@ -56,6 +56,14 @@ class TestContactGroups:
         resp = await auth_client.get("/api/v1/contacts/groups")
         assert len(resp.json()) == 1
 
+    async def test_delete_group(self, auth_client: AsyncClient):
+        resp = await auth_client.post("/api/v1/contacts/groups", json={"name": "Group B"})
+        group_id = resp.json()["id"]
+        del_resp = await auth_client.delete(f"/api/v1/contacts/groups/{group_id}")
+        assert del_resp.status_code == 204
+        list_resp = await auth_client.get("/api/v1/contacts/groups")
+        assert not any(g["id"] == group_id for g in list_resp.json())
+
 
 class TestSMS:
     async def test_send_sms(self, auth_client: AsyncClient):
@@ -146,6 +154,54 @@ class TestCampaigns:
         assert data["name"] == "Promo 2"
         assert data["status"] == "draft"
         assert data["total_recipients"] == 1
+
+    async def test_update_campaign(self, auth_client: AsyncClient):
+        # Create a contact and campaign first
+        await auth_client.post("/api/v1/contacts", json={"name": "John", "phone": "+254711223344"})
+        resp = await auth_client.post("/api/v1/campaigns", json={
+            "name": "Promo 2", "message_content": "Special promo today!"
+        })
+        cid = resp.json()["id"]
+
+        # Update it
+        up_resp = await auth_client.put(f"/api/v1/campaigns/{cid}", json={
+            "name": "Promo 2 Updated",
+            "message_content": "Super special promo today!"
+        })
+        assert up_resp.status_code == 200
+        assert up_resp.json()["name"] == "Promo 2 Updated"
+        assert up_resp.json()["message_content"] == "Super special promo today!"
+
+    async def test_delete_campaign(self, auth_client: AsyncClient):
+        # Create a contact and campaign first
+        await auth_client.post("/api/v1/contacts", json={"name": "John", "phone": "+254711223344"})
+        resp = await auth_client.post("/api/v1/campaigns", json={
+            "name": "Promo 2", "message_content": "Special promo today!"
+        })
+        cid = resp.json()["id"]
+
+        # Delete it
+        del_resp = await auth_client.delete(f"/api/v1/campaigns/{cid}")
+        assert del_resp.status_code == 204
+
+        # Verify not listed
+        list_resp = await auth_client.get("/api/v1/campaigns")
+        assert not any(c["id"] == cid for c in list_resp.json())
+
+    async def test_resend_campaign(self, auth_client: AsyncClient):
+        # Create a contact and campaign first
+        await auth_client.post("/api/v1/contacts", json={"name": "John", "phone": "+254711223344"})
+        resp = await auth_client.post("/api/v1/campaigns", json={
+            "name": "Promo 2", "message_content": "Special promo today!"
+        })
+        cid = resp.json()["id"]
+
+        # Resend it
+        resend_resp = await auth_client.post(f"/api/v1/campaigns/{cid}/resend")
+        assert resend_resp.status_code == 201
+        data = resend_resp.json()
+        assert data["name"] == "Resend: Promo 2"
+        assert data["status"] in ("draft", "sending", "completed")
 
 
 class TestWallet:

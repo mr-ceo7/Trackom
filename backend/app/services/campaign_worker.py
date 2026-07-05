@@ -139,7 +139,8 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
                 return
 
             # 5. Calculate split parts and verify balance
-            calc = calculate_sms_parts(campaign.message_content)
+            full_campaign_message = campaign.message_content + "\nSTOP *456*9*5#" if (campaign.message_content and campaign.include_opt_out) else campaign.message_content
+            calc = calculate_sms_parts(full_campaign_message)
             sms_parts = calc["parts"]
             total_recipients = len(contacts)
             total_cost = total_recipients * sms_parts
@@ -176,7 +177,9 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
                 batch_contacts = contacts[i:i+batch_size]
                 
                 async def send_to_one(contact):
-                    personalized_msg = compile_template(campaign.message_content, contact)
+                    opt_out_suffix = "\nSTOP *456*9*5#" if campaign.include_opt_out else ""
+                    personalized_msg = compile_template(campaign.message_content, contact) + opt_out_suffix
+                    err_msg = None
                     try:
                         res_list = await gateway.send_messages(
                             sender_id=campaign.sender_id,
@@ -190,6 +193,7 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
                             return res
                     except Exception as e:
                         logger.error(f"Gateway failed for contact {contact.phone}: {e}")
+                        err_msg = str(e)
                     
                     calc_single = calculate_sms_parts(personalized_msg)
                     return {
@@ -197,12 +201,14 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
                         "status": "failed",
                         "message_id": None,
                         "cost": float(calc_single["parts"]),
-                        "error_message": str(e),
+                        "error_message": err_msg or "Gateway error",
                         "compiled_message": personalized_msg
                     }
 
-                tasks = [send_to_one(c) for c in batch_contacts]
-                gateway_results = await asyncio.gather(*tasks)
+                gateway_results = []
+                for c in batch_contacts:
+                    res = await send_to_one(c)
+                    gateway_results.append(res)
 
                 # Map response metrics back to models
                 for res in gateway_results:

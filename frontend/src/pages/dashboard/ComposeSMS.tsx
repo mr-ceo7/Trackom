@@ -40,6 +40,46 @@ export default function ComposeSMS() {
   const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
   const [csvPreviewRow, setCsvPreviewRow] = useState<Record<string, string> | null>(null);
   const [csvUploadLoading, setCsvUploadLoading] = useState(false);
+  const [isLocalUploadActive, setIsLocalUploadActive] = useState(false);
+  const [directCsvFile, setDirectCsvFile] = useState<File | null>(null);
+  const [directCsvGroupName, setDirectCsvGroupName] = useState<string>('');
+  const [estimatedContactsCount, setEstimatedContactsCount] = useState<number | null>(null);
+
+  const fetchGroups = useCallback(async () => {
+    try {
+      const resp = await api.get('/contacts/groups');
+      setGroups(resp.data);
+    } catch { /* noop */ }
+  }, []);
+
+  const countCSVLines = (file: File): Promise<number> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      let linesCount = 0;
+      const chunkSize = 1024 * 1024; // 1MB chunks
+      let offset = 0;
+
+      const readNextChunk = () => {
+        if (offset >= file.size) {
+          resolve(linesCount > 0 ? linesCount - 1 : 0); // subtract header
+          return;
+        }
+        const slice = file.slice(offset, offset + chunkSize);
+        reader.onload = (e) => {
+          const text = e.target?.result as string || '';
+          const matches = text.match(/\n/g);
+          if (matches) {
+            linesCount += matches.length;
+          }
+          offset += chunkSize;
+          readNextChunk();
+        };
+        reader.readAsText(slice);
+      };
+
+      readNextChunk();
+    });
+  };
 
   const parseCSVPreview = (file: File): Promise<{ headers: string[], preview: Record<string, string> }> => {
     return new Promise((resolve) => {
@@ -66,6 +106,58 @@ export default function ComposeSMS() {
     });
   };
 
+  const parseCSVPhones = (file: File, headers: string[]): Promise<string[]> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const text = e.target?.result as string || '';
+          const lines = text.split(/\r\n|\n/).map(l => l.trim()).filter(Boolean);
+          if (lines.length <= 1) {
+            resolve([]);
+            return;
+          }
+          
+          const header_lower = headers.map(h => h.toLowerCase().trim());
+          const phone_names = ["phone", "mobile", "number", "telephone", "phone number", "msisdn", "recipient"];
+          let phoneIdx = -1;
+          for (const p_name of phone_names) {
+            const idx = header_lower.indexOf(p_name);
+            if (idx !== -1) {
+              phoneIdx = idx;
+              break;
+            }
+          }
+          if (phoneIdx === -1) {
+            for (let i = 0; i < header_lower.length; i++) {
+              if (header_lower[i].includes('phone') || header_lower[i].includes('num') || header_lower[i].includes('cell')) {
+                phoneIdx = i;
+                break;
+              }
+            }
+          }
+          if (phoneIdx === -1) phoneIdx = 0;
+
+          const phones: string[] = [];
+          for (let i = 1; i < lines.length; i++) {
+            const cols = lines[i].split(',').map(v => v.trim().replace(/['"]/g, ''));
+            if (cols.length > phoneIdx) {
+              const val = cols[phoneIdx];
+              if (val) {
+                phones.push(val);
+              }
+            }
+          }
+          resolve(phones);
+        } catch (err) {
+          reject(err);
+        }
+      };
+      reader.onerror = (err) => reject(err);
+      reader.readAsText(file);
+    });
+  };
+
   const handleComposerCSVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -78,25 +170,23 @@ export default function ComposeSMS() {
       setCsvHeaders(headers);
       setCsvPreviewRow(preview);
 
-      const groupName = `Upload: ${file.name.replace(/\.[^/.]+$/, "")}`;
-      const groupResp = await api.post('/contacts/groups', {
-        name: groupName,
-        description: `Uploaded directly from message composer on ${new Date().toLocaleDateString()}`
-      });
-      const newGroupId = groupResp.data.id;
+      const lines = await countCSVLines(file);
+      setEstimatedContactsCount(lines);
+      setDirectCsvFile(file);
 
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      const importId = `import-${Date.now()}`;
-      await api.post(`/contacts/import?import_id=${importId}&group_id=${newGroupId}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const groupName = `Composer Upload: ${file.name}`;
+      setDirectCsvGroupName(groupName);
 
-      setSelectedGroupIds([newGroupId]);
-      setResult({ type: 'success', text: `List '${groupName}' imported and selected successfully!` });
+      const phones = await parseCSVPhones(file, headers);
+      if (phones.length > 5000) {
+        setRecipients(phones.slice(0, 5000).join('\n') + `\n\n[... and ${phones.length - 5000} more contacts loaded from ${file.name}]`);
+      } else {
+        setRecipients(phones.join('\n'));
+      }
+      setIsLocalUploadActive(true);
+      setResult({ type: 'success', text: `CSV '${file.name}' mapped successfully. Ready to compose campaign!` });
     } catch (err: any) {
-      setResult({ type: 'error', text: `Failed to import list: ${err.response?.data?.detail || err.message}` });
+      setResult({ type: 'error', text: `Failed to map CSV list: ${err.message}` });
     } finally {
       setCsvUploadLoading(false);
     }
@@ -106,6 +196,9 @@ export default function ComposeSMS() {
   const [batchNumber, setBatchNumber] = useState('');
   const [isScheduled, setIsScheduled] = useState(false);
   const [scheduledAt, setScheduledAt] = useState('');
+  const [includeOptOut, setIncludeOptOut] = useState(true);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [localScheduledAt, setLocalScheduledAt] = useState('');
 
   // Reusable templates
   const [templates, setTemplates] = useState<{ id: string; name: string; content: string }[]>([]);
@@ -122,12 +215,6 @@ export default function ComposeSMS() {
   }, []);
 
   useEffect(() => {
-    async function loadGroups() {
-      try {
-        const resp = await api.get('/contacts/groups');
-        setGroups(resp.data);
-      } catch { /* noop */ }
-    }
     async function loadSenderIds() {
       try {
         const resp = await api.get('/sender-ids/approved');
@@ -137,10 +224,10 @@ export default function ComposeSMS() {
         }
       } catch { /* noop */ }
     }
-    loadGroups();
+    fetchGroups();
     loadSenderIds();
     fetchTemplates();
-  }, [fetchTemplates]);
+  }, [fetchGroups, fetchTemplates]);
 
   const handleSaveTemplate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -176,6 +263,9 @@ export default function ComposeSMS() {
   useEffect(() => {
     if (sendMode !== 'group') {
       setLoadedContacts([]);
+      return;
+    }
+    if (isLocalUploadActive) {
       return;
     }
     if (selectedGroupIds.length === 0) {
@@ -221,7 +311,7 @@ export default function ComposeSMS() {
     }
 
     loadGroupContacts();
-  }, [selectedGroupIds, sendMode]);
+  }, [selectedGroupIds, sendMode, directCsvFile, isLocalUploadActive]);
 
   // Reset recipients if switching modes
   const handleModeChange = (mode: 'single' | 'bulk' | 'group') => {
@@ -229,9 +319,15 @@ export default function ComposeSMS() {
     setRecipients('');
     setSelectedGroupIds([]);
     setLoadedContacts([]);
+    setDirectCsvFile(null);
+    setEstimatedContactsCount(null);
+    setCsvHeaders([]);
+    setCsvPreviewRow(null);
+    setIsLocalUploadActive(false);
   };
 
   const toggleGroupSelection = (groupId: string) => {
+    setIsLocalUploadActive(false);
     if (groupId === 'all-contacts') {
       if (selectedGroupIds.includes('all-contacts')) {
         setSelectedGroupIds([]);
@@ -341,23 +437,22 @@ export default function ComposeSMS() {
   const hasPlaceholders = /\{\{(.*?)\}\}/.test(message);
 
 
-  const { parts: smsCount, charCount, isUnicode } = calculateSmsParts(message);
-  const recipientCount = recipients.split(/[\n,;]+/).filter((r) => r.trim()).length;
-  const estimatedCost = recipientCount * smsCount;
+  const fullMessageText = message ? (message + '\nSTOP *456*9*5#') : '';
+  const { parts: smsCount, charCount, isUnicode } = calculateSmsParts(fullMessageText);
+  const recipientCount = (sendMode === 'group' && directCsvFile)
+    ? (estimatedContactsCount || 0)
+    : (sendMode === 'group')
+      ? loadedContacts.length
+      : recipients.split(/[\n,;]+/).filter((r) => r.trim()).length;
+  const estimatedCost = recipientCount * smsCount * (user?.credit_rate || 1.0);
 
-
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSend = async (e?: React.FormEvent, isScheduledParam?: boolean, scheduledAtParam?: string) => {
+    if (e) e.preventDefault();
     setResult(null);
     setIsSending(true);
 
-    const phones = recipients.split(/[\n,;]+/).map((r) => r.trim()).filter(Boolean);
-
-    if (phones.length === 0) {
-      setResult({ type: 'error', text: 'Please enter at least one recipient.' });
-      setIsSending(false);
-      return;
-    }
+    const isSched = isScheduledParam !== undefined ? isScheduledParam : isScheduled;
+    const schedAt = scheduledAtParam !== undefined ? scheduledAtParam : scheduledAt;
 
     if (!message.trim()) {
       setResult({ type: 'error', text: 'Message content cannot be empty.' });
@@ -365,114 +460,96 @@ export default function ComposeSMS() {
       return;
     }
 
-    if (sendMode === 'group' && hasPlaceholders) {
-      if (loadedContacts.length === 0) {
-        setResult({ type: 'error', text: 'No contacts loaded to personalize.' });
-        setIsSending(false);
-        return;
-      }
-      
-      let totalPersonalizedCost = 0;
-      const dispatches = loadedContacts.map(contact => {
-        let text = message;
-        text = text.replace(/\{\{name\}\}/g, contact.name || '');
-        text = text.replace(/\{\{phone\}\}/g, contact.phone || '');
-        text = text.replace(/\{\{email\}\}/g, contact.email || '');
-        
-        const customAttrs = (contact.custom_attributes as Record<string, string>) || {};
-        Object.entries(customAttrs).forEach(([key, value]) => {
-          const regex = new RegExp(`\\{\\{${key}\\}\\}(?:\\s*\\|\\s*(?:default|fallback)\\s*=\\s*["'](.*?)["'])?`, 'g');
-          text = text.replace(regex, (match, fallback) => {
-            return value || fallback || '';
-          });
-        });
-        
-        text = text.replace(/\{\{name\s*\|\s*(?:default|fallback)\s*=\s*["'](.*?)["']\}\}/g, (match, fallback) => contact.name || fallback);
-        text = text.replace(/\{\{phone\s*\|\s*(?:default|fallback)\s*=\s*["'](.*?)["']\}\}/g, (match, fallback) => contact.phone || fallback);
-        text = text.replace(/\{\{email\s*\|\s*(?:default|fallback)\s*=\s*["'](.*?)["']\}\}/g, (match, fallback) => contact.email || fallback);
-        
-        text = text.replace(/\{\{(.*?)\}\}/g, (match, token) => {
-          if (token.includes('|')) {
-            const parts = token.split('|');
-            const fbMatch = parts[1].match(/(?:default|fallback)\s*=\s*["'](.*?)["']/);
-            return fbMatch ? fbMatch[1] : '';
-          }
-          return '';
-        });
-        
-        const calc = calculateSmsParts(text);
-        const cost = calc.parts * (user?.credit_rate || 1.0);
-        totalPersonalizedCost += cost;
-        
-        return {
-          phone: contact.phone,
-          message: text
-        };
-      });
-      
-      if ((user?.sms_balance || 0) < totalPersonalizedCost) {
-        setResult({ type: 'error', text: `Insufficient balance. Need ${totalPersonalizedCost.toFixed(2)} credits, you have ${user?.sms_balance?.toLocaleString()}.` });
+    if (sendMode !== 'group') {
+      const phones = recipients.split(/[\n,;]+/).map((r) => r.trim()).filter(Boolean);
+      if (phones.length === 0) {
+        setResult({ type: 'error', text: 'Please enter at least one recipient.' });
         setIsSending(false);
         return;
       }
 
+      if ((user?.sms_balance || 0) < estimatedCost) {
+        setResult({ type: 'error', text: `Insufficient balance. Need ${estimatedCost.toFixed(2)} credits, you have ${user?.sms_balance?.toLocaleString()}.` });
+        setIsSending(false);
+        return;
+      }
+
+      // Launch Dispatch radar simulation
       setShowRadar(true);
       setRadarProgress(0);
-      setRadarStatus('Generating personalized messages...');
-      setDispatchedCount(dispatches.length);
-      
-      try {
-        const batchSize = 10;
-        for (let i = 0; i < dispatches.length; i += batchSize) {
-          const chunk = dispatches.slice(i, i + batchSize);
-          
-          setRadarProgress(Math.floor((i / dispatches.length) * 90));
-          setRadarStatus(`Dispatching batch ${Math.floor(i / batchSize) + 1} of ${Math.ceil(dispatches.length / batchSize)}...`);
-          
-          await Promise.all(chunk.map(d => 
-            api.post('/messages/send', {
-              recipients: [d.phone],
-              message: d.message,
-              sender_id: senderId || 'TRACKOM',
-              batch_number: batchNumber || undefined,
-              scheduled_at: isScheduled && scheduledAt ? new Date(scheduledAt).toISOString() : undefined,
-            })
-          ));
+      setRadarStatus('Establishing carrier routing session...');
+      setDispatchedCount(phones.length);
+
+      let progress = 0;
+      const progressInterval = setInterval(() => {
+        progress += Math.floor(Math.random() * 8) + 3;
+        if (progress >= 95) progress = 95;
+        setRadarProgress(progress);
+        
+        if (progress < 30) {
+          setRadarStatus('Establishing SMPP links...');
+        } else if (progress < 65) {
+          setRadarStatus('Broadcasting encrypted E.164 payload...');
+        } else {
+          setRadarStatus('Waiting for carrier delivery webhooks...');
         }
-        
+      }, 90);
+
+      try {
+        await Promise.all([
+          api.post('/messages/send', {
+            recipients: phones,
+            message: message,
+            sender_id: senderId || 'TRACKOM',
+            batch_number: batchNumber || undefined,
+            scheduled_at: isSched && schedAt ? new Date(schedAt).toISOString() : undefined,
+            include_opt_out: includeOptOut,
+          }),
+          new Promise(resolve => setTimeout(resolve, 2200))
+        ]);
+
+        clearInterval(progressInterval);
         setRadarProgress(100);
-        setRadarStatus('Personalized dispatch completed successfully!');
-        
+        setRadarStatus('Completed successfully!');
+
         setTimeout(() => {
           setShowRadar(false);
-          setResult({ type: 'success', text: isScheduled ? `${dispatches.length} personalized message(s) scheduled successfully!` : `${dispatches.length} personalized message(s) sent successfully!` });
+          setResult({ type: 'success', text: isSched ? `${phones.length} message(s) scheduled successfully!` : `${phones.length} message(s) queued for delivery successfully!` });
           setRecipients('');
           setMessage('');
           setBatchNumber('');
           setIsScheduled(false);
           setScheduledAt('');
+          setLocalScheduledAt('');
         }, 700);
         await refreshUser();
       } catch (err: any) {
+        clearInterval(progressInterval);
         setShowRadar(false);
-        setResult({ type: 'error', text: err.response?.data?.detail || 'Failed to dispatch personalized messages. Some dispatches may have succeeded.' });
+        setResult({ type: 'error', text: err.response?.data?.detail || 'Failed to dispatch messages.' });
       } finally {
         setIsSending(false);
       }
       return;
     }
 
-    if ((user?.sms_balance || 0) < estimatedCost) {
-      setResult({ type: 'error', text: `Insufficient balance. Need ${estimatedCost} credits, you have ${user?.sms_balance?.toLocaleString()}.` });
+    // Otherwise: sendMode === 'group'
+    if (recipientCount === 0) {
+      setResult({ type: 'error', text: 'No contacts selected to broadcast to.' });
       setIsSending(false);
       return;
     }
 
-    // Launch Dispatch radar simulation
+    if ((user?.sms_balance || 0) < estimatedCost) {
+      setResult({ type: 'error', text: `Insufficient balance. Need ${estimatedCost.toFixed(2)} credits, you have ${user?.sms_balance?.toLocaleString()}.` });
+      setIsSending(false);
+      return;
+    }
+
     setShowRadar(true);
     setRadarProgress(0);
-    setRadarStatus('Establishing carrier routing session...');
-    setDispatchedCount(phones.length);
+    setRadarStatus('Initializing campaign broadcast...');
+    setDispatchedCount(recipientCount);
 
     let progress = 0;
     const progressInterval = setInterval(() => {
@@ -481,44 +558,124 @@ export default function ComposeSMS() {
       setRadarProgress(progress);
       
       if (progress < 30) {
-        setRadarStatus('Establishing SMPP links...');
+        setRadarStatus('Creating contact segment...');
       } else if (progress < 65) {
-        setRadarStatus('Broadcasting encrypted E.164 payload...');
+        setRadarStatus('Uploading CSV database records...');
       } else {
-        setRadarStatus('Waiting for carrier delivery webhooks...');
+        setRadarStatus('Queuing backend campaign workers...');
       }
-    }, 90);
+    }, 100);
 
     try {
-      const [resp] = await Promise.all([
-        api.post('/messages/send', {
-          recipients: phones,
-          message: message,
+      let finalGroupId: string | null = null;
+
+      if (directCsvFile) {
+        // 1. Create the Group
+        const groupResp = await api.post('/contacts/groups', {
+          name: directCsvGroupName,
+          description: `Uploaded from composer on ${new Date().toLocaleDateString()}`
+        });
+        finalGroupId = groupResp.data.id;
+
+        // 2. Upload the CSV File
+        const formData = new FormData();
+        formData.append('file', directCsvFile);
+        if (finalGroupId) {
+          formData.append('group_id', finalGroupId);
+        }
+        const importId = `import-${Date.now()}`;
+        await api.post(`/contacts/import?import_id=${importId}`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+
+        // Wait for the import background task to complete using EventSource
+        await new Promise<void>((resolvePromise, rejectPromise) => {
+          const baseURL = api.defaults.baseURL || 'http://localhost:8000/api/v1';
+          const eventSource = new EventSource(`${baseURL}/contacts/import/stream?import_id=${importId}`);
+          
+          eventSource.onmessage = (event) => {
+            const msg = event.data;
+            if (msg.includes('COMPLETE')) {
+              eventSource.close();
+              resolvePromise();
+            } else if (msg.includes('FATAL') || msg.includes('❌')) {
+              eventSource.close();
+              rejectPromise(new Error('CSV Import failed during background processing.'));
+            }
+          };
+
+          eventSource.onerror = (err) => {
+            console.error('SSE Error during composer import:', err);
+            eventSource.close();
+            rejectPromise(new Error('Connection to import stream lost.'));
+          };
+        });
+      } else {
+        // Select targeted group(s)
+        if (selectedGroupIds.includes('all-contacts')) {
+          finalGroupId = null;
+        } else if (selectedGroupIds.length > 0) {
+          finalGroupId = selectedGroupIds[0];
+        }
+      }
+
+      // 3. Dispatch Campaigns
+      const targetGroupIds = finalGroupId === null && !directCsvFile 
+        ? [null] 
+        : finalGroupId 
+          ? [finalGroupId] 
+          : [];
+
+      await Promise.all(targetGroupIds.map(async (gid) => {
+        const campaignName = directCsvFile 
+          ? `Broadcast: ${directCsvFile.name.replace(/\.[^/.]+$/, "")}`
+          : gid === null 
+            ? `Broadcast: All Contacts - ${new Date().toLocaleDateString()}`
+            : `Broadcast: Group - ${new Date().toLocaleDateString()}`;
+
+        await api.post('/campaigns', {
+          name: campaignName,
+          message_content: message,
           sender_id: senderId || 'TRACKOM',
-          batch_number: batchNumber || undefined,
-          scheduled_at: isScheduled && scheduledAt ? new Date(scheduledAt).toISOString() : undefined,
-        }),
-        new Promise(resolve => setTimeout(resolve, 2200))
-      ]);
+          group_id: gid || undefined,
+          scheduled_at: isSched && schedAt ? new Date(schedAt).toISOString() : undefined,
+          include_opt_out: includeOptOut,
+        });
+      }));
 
       clearInterval(progressInterval);
       setRadarProgress(100);
-      setRadarStatus('Completed successfully!');
+      setRadarStatus('Campaign broadcast scheduled successfully!');
 
       setTimeout(() => {
         setShowRadar(false);
-        setResult({ type: 'success', text: isScheduled ? `${phones.length} message(s) scheduled successfully!` : `${phones.length} message(s) queued for delivery successfully!` });
-        setRecipients('');
+        setResult({
+          type: 'success',
+          text: isSched 
+            ? `Campaign broadcast scheduled successfully!` 
+            : `Campaign broadcast initiated and queued successfully!`
+        });
         setMessage('');
+        setDirectCsvFile(null);
+        setEstimatedContactsCount(null);
+        setCsvHeaders([]);
+        setCsvPreviewRow(null);
+        setIsLocalUploadActive(false);
+        setSelectedGroupIds([]);
         setBatchNumber('');
         setIsScheduled(false);
         setScheduledAt('');
+        setLocalScheduledAt('');
+        fetchGroups();
       }, 700);
       await refreshUser();
     } catch (err: any) {
       clearInterval(progressInterval);
       setShowRadar(false);
-      setResult({ type: 'error', text: err.response?.data?.detail || 'Failed to send. Please try again.' });
+      setResult({
+        type: 'error',
+        text: `Failed to launch campaign: ${err.response?.data?.detail || err.message}`
+      });
     } finally {
       setIsSending(false);
     }
@@ -654,6 +811,33 @@ export default function ComposeSMS() {
               </div>
             )}
 
+            {sendMode === 'group' && directCsvFile && (
+              <div className="bg-slate-50 dark:bg-white/5 border border-slate-200/50 dark:border-white/5 p-3 rounded-2xl flex items-center justify-between gap-4 mt-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-brand-primary font-mono truncate max-w-[200px]">
+                    📄 {directCsvFile.name}
+                  </span>
+                  <span className="text-[10px] text-slate-400 dark:text-gray-500 font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-white/10">
+                    {estimatedContactsCount} contacts
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDirectCsvFile(null);
+                    setEstimatedContactsCount(null);
+                    setCsvHeaders([]);
+                    setCsvPreviewRow(null);
+                    setIsLocalUploadActive(false);
+                    setRecipients('');
+                  }}
+                  className="text-slate-400 hover:text-rose-500 transition-all cursor-pointer p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5"
+                >
+                  <X className="w-4.5 h-4.5" />
+                </button>
+              </div>
+            )}
+
             <div className="space-y-1.5 relative">
               <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Recipient Phone Numbers</label>
               <textarea
@@ -696,8 +880,8 @@ export default function ComposeSMS() {
           {/* Message */}
           <div className="clay-card rounded-3xl p-5 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <h3 className="font-display font-semibold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                <MessageSquare className="w-4 h-4 text-brand-emerald" /> Message
+              <h3 className="font-display font-semibold text-sm text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
+                <MessageSquare className="w-4 h-4 text-brand-emerald" /> Compose Message {includeOptOut && <span className="text-amber-500 font-medium text-[11px] ml-1">[15 characters are automatically added for opt out]</span>}
               </h3>
               
               <div className="flex items-center gap-2">
@@ -752,14 +936,27 @@ export default function ComposeSMS() {
               </div>
             )}
 
-            <div className="flex items-center justify-between text-[11px] text-slate-400 dark:text-gray-500 font-mono">
-              <span>
-                {charCount} / {isUnicode ? 70 : 160} characters{' '}
-                {isUnicode && (
-                  <span className="text-amber-500 font-semibold">(Unicode encoding)</span>
-                )}
-              </span>
-              <span>{smsCount} SMS part(s)</span>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[11px] text-slate-400 dark:text-gray-500 font-mono">
+              <div className="flex items-center gap-2">
+                <span>
+                  {charCount} / {isUnicode ? 70 : 160} characters{' '}
+                  {isUnicode && (
+                    <span className="text-amber-500 font-semibold">(Unicode encoding)</span>
+                  )}
+                </span>
+                <span>•</span>
+                <span>{smsCount} SMS part(s)</span>
+              </div>
+              
+              <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-700 dark:text-gray-300 select-none">
+                <input 
+                  type="checkbox"
+                  checked={includeOptOut}
+                  onChange={(e) => setIncludeOptOut(e.target.checked)}
+                  className="rounded border-slate-300 dark:border-white/10 text-brand-primary focus:ring-brand-primary w-4 h-4 cursor-pointer"
+                />
+                <span>Auto-append opt-out footer (<span className="font-mono text-[10px]">*456*9*5#</span>)</span>
+              </label>
             </div>
 
             {sendMode === 'group' && (loadedContacts.length > 0 || csvPreviewRow) && (
@@ -797,39 +994,6 @@ export default function ComposeSMS() {
                   className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-xs"
                 />
               </div>
-
-              {/* Schedule Checkbox */}
-              <div className="flex items-center gap-2 py-1">
-                <input
-                  type="checkbox"
-                  id="scheduleCheckbox"
-                  checked={isScheduled}
-                  onChange={(e) => {
-                    setIsScheduled(e.target.checked);
-                    if (!e.target.checked) setScheduledAt('');
-                  }}
-                  className="w-4 h-4 rounded text-brand-primary border-slate-300 focus:ring-brand-primary cursor-pointer"
-                />
-                <label htmlFor="scheduleCheckbox" className="text-xs font-semibold text-slate-700 dark:text-gray-300 cursor-pointer select-none">
-                  Schedule dispatch for later
-                </label>
-              </div>
-
-              {/* Datepicker */}
-              {isScheduled && (
-                <div className="space-y-1.5 text-left">
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300">
-                    Dispatch Date & Time
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={scheduledAt}
-                    onChange={(e) => setScheduledAt(e.target.value)}
-                    required
-                    className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-xs font-mono"
-                  />
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -867,20 +1031,32 @@ export default function ComposeSMS() {
               )}
             </div>
 
-            <button
-              type="submit"
-              disabled={isSending || charCount === 0 || recipientCount === 0}
-              className="clay-button-primary w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-semibold text-white transition-all duration-300 disabled:opacity-50 active:scale-[0.98]"
-            >
-              {isSending ? (
-                <Loader size="sm" />
-              ) : (
-                <>
-                  <Send className="w-4 h-4" />
-                  <span>Send Message</span>
-                </>
-              )}
-            </button>
+            <div className="flex flex-col gap-2.5">
+              <button
+                type="submit"
+                disabled={isSending || charCount === 0 || recipientCount === 0 || estimatedCost > (user?.sms_balance || 0)}
+                className="clay-button-primary w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-semibold text-white transition-all duration-300 disabled:opacity-50 active:scale-[0.98]"
+              >
+                {isSending ? (
+                  <Loader size="sm" />
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    <span>Send Message</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowScheduleModal(true)}
+                disabled={isSending || charCount === 0 || recipientCount === 0 || estimatedCost > (user?.sms_balance || 0)}
+                className="clay-button-secondary w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-xs font-semibold text-slate-600 dark:text-gray-300 transition-all duration-300 disabled:opacity-50 active:scale-[0.98]"
+              >
+                <Clock className="w-3.5 h-3.5" />
+                <span>Send Later</span>
+              </button>
+            </div>
 
             <div className="flex items-center gap-2 text-[11px] text-slate-400 dark:text-gray-500">
               <Clock className="w-3 h-3" />
@@ -889,6 +1065,59 @@ export default function ComposeSMS() {
           </div>
         </div>
       </form>
+
+      {/* Schedule Send Modal */}
+      <AnimatePresence>
+        {showScheduleModal && (
+          <GenieModal onClose={() => setShowScheduleModal(false)} className="p-6 space-y-5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Clock className="w-5 h-5 text-brand-primary" /> Schedule Dispatch
+              </h3>
+              <button type="button" onClick={() => setShowScheduleModal(false)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-4 text-left">
+              <p className="text-xs text-slate-500 dark:text-gray-400 leading-relaxed">
+                Choose the date and time you would like this broadcast campaign or message to be sent to your recipients.
+              </p>
+              
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300">
+                  Scheduled Date & Time *
+                </label>
+                <input
+                  type="datetime-local"
+                  value={localScheduledAt}
+                  onChange={(e) => setLocalScheduledAt(e.target.value)}
+                  required
+                  className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm font-mono"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button type="button" onClick={() => setShowScheduleModal(false)} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
+              <button 
+                type="button" 
+                onClick={() => {
+                  if (!localScheduledAt) {
+                    alert('Please select a date and time.');
+                    return;
+                  }
+                  setShowScheduleModal(false);
+                  handleSend(undefined, true, localScheduledAt);
+                }} 
+                className="clay-button-primary flex-1 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all"
+              >
+                Confirm Schedule
+              </button>
+            </div>
+          </GenieModal>
+        )}
+      </AnimatePresence>
 
       {/* Dispatch Radar Modal */}
       <AnimatePresence>

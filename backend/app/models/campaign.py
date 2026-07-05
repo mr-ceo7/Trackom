@@ -32,6 +32,7 @@ class Campaign(Base):
     total_cost: Mapped[float] = mapped_column(Numeric(12, 4), default=0)
     group_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("contact_groups.id", ondelete="SET NULL"), nullable=True)
     deleted_at: Mapped[datetime] = mapped_column(DateTime, nullable=True, default=None)
+    include_opt_out: Mapped[bool] = mapped_column(default=True, nullable=False)
 
 
     # Scheduling

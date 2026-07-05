@@ -15,6 +15,7 @@ class SmsSendRequest(BaseModel):
     sender_id: str = Field(default="TRACKOM", max_length=11)
     batch_number: Optional[str] = Field(None, max_length=100)
     scheduled_at: Optional[datetime] = Field(None)
+    include_opt_out: bool = Field(default=True, description="Append STOP *456*9*5# suffix")
 
     @field_validator('recipients')
     @classmethod

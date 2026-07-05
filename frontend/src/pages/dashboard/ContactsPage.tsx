@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   Users, Plus, Search, Upload, Trash2, X, UserPlus, 
   FolderPlus, FileSpreadsheet, Layers, AlertCircle, CheckCircle2,
-  FolderMinus, Download, Edit3
+  FolderMinus, Download, Edit3, Edit
 } from 'lucide-react';
 import api from '../../services/api';
 import Loader from '../../components/Loader';
@@ -18,6 +18,8 @@ interface Contact {
   name: string; 
   phone: string; 
   email: string | null; 
+  custom_attributes?: Record<string, any>;
+  groups?: Group[];
   created_at: string; 
 }
 
@@ -52,6 +54,13 @@ export default function ContactsPage() {
   const [newEmail, setNewEmail] = useState('');
   const [newContactGroupId, setNewContactGroupId] = useState('');
   const [savingContact, setSavingContact] = useState(false);
+  const [customFields, setCustomFields] = useState<{ key: string; value: string }[]>([]);
+  const [editingContact, setEditingContact] = useState<Contact | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editContactGroupId, setEditContactGroupId] = useState('');
+  const [editCustomFields, setEditCustomFields] = useState<{ key: string; value: string }[]>([]);
   const [page, setPage] = useState(1);
   const [limit] = useState(50);
   const [totalContactsCount, setTotalContactsCount] = useState(0);
@@ -93,6 +102,7 @@ export default function ContactsPage() {
   const [bulkEmail, setBulkEmail] = useState('');
   const [bulkUpdating, setBulkUpdating] = useState(false);
   const [bulkError, setBulkError] = useState<string | null>(null);
+  const [bulkCustomFields, setBulkCustomFields] = useState<{ key: string; value: string }[]>([]);
   const [bulkSuccess, setBulkSuccess] = useState<string | null>(null);
 
   const [showTooltip, setShowTooltip] = useState(false);
@@ -170,16 +180,25 @@ export default function ContactsPage() {
     if (!newName || !newPhone) return;
     setSavingContact(true);
     try {
+      const customAttrs: Record<string, string> = {};
+      customFields.forEach(f => {
+        if (f.key.trim()) {
+          customAttrs[f.key.trim()] = f.value;
+        }
+      });
+
       await api.post('/contacts', { 
         name: newName, 
         phone: newPhone, 
         email: newEmail || null,
-        group_id: newContactGroupId || null
+        group_id: newContactGroupId || null,
+        custom_attributes: customAttrs
       });
       setNewName(''); 
       setNewPhone(''); 
       setNewEmail(''); 
       setNewContactGroupId('');
+      setCustomFields([]);
       setShowAddContact(false);
       await fetchContacts();
     } catch { /* noop */ }
@@ -192,6 +211,46 @@ export default function ContactsPage() {
       await api.delete(`/contacts/${id}`); 
       await fetchContacts(); 
     } catch { /* noop */ }
+  };
+
+  const openEditContactModal = (c: Contact) => {
+    setEditingContact(c);
+    setEditName(c.name);
+    setEditPhone(c.phone);
+    setEditEmail(c.email || '');
+    const firstGroupId = c.groups && c.groups.length > 0 ? c.groups[0].id : '';
+    setEditContactGroupId(firstGroupId);
+
+    const fieldsList = c.custom_attributes 
+      ? Object.entries(c.custom_attributes).map(([key, val]) => ({ key, value: String(val) }))
+      : [];
+    setEditCustomFields(fieldsList);
+  };
+
+  const handleUpdateContact = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingContact || !editName || !editPhone) return;
+    setSavingContact(true);
+    try {
+      const customAttrs: Record<string, string> = {};
+      editCustomFields.forEach(f => {
+        if (f.key.trim()) {
+          customAttrs[f.key.trim()] = f.value;
+        }
+      });
+
+      await api.put(`/contacts/${editingContact.id}`, { 
+        name: editName, 
+        phone: editPhone, 
+        email: editEmail || null,
+        group_id: editContactGroupId || null,
+        custom_attributes: customAttrs
+      });
+      
+      setEditingContact(null);
+      await fetchContacts();
+    } catch { /* noop */ }
+    finally { setSavingContact(false); }
   };
 
   const handleBulkExport = async () => {
@@ -322,6 +381,16 @@ export default function ContactsPage() {
     if (bulkPhone.trim()) update.phone = bulkPhone.trim();
     if (bulkEmail.trim()) update.email = bulkEmail.trim();
 
+    const customAttrs: Record<string, string> = {};
+    bulkCustomFields.forEach(f => {
+      if (f.key.trim()) {
+        customAttrs[f.key.trim()] = f.value;
+      }
+    });
+    if (Object.keys(customAttrs).length > 0) {
+      update.custom_attributes = customAttrs;
+    }
+
     if (Object.keys(update).length === 0) {
       setBulkError('Please fill in at least one field to update.');
       setBulkUpdating(false);
@@ -342,6 +411,7 @@ export default function ContactsPage() {
         setBulkName('');
         setBulkPhone('');
         setBulkEmail('');
+        setBulkCustomFields([]);
         setSelectedIds([]);
         setSelectAllTotal(false);
         fetchContacts();
@@ -376,7 +446,10 @@ export default function ContactsPage() {
     try {
       await api.delete(`/contacts/groups/${id}`);
       await fetchGroups();
-    } catch { /* noop */ }
+    } catch (err: any) {
+      console.error('Failed to delete contact group:', err);
+      alert(err.response?.data?.detail || 'Failed to delete the contact group. Please try again.');
+    }
   };
 
   const handleDownloadTemplate = () => {
@@ -735,8 +808,25 @@ export default function ContactsPage() {
                           </div>
                         </td>
                         <td className="px-5 py-3 text-sm text-slate-600 dark:text-gray-400 font-mono">{c.phone}</td>
-                        <td className="px-5 py-3 text-sm text-slate-500 hidden sm:table-cell">{c.email || ' - '}</td>
+                        <td className="px-5 py-3 text-sm text-slate-500 hidden sm:table-cell">
+                          <div>{c.email || ' - '}</div>
+                          {c.custom_attributes && Object.keys(c.custom_attributes).length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {Object.entries(c.custom_attributes).map(([key, val]) => (
+                                <span key={key} className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-gray-400 border border-slate-200/50 dark:border-white/5">
+                                  {key}: {String(val)}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </td>
                         <td className="px-5 py-3 text-right">
+                          <button 
+                            onClick={() => openEditContactModal(c)} 
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-brand-primary hover:bg-brand-primary/5 dark:hover:bg-brand-primary/10 cursor-pointer transition-all mr-1.5"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                          </button>
                           <button 
                             onClick={() => handleDeleteContact(c.id)} 
                             className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 cursor-pointer transition-all"
@@ -987,7 +1077,7 @@ export default function ContactsPage() {
               <div className="space-y-1.5"><label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Phone *</label><input type="tel" value={newPhone} onChange={e => setNewPhone(e.target.value)} required className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm font-mono transition-all" placeholder="+254712345678" /></div>
               <div className="space-y-1.5"><label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Email</label><input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" placeholder="email@example.com" /></div>
               
-              <div className="space-y-1.5">
+               <div className="space-y-1.5">
                 <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Add to Group</label>
                 <select
                   value={newContactGroupId}
@@ -1000,11 +1090,193 @@ export default function ContactsPage() {
                   ))}
                 </select>
               </div>
+
+              {/* Custom Attributes Fields List */}
+              <div className="space-y-2 pt-2 border-t border-slate-200/20 dark:border-white/5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 uppercase tracking-wider">Custom Fields (e.g. Balance)</label>
+                  <button
+                    type="button"
+                    onClick={() => setCustomFields(prev => [...prev, { key: '', value: '' }])}
+                    className="px-2.5 py-1 text-[10px] font-bold rounded-xl clay-button-secondary text-brand-primary cursor-pointer transition-all"
+                  >
+                    + Add Field
+                  </button>
+                </div>
+
+                <div className="space-y-2 max-h-36 overflow-y-auto pr-1 custom-scrollbar">
+                  {customFields.map((f, idx) => (
+                    <div key={idx} className="flex gap-2 items-center">
+                      <input
+                        type="text"
+                        value={f.key}
+                        onChange={e => {
+                          const newFields = [...customFields];
+                          newFields[idx].key = e.target.value;
+                          setCustomFields(newFields);
+                        }}
+                        className="clay-input flex-1 px-3 py-2 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none placeholder:text-slate-400"
+                        placeholder="Field Name (e.g. balance)"
+                      />
+                      <input
+                        type="text"
+                        value={f.value}
+                        onChange={e => {
+                          const newFields = [...customFields];
+                          newFields[idx].value = e.target.value;
+                          setCustomFields(newFields);
+                        }}
+                        className="clay-input flex-1 px-3 py-2 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none placeholder:text-slate-400"
+                        placeholder="Value (e.g. 1,000)"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCustomFields(prev => prev.filter((_, i) => i !== idx));
+                        }}
+                        className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-xl cursor-pointer transition-all shrink-0"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                  {customFields.length === 0 && (
+                    <p className="text-[10px] text-slate-400 italic">No custom fields defined for this contact yet.</p>
+                  )}
+                </div>
+              </div>
             </div>
             <div className="flex gap-3">
-              <button type="button" onClick={() => setShowAddContact(false)} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
+              <button type="button" onClick={() => { setShowAddContact(false); setCustomFields([]); }} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
               <button type="submit" disabled={savingContact || !newName || !newPhone} className="clay-button-primary flex-1 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-50">
                 {savingContact ? <Loader size="sm" /> : 'Save'}
+              </button>
+            </div>
+          </GenieModal>
+        )}
+      </AnimatePresence>
+
+      {/* Edit Contact Modal */}
+      <AnimatePresence>
+        {editingContact && (
+          <GenieModal as="form" onSubmit={handleUpdateContact} onClose={() => setEditingContact(null)} className="p-6 space-y-5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Edit className="w-5 h-5 text-brand-primary" />Edit Contact
+              </h3>
+              <button type="button" onClick={() => setEditingContact(null)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Full Name *</label>
+                <input 
+                  type="text" 
+                  value={editName} 
+                  onChange={e => setEditName(e.target.value)} 
+                  required 
+                  className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" 
+                  placeholder="John Doe" 
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Phone *</label>
+                <input 
+                  type="tel" 
+                  value={editPhone} 
+                  onChange={e => setEditPhone(e.target.value)} 
+                  required 
+                  className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm font-mono transition-all" 
+                  placeholder="+254712345678" 
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Email</label>
+                <input 
+                  type="email" 
+                  value={editEmail} 
+                  onChange={e => setEditEmail(e.target.value)} 
+                  className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" 
+                  placeholder="email@example.com" 
+                />
+              </div>
+              
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Add to Group</label>
+                <select
+                  value={editContactGroupId}
+                  onChange={e => setEditContactGroupId(e.target.value)}
+                  className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm cursor-pointer"
+                >
+                  <option value=""> - No group (Unsorted) - </option>
+                  {groups.map(g => (
+                    <option key={g.id} value={g.id}>{g.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Custom Attributes Fields List */}
+              <div className="space-y-2 pt-2 border-t border-slate-200/20 dark:border-white/5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 uppercase tracking-wider">Custom Fields (e.g. Balance)</label>
+                  <button
+                    type="button"
+                    onClick={() => setEditCustomFields(prev => [...prev, { key: '', value: '' }])}
+                    className="px-2.5 py-1 text-[10px] font-bold rounded-xl clay-button-secondary text-brand-primary cursor-pointer transition-all"
+                  >
+                    + Add Field
+                  </button>
+                </div>
+
+                <div className="space-y-2 max-h-36 overflow-y-auto pr-1 custom-scrollbar">
+                  {editCustomFields.map((f, idx) => (
+                    <div key={idx} className="flex gap-2 items-center">
+                      <input
+                        type="text"
+                        value={f.key}
+                        onChange={e => {
+                          const newFields = [...editCustomFields];
+                          newFields[idx].key = e.target.value;
+                          setEditCustomFields(newFields);
+                        }}
+                        className="clay-input flex-1 px-3 py-2 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none placeholder:text-slate-400"
+                        placeholder="Field Name (e.g. balance)"
+                      />
+                      <input
+                        type="text"
+                        value={f.value}
+                        onChange={e => {
+                          const newFields = [...editCustomFields];
+                          newFields[idx].value = e.target.value;
+                          setEditCustomFields(newFields);
+                        }}
+                        className="clay-input flex-1 px-3 py-2 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none placeholder:text-slate-400"
+                        placeholder="Value (e.g. 1,000)"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditCustomFields(prev => prev.filter((_, i) => i !== idx));
+                        }}
+                        className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-xl cursor-pointer transition-all shrink-0"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                  {editCustomFields.length === 0 && (
+                    <p className="text-[10px] text-slate-400 italic">No custom fields defined for this contact yet.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button type="button" onClick={() => setEditingContact(null)} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
+              <button type="submit" disabled={savingContact || !editName || !editPhone} className="clay-button-primary flex-1 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-50">
+                {savingContact ? <Loader size="sm" /> : 'Save Changes'}
               </button>
             </div>
           </GenieModal>
@@ -1313,10 +1585,65 @@ export default function ContactsPage() {
                   placeholder="email@example.com"
                 />
               </div>
+
+              {/* Custom Attributes Fields List */}
+              <div className="space-y-2 pt-2 border-t border-slate-200/20 dark:border-white/5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 uppercase tracking-wider">Custom Fields (e.g. Balance)</label>
+                  <button
+                    type="button"
+                    onClick={() => setBulkCustomFields(prev => [...prev, { key: '', value: '' }])}
+                    className="px-2.5 py-1 text-[10px] font-bold rounded-xl clay-button-secondary text-brand-primary cursor-pointer transition-all"
+                  >
+                    + Add Field
+                  </button>
+                </div>
+
+                <div className="space-y-2 max-h-36 overflow-y-auto pr-1 custom-scrollbar">
+                  {bulkCustomFields.map((f, idx) => (
+                    <div key={idx} className="flex gap-2 items-center">
+                      <input
+                        type="text"
+                        value={f.key}
+                        onChange={e => {
+                          const newFields = [...bulkCustomFields];
+                          newFields[idx].key = e.target.value;
+                          setBulkCustomFields(newFields);
+                        }}
+                        className="clay-input flex-1 px-3 py-2 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none placeholder:text-slate-400"
+                        placeholder="Field Name (e.g. balance)"
+                      />
+                      <input
+                        type="text"
+                        value={f.value}
+                        onChange={e => {
+                          const newFields = [...bulkCustomFields];
+                          newFields[idx].value = e.target.value;
+                          setBulkCustomFields(newFields);
+                        }}
+                        className="clay-input flex-1 px-3 py-2 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none placeholder:text-slate-400"
+                        placeholder="Value (e.g. 1,000)"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setBulkCustomFields(prev => prev.filter((_, i) => i !== idx));
+                        }}
+                        className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-xl cursor-pointer transition-all shrink-0"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                  {bulkCustomFields.length === 0 && (
+                    <p className="text-[10px] text-slate-400 italic">No custom fields defined for bulk update yet.</p>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="flex gap-3">
-              <button type="button" onClick={() => { setShowBulkEditModal(false); setBulkError(null); setBulkSuccess(null); }} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
+              <button type="button" onClick={() => { setShowBulkEditModal(false); setBulkError(null); setBulkSuccess(null); setBulkCustomFields([]); }} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
               <button type="submit" disabled={bulkUpdating} className="clay-button-primary flex-1 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-50">
                 {bulkUpdating ? <Loader size="sm" /> : 'Update'}
               </button>

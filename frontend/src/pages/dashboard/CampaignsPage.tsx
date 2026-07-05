@@ -2,7 +2,7 @@
  * CampaignsPage - view and create SMS campaigns with groups targeting & scheduling.
  */
 import React, { useState, useEffect, useCallback } from 'react';
-import { Megaphone, Plus, Clock, CheckCircle2, XCircle, Send, BarChart3, X, Calendar, Users } from 'lucide-react';
+import { Megaphone, Plus, Clock, CheckCircle2, XCircle, Send, BarChart3, X, Calendar, Users, Edit, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import api from '../../services/api';
 import Loader from '../../components/Loader';
@@ -20,7 +20,10 @@ interface CampaignData {
   sent_count: number;
   delivered_count: number;
   failed_count: number;
+  total_cost: number;
   scheduled_at: string | null;
+  group_id: string | null;
+  include_opt_out: boolean;
   created_at: string;
 }
 
@@ -38,7 +41,13 @@ const statusConfig: Record<string, { icon: any; color: string; bg: string }> = {
   failed: { icon: XCircle, color: 'text-red-500', bg: 'bg-red-500/10' },
 };
 
-const CampaignRow: React.FC<{ c: CampaignData; statusConfig: any }> = ({ c, statusConfig }) => {
+const CampaignRow: React.FC<{ 
+  c: CampaignData; 
+  statusConfig: any;
+  onDelete: (id: string) => Promise<void>;
+  onResend: (id: string) => Promise<void>;
+  onEdit: (c: CampaignData) => void;
+}> = ({ c, statusConfig, onDelete, onResend, onEdit }) => {
   const [expanded, setExpanded] = useState(c.status === 'queued' || c.status === 'sending');
   const [liveLogs, setLiveLogs] = useState<string[]>([]);
 
@@ -80,7 +89,10 @@ const CampaignRow: React.FC<{ c: CampaignData; statusConfig: any }> = ({ c, stat
   const deliveryRate = c.sent_count > 0 ? Math.round((c.delivered_count / c.sent_count) * 100) : 0;
 
   return (
-    <div className="clay-card clay-card-hover rounded-3xl overflow-hidden transition-all dark:border-white/10">
+    <div 
+      onClick={() => setExpanded(!expanded)}
+      className="clay-card clay-card-hover rounded-3xl overflow-hidden transition-all dark:border-white/10 cursor-pointer text-left"
+    >
       <div className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className={`w-10 h-10 rounded-2xl ${cfg.bg} flex items-center justify-center shrink-0`}>
@@ -104,14 +116,9 @@ const CampaignRow: React.FC<{ c: CampaignData; statusConfig: any }> = ({ c, stat
                   Sched: {new Date(c.scheduled_at).toLocaleString()}
                 </span>
               )}
-              {(c.status === 'queued' || c.status === 'sending' || liveLogs.length > 0) && (
-                <button 
-                  onClick={() => setExpanded(!expanded)} 
-                  className="text-brand-primary font-bold hover:underline cursor-pointer flex items-center gap-1"
-                >
-                  {expanded ? 'Hide Monitor' : 'Show Live Monitor'}
-                </button>
-              )}
+              <span className="text-brand-primary font-semibold flex items-center gap-1">
+                {expanded ? 'Hide Details' : 'Show Details'}
+              </span>
             </div>
           </div>
         </div>
@@ -135,52 +142,110 @@ const CampaignRow: React.FC<{ c: CampaignData; statusConfig: any }> = ({ c, stat
               <div className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Delivery</div>
             </div>
           )}
+
+          {/* Action buttons */}
+          <div className="flex items-center gap-1 border-l border-slate-200/20 dark:border-white/5 pl-4 shrink-0">
+            <button 
+              onClick={(e) => { e.stopPropagation(); onEdit(c); }}
+              className="p-2 rounded-xl text-slate-400 hover:text-brand-primary hover:bg-brand-primary/5 dark:hover:bg-brand-primary/10 cursor-pointer transition-all"
+              title={c.status === 'draft' || c.status === 'scheduled' ? "Edit Campaign" : "Edit & Resend"}
+            >
+              <Edit className="w-4 h-4" />
+            </button>
+            {(c.status !== 'sending' && c.status !== 'queued') && (
+              <button 
+                onClick={(e) => { e.stopPropagation(); onResend(c.id); }}
+                className="p-2 rounded-xl text-slate-400 hover:text-brand-emerald hover:bg-brand-emerald/5 dark:hover:bg-brand-emerald/10 cursor-pointer transition-all"
+                title="Resend Campaign"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            )}
+            <button 
+              onClick={(e) => { e.stopPropagation(); onDelete(c.id); }}
+              className="p-2 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-500/5 dark:hover:bg-rose-500/10 cursor-pointer transition-all"
+              title="Delete Campaign"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
 
       <AnimatePresence>
-        {expanded && (c.status === 'queued' || c.status === 'sending' || liveLogs.length > 0) && (
+        {expanded && (
           <motion.div 
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="clay-inset border-t border-slate-200/20 dark:border-white/5 px-5 py-4 space-y-3.5"
+            className="clay-inset border-t border-slate-200/20 dark:border-white/5 px-5 py-4 space-y-4"
+            onClick={(e) => e.stopPropagation()} // Prevent collapse on content click
           >
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-              <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse" /> Live Broadcast Stream
-              </div>
-              <div className="text-xs font-mono font-bold text-slate-700 dark:text-gray-300">
-                {progressPercent}% Complete ({c.sent_count} / {c.total_recipients})
-              </div>
-            </div>
-
-            <div className="w-full h-1.5 clay-card dark:bg-white/5 rounded-full overflow-hidden">
-              <motion.div 
-                className="h-full bg-gradient-to-r from-brand-primary via-indigo-500 to-brand-emerald rounded-full" 
-                animate={{ width: `${progressPercent}%` }}
-                transition={{ duration: 0.5 }}
-              />
-            </div>
-
-            {liveLogs.length > 0 && (
-              <div className="bg-slate-950 border border-slate-800 dark:border-white/5 rounded-xl p-3.5 font-mono text-[9px] text-slate-400 space-y-1 h-36 overflow-y-auto custom-scrollbar">
-                {liveLogs.map((log, index) => (
-                  <div 
-                    key={index}
-                    className={
-                      log.includes('SYSTEM') 
-                        ? 'text-indigo-400 font-bold' 
-                        : log.includes('Safaricom') 
-                        ? 'text-emerald-400' 
-                        : log.includes('Airtel') 
-                        ? 'text-red-400' 
-                        : 'text-cyan-400'
-                    }
-                  >
-                    {log}
+            {(c.status === 'queued' || c.status === 'sending') ? (
+              <div className="space-y-3.5">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                  <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse" /> Live Broadcast Stream
                   </div>
-                ))}
+                  <div className="text-xs font-mono font-bold text-slate-700 dark:text-gray-300">
+                    {progressPercent}% Complete ({c.sent_count} / {c.total_recipients})
+                  </div>
+                </div>
+
+                <div className="w-full h-1.5 clay-card dark:bg-white/5 rounded-full overflow-hidden">
+                  <motion.div 
+                    className="h-full bg-gradient-to-r from-brand-primary via-indigo-500 to-brand-emerald rounded-full" 
+                    animate={{ width: `${progressPercent}%` }}
+                    transition={{ duration: 0.5 }}
+                  />
+                </div>
+
+                {liveLogs.length > 0 && (
+                  <div className="bg-slate-950 border border-slate-800 dark:border-white/5 rounded-xl p-3.5 font-mono text-[9px] text-slate-400 space-y-1 h-36 overflow-y-auto custom-scrollbar">
+                    {liveLogs.map((log, index) => (
+                      <div 
+                        key={index}
+                        className={
+                          log.includes('SYSTEM') 
+                            ? 'text-indigo-400 font-bold' 
+                            : log.includes('Safaricom') 
+                            ? 'text-emerald-400' 
+                            : log.includes('Airtel') 
+                            ? 'text-red-400' 
+                            : 'text-cyan-400'
+                        }
+                      >
+                        {log}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4 text-left">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pb-1">
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Message Body</span>
+                    <p className="text-xs text-slate-700 dark:text-gray-300 font-sans leading-relaxed whitespace-pre-wrap bg-slate-50 dark:bg-slate-900/50 border border-slate-200/30 dark:border-white/5 p-3 rounded-2xl">
+                      {c.message_content}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Details</span>
+                    <div className="space-y-1.5 text-xs text-slate-600 dark:text-gray-400">
+                      <div><strong className="text-slate-800 dark:text-gray-200">Sender ID:</strong> <span className="font-mono">{c.sender_id}</span></div>
+                      <div><strong className="text-slate-800 dark:text-gray-200">Targeting Segment:</strong> {c.group_id ? "Group Segment" : "All Contacts"}</div>
+                      <div><strong className="text-slate-800 dark:text-gray-200">Credits Spent:</strong> <span className="font-mono">{c.total_cost} cr</span></div>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Timestamps</span>
+                    <div className="space-y-1.5 text-xs text-slate-600 dark:text-gray-400">
+                      <div><strong className="text-slate-800 dark:text-gray-200">Created:</strong> {new Date(c.created_at).toLocaleString()}</div>
+                      {c.scheduled_at && <div><strong className="text-slate-800 dark:text-gray-200">Scheduled:</strong> {new Date(c.scheduled_at).toLocaleString()}</div>}
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </motion.div>
@@ -205,6 +270,7 @@ export default function CampaignsPage() {
   const [selectedGroupId, setSelectedGroupId] = useState('');
   const [isScheduled, setIsScheduled] = useState(false);
   const [scheduledAt, setScheduledAt] = useState('');
+  const [includeOptOut, setIncludeOptOut] = useState(true);
   
   // Reusable templates
   const [templates, setTemplates] = useState<{ id: string; name: string; content: string }[]>([]);
@@ -212,6 +278,94 @@ export default function CampaignsPage() {
   
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  // Edit Campaign Modal State
+  const [editingCampaign, setEditingCampaign] = useState<CampaignData | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editMessageContent, setEditMessageContent] = useState('');
+  const [editGroupId, setEditGroupId] = useState('');
+  const [editIsScheduled, setEditIsScheduled] = useState(false);
+  const [editScheduledAt, setEditScheduledAt] = useState('');
+  const [editSelectedTemplateId, setEditSelectedTemplateId] = useState('');
+  const [editIncludeOptOut, setEditIncludeOptOut] = useState(true);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editErrorMsg, setEditErrorMsg] = useState('');
+
+  const openEditModal = (c: CampaignData) => {
+    setEditingCampaign(c);
+    setEditName(c.name);
+    setEditMessageContent(c.message_content);
+    setEditGroupId(c.group_id || '');
+    setEditIsScheduled(!!c.scheduled_at);
+    if (c.scheduled_at) {
+      const date = new Date(c.scheduled_at);
+      const formatted = date.toISOString().slice(0, 16);
+      setEditScheduledAt(formatted);
+    } else {
+      setEditScheduledAt('');
+    }
+    setEditIncludeOptOut(c.include_opt_out);
+    setEditSelectedTemplateId('');
+    setEditErrorMsg('');
+  };
+
+  const handleUpdateCampaign = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCampaign) return;
+    setEditSaving(true);
+    setEditErrorMsg('');
+    try {
+      const isDraftOrScheduled = editingCampaign.status === 'draft' || editingCampaign.status === 'scheduled';
+      
+      if (isDraftOrScheduled) {
+        await api.put(`/campaigns/${editingCampaign.id}`, {
+          name: editName,
+          message_content: editMessageContent,
+          group_id: editGroupId || null,
+          scheduled_at: editIsScheduled && editScheduledAt ? new Date(editScheduledAt).toISOString() : null,
+          include_opt_out: editIncludeOptOut,
+        });
+      } else {
+        // Edit and Launch/Resend as a new campaign run!
+        await api.post(`/campaigns`, {
+          name: editName.startsWith('Resend: ') ? editName : `Resend: ${editName}`,
+          message_content: editMessageContent,
+          group_id: editGroupId || null,
+          sender_id: editingCampaign.sender_id || 'TRACKOM',
+          scheduled_at: editIsScheduled && editScheduledAt ? new Date(editScheduledAt).toISOString() : null,
+          include_opt_out: editIncludeOptOut,
+        });
+      }
+      setEditingCampaign(null);
+      await fetchCampaigns();
+      await refreshUser();
+    } catch (err: any) {
+      setEditErrorMsg(err.response?.data?.detail || 'Failed to save or resend campaign.');
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
+  const handleDeleteCampaign = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this campaign history?')) return;
+    try {
+      await api.delete(`/campaigns/${id}`);
+      await fetchCampaigns();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Failed to delete campaign.');
+    }
+  };
+
+  const handleResendCampaign = async (id: string) => {
+    if (!confirm('Are you sure you want to duplicate and resend this campaign?')) return;
+    try {
+      await api.post(`/campaigns/${id}/resend`);
+      await fetchCampaigns();
+      await refreshUser();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Failed to resend campaign.');
+    }
+  };
 
   const fetchCampaigns = useCallback(async () => {
     try {
@@ -276,12 +430,14 @@ export default function CampaignsPage() {
         sender_id: senderId || 'TRACKOM',
         group_id: selectedGroupId || null,
         scheduled_at: isScheduled && scheduledAt ? new Date(scheduledAt).toISOString() : null,
+        include_opt_out: includeOptOut,
       });
       setCampaignName('');
       setMessageContent('');
       setSelectedGroupId('');
       setIsScheduled(false);
       setScheduledAt('');
+      setIncludeOptOut(true);
       setShowCreate(false);
       await fetchCampaigns();
       await refreshUser();
@@ -329,7 +485,14 @@ export default function CampaignsPage() {
       ) : (
         <div className="space-y-3">
           {campaigns.map(c => (
-            <CampaignRow key={c.id} c={c} statusConfig={statusConfig} />
+            <CampaignRow 
+              key={c.id} 
+              c={c} 
+              statusConfig={statusConfig} 
+              onDelete={handleDeleteCampaign}
+              onResend={handleResendCampaign}
+              onEdit={openEditModal}
+            />
           ))}
           {campaigns.length === 0 && (
             <div className="text-center py-12 border border-dashed border-slate-200 dark:border-white/10 rounded-2xl">
@@ -423,6 +586,19 @@ export default function CampaignsPage() {
                 />
               </div>
 
+              {/* Opt-out Footer Option */}
+              <div className="clay-inset p-3.5 rounded-2xl">
+                <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-gray-300 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={includeOptOut} 
+                    onChange={e => setIncludeOptOut(e.target.checked)} 
+                    className="rounded border-slate-300 dark:border-white/10 text-brand-primary focus:ring-brand-primary w-4 h-4 cursor-pointer"
+                  />
+                  <span>Auto-append opt-out footer (<span className="font-mono text-[10px]">*456*9*5#</span>)</span>
+                </label>
+              </div>
+
               {/* Scheduling Section */}
               <div className="clay-inset space-y-3 p-3.5 rounded-2xl">
                 <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-gray-300 cursor-pointer">
@@ -453,6 +629,136 @@ export default function CampaignsPage() {
                 <button type="button" onClick={() => setShowCreate(false)} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
                 <button type="submit" disabled={saving || !campaignName.trim() || !messageContent.trim()} className="clay-button-primary flex-1 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-50">
                   {saving ? 'Creating...' : isScheduled ? 'Schedule Campaign' : 'Launch Campaign'}
+                </button>
+              </div>
+            </div>
+          </GenieModal>
+        )}
+      </AnimatePresence>
+      {/* Edit Campaign Modal */}
+      <AnimatePresence>
+        {editingCampaign && (
+          <GenieModal as="form" onSubmit={handleUpdateCampaign} onClose={() => setEditingCampaign(null)} className="p-6 space-y-5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Edit className="w-5 h-5 text-brand-primary" />
+                {editingCampaign.status === 'draft' || editingCampaign.status === 'scheduled' ? 'Edit Campaign' : 'Edit & Resend Campaign'}
+              </h3>
+              <button type="button" onClick={() => setEditingCampaign(null)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {editErrorMsg && (
+              <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-xs rounded-xl">{editErrorMsg}</div>
+            )}
+
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Campaign Name</label>
+                <input 
+                  type="text" 
+                  value={editName} 
+                  onChange={e => setEditName(e.target.value)} 
+                  required 
+                  className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" 
+                  placeholder="e.g. June Flash Sale" 
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Target Segment</label>
+                <select
+                  value={editGroupId}
+                  onChange={e => setEditGroupId(e.target.value)}
+                  className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm cursor-pointer"
+                >
+                  <option value="">All Contacts</option>
+                  {groups.map(g => (
+                    <option key={g.id} value={g.id}>{g.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Message Content</label>
+                  <select
+                    value={editSelectedTemplateId}
+                    onChange={e => {
+                      const id = e.target.value;
+                      setEditSelectedTemplateId(id);
+                      if (id === '') {
+                        setEditMessageContent('');
+                      } else {
+                        const match = templates.find(t => t.id === id);
+                        if (match) setEditMessageContent(match.content);
+                      }
+                    }}
+                    className="clay-input px-2 py-1 rounded-xl text-slate-900 dark:text-white focus:outline-none text-[10px] cursor-pointer"
+                  >
+                    <option value="">Use Template</option>
+                    {templates.map(t => (
+                      <option key={t.id} value={t.id}>{t.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <textarea 
+                  value={editMessageContent} 
+                  onChange={e => {
+                    setEditMessageContent(e.target.value);
+                    setEditSelectedTemplateId('');
+                  }} 
+                  required 
+                  rows={4} 
+                  className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all resize-none" 
+                  placeholder="Type your marketing or notification message here..." 
+                />
+              </div>
+
+              {/* Opt-out Footer Option */}
+              <div className="clay-inset p-3.5 rounded-2xl">
+                <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-gray-300 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={editIncludeOptOut} 
+                    onChange={e => setEditIncludeOptOut(e.target.checked)} 
+                    className="rounded border-slate-300 dark:border-white/10 text-brand-primary focus:ring-brand-primary w-4 h-4 cursor-pointer"
+                  />
+                  <span>Auto-append opt-out footer (<span className="font-mono text-[10px]">*456*9*5#</span>)</span>
+                </label>
+              </div>
+
+              {/* Scheduling Section */}
+              <div className="clay-inset space-y-3 p-3.5 rounded-2xl">
+                <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-gray-300 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={editIsScheduled} 
+                    onChange={e => setEditIsScheduled(e.target.checked)} 
+                    className="rounded border-slate-300 dark:border-white/10 text-brand-primary focus:ring-brand-primary w-4 h-4 cursor-pointer"
+                  />
+                  <span>Schedule for a later time</span>
+                </label>
+
+                {editIsScheduled && (
+                  <div className="space-y-1">
+                    <label className="block text-[10px] uppercase font-bold text-slate-400">Scheduled Date & Time</label>
+                    <input 
+                      type="datetime-local" 
+                      value={editScheduledAt} 
+                      onChange={e => setEditScheduledAt(e.target.value)}
+                      required={editIsScheduled}
+                      className="clay-input w-full px-3 py-2 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-xs"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setEditingCampaign(null)} className="clay-button-secondary flex-1 py-3 rounded-2xl text-sm font-medium text-slate-600 cursor-pointer transition-all">Cancel</button>
+                <button type="submit" disabled={editSaving || !editName.trim() || !editMessageContent.trim()} className="clay-button-primary flex-1 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-50">
+                  {editSaving ? 'Saving...' : editIsScheduled ? 'Schedule Campaign' : (editingCampaign.status === 'draft' || editingCampaign.status === 'scheduled' ? 'Save Changes' : 'Launch Campaign')}
                 </button>
               </div>
             </div>

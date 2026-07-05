@@ -46,6 +46,7 @@ export default function ReportsPage() {
   // Scheduled states
   const [scheduledMessages, setScheduledMessages] = useState<any[]>([]);
   const [loadingScheduled, setLoadingScheduled] = useState(false);
+  const [expandedMessageId, setExpandedMessageId] = useState<string | null>(null);
 
   const fetchHistory = useCallback(async () => {
     setLoading(true);
@@ -294,36 +295,46 @@ export default function ReportsPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {messages.map((m) => (
-                        <tr 
-                          key={m.id} 
-                          className="border-b border-slate-100 dark:border-white/[0.03] last:border-0 clay-row-hover hover:bg-slate-50 dark:hover:bg-white/[0.01] transition-colors"
-                        >
-                          <td className="px-5 py-3 text-xs font-mono font-bold text-slate-900 dark:text-white">
-                            {m.recipient}
-                          </td>
-                          <td className="px-5 py-3 text-xs text-slate-600 dark:text-gray-300 max-w-xs truncate">
-                            {m.content}
-                          </td>
-                          <td className="px-5 py-3 text-left">
-                            <div className="text-xs font-semibold text-slate-900 dark:text-white font-mono">{m.sender_id}</div>
-                            {m.batch_number && (
-                              <div className="text-[10px] text-brand-primary font-mono mt-0.5">{m.batch_number}</div>
-                            )}
-                          </td>
-                          <td className="px-5 py-3">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${getStatusBadge(m.status)}`}>
-                              {m.status}
-                            </span>
-                          </td>
-                          <td className="px-5 py-3 text-xs font-mono text-slate-900 dark:text-white">
-                            {m.cost.toFixed(2)} cr
-                          </td>
-                          <td className="px-5 py-3 text-xs text-slate-500 dark:text-gray-400 font-mono">
-                            {m.sent_at ? new Date(m.sent_at).toLocaleTimeString() : ' - '}
-                          </td>
-                        </tr>
-                      ))}
+                      {messages.map((m) => {
+                        const isRowExpanded = expandedMessageId === m.id;
+                        return (
+                          <tr 
+                            key={m.id} 
+                            onClick={() => setExpandedMessageId(isRowExpanded ? null : m.id)}
+                            className="border-b border-slate-100 dark:border-white/[0.03] last:border-0 clay-row-hover hover:bg-slate-50 dark:hover:bg-white/[0.01] transition-colors cursor-pointer"
+                          >
+                            <td className="px-5 py-3 text-xs font-mono font-bold text-slate-900 dark:text-white">
+                              {m.recipient}
+                            </td>
+                            <td className="px-5 py-3 text-xs text-slate-600 dark:text-gray-300 max-w-xs">
+                              {isRowExpanded ? (
+                                <div className="font-sans whitespace-pre-wrap bg-slate-50 dark:bg-slate-900/50 p-2.5 rounded-xl border border-slate-200/30 dark:border-white/5 shadow-inner leading-relaxed">
+                                  {m.content}
+                                </div>
+                              ) : (
+                                <div className="truncate">{m.content}</div>
+                              )}
+                            </td>
+                            <td className="px-5 py-3 text-left">
+                              <div className="text-xs font-semibold text-slate-900 dark:text-white font-mono">{m.sender_id}</div>
+                              {m.batch_number && (
+                                <div className="text-[10px] text-brand-primary font-mono mt-0.5">{m.batch_number}</div>
+                              )}
+                            </td>
+                            <td className="px-5 py-3">
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${getStatusBadge(m.status)}`}>
+                                {m.status}
+                              </span>
+                            </td>
+                            <td className="px-5 py-3 text-xs font-mono text-slate-900 dark:text-white">
+                              {m.cost.toFixed(2)} cr
+                            </td>
+                            <td className="px-5 py-3 text-xs text-slate-500 dark:text-gray-400 font-mono">
+                              {m.sent_at ? new Date(m.sent_at).toLocaleTimeString() : ' - '}
+                            </td>
+                          </tr>
+                        );
+                      })}
                       {messages.length === 0 && (
                         <tr>
                           <td colSpan={6} className="text-center py-16">
@@ -374,36 +385,46 @@ export default function ReportsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {scheduledMessages.map((m) => (
-                      <tr 
-                        key={m.id} 
-                        className="border-b border-slate-100 dark:border-white/[0.03] last:border-0 clay-row-hover hover:bg-slate-50 dark:hover:bg-white/[0.01] transition-colors"
-                      >
-                        <td className="px-5 py-3 text-xs font-mono font-bold text-slate-900 dark:text-white">
-                          {m.recipient}
-                        </td>
-                        <td className="px-5 py-3 text-xs text-slate-600 dark:text-gray-300 max-w-xs truncate">
-                          {m.content}
-                        </td>
-                        <td className="px-5 py-3 text-left">
-                          <div className="text-xs font-semibold text-slate-900 dark:text-white font-mono">{m.sender_id}</div>
-                          {m.batch_number && (
-                            <div className="text-[10px] text-brand-primary font-mono mt-0.5">{m.batch_number}</div>
-                          )}
-                        </td>
-                        <td className="px-5 py-3 text-xs font-semibold text-amber-600 dark:text-amber-400 font-mono">
-                          {m.scheduled_at ? new Date(m.scheduled_at).toLocaleString() : ' - '}
-                        </td>
-                        <td className="px-5 py-3">
-                          <button
-                            onClick={() => handleCancelScheduled(m.id)}
-                            className="px-3 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/25 text-red-500 text-xs font-bold transition-all cursor-pointer"
-                          >
-                            Cancel
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                    {scheduledMessages.map((m) => {
+                      const isRowExpanded = expandedMessageId === m.id;
+                      return (
+                        <tr 
+                          key={m.id} 
+                          onClick={() => setExpandedMessageId(isRowExpanded ? null : m.id)}
+                          className="border-b border-slate-100 dark:border-white/[0.03] last:border-0 clay-row-hover hover:bg-slate-50 dark:hover:bg-white/[0.01] transition-colors cursor-pointer"
+                        >
+                          <td className="px-5 py-3 text-xs font-mono font-bold text-slate-900 dark:text-white">
+                            {m.recipient}
+                          </td>
+                          <td className="px-5 py-3 text-xs text-slate-600 dark:text-gray-300 max-w-xs">
+                            {isRowExpanded ? (
+                              <div className="font-sans whitespace-pre-wrap bg-slate-50 dark:bg-slate-900/50 p-2.5 rounded-xl border border-slate-200/30 dark:border-white/5 shadow-inner leading-relaxed">
+                                {m.content}
+                              </div>
+                            ) : (
+                              <div className="truncate">{m.content}</div>
+                            )}
+                          </td>
+                          <td className="px-5 py-3 text-left">
+                            <div className="text-xs font-semibold text-slate-900 dark:text-white font-mono">{m.sender_id}</div>
+                            {m.batch_number && (
+                              <div className="text-[10px] text-brand-primary font-mono mt-0.5">{m.batch_number}</div>
+                            )}
+                          </td>
+                          <td className="px-5 py-3 text-xs font-semibold text-amber-600 dark:text-amber-400 font-mono">
+                            {m.scheduled_at ? new Date(m.scheduled_at).toLocaleString() : ' - '}
+                          </td>
+                          <td className="px-5 py-3">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleCancelScheduled(m.id); }}
+                              className="px-3 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/25 text-red-500 text-xs font-bold transition-all cursor-pointer"
+                            >
+                              Cancel
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
                     {scheduledMessages.length === 0 && (
                       <tr>
                         <td colSpan={5} className="text-center py-16">
