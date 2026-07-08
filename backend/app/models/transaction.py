@@ -3,7 +3,8 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import String, DateTime, ForeignKey, Text, Numeric, Enum as SAEnum
+from sqlalchemy import String, DateTime, ForeignKey, Text, Numeric, Enum as SAEnum, Boolean
+import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -31,7 +32,9 @@ class Transaction(Base):
         default="completed",
         nullable=False,
     )
+    sandbox_mode: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, server_default=sa.text('true'))
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
 
     # Relationships
     user = relationship("User", back_populates="transactions")

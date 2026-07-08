@@ -28,7 +28,10 @@ async def list_transactions(
     """Retrieve transaction history for the authenticated user."""
     result = await db.execute(
         select(Transaction)
-        .where(Transaction.user_id == current_user.id)
+        .where(
+            Transaction.user_id == current_user.id,
+            Transaction.sandbox_mode == current_user.sandbox_mode
+        )
         .order_by(Transaction.created_at.desc())
         .offset((page - 1) * limit)
         .limit(limit)
@@ -71,17 +74,19 @@ async def mpesa_topup(
         type="topup",
         amount=data.amount,
         sms_credits=credits_to_add,
-        balance_after=user.sms_balance + credits_to_add,
+        balance_after=user.active_balance + credits_to_add,
         reference=f"MP_{secrets.token_hex(5).upper()}",
         description=f"M-Pesa STK push top-up ({data.phone_number})",
         payment_method="mpesa",
         status="completed",
+        sandbox_mode=user.sandbox_mode,
     )
     db.add(tx)
 
     # Credit user balance
-    user.sms_balance += credits_to_add
+    user.active_balance += credits_to_add
     await db.flush()
+
 
     return TopupResponse(
         checkout_request_id=checkout_id,

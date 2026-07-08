@@ -469,7 +469,8 @@ DEFAULT_SETTINGS = {
     "maintenanceMode": False,
     "supportEmail": "support@trackom.co.ke",
     "supportPhone": "+254 700 000 000",
-    "alertBanner": ""
+    "alertBanner": "",
+    "advantasmsDefaultShortcode": "ARVOCAP"
 }
 
 def load_system_settings():
@@ -507,6 +508,8 @@ class SystemSettingsUpdateRequest(BaseModel):
     supportEmail: str
     supportPhone: str
     alertBanner: str
+    advantasmsDefaultShortcode: str
+
 
 @router.get("/settings")
 async def get_settings(admin: User = Depends(get_current_admin)):

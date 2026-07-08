@@ -3,7 +3,8 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import String, DateTime, ForeignKey, Text
+from sqlalchemy import String, DateTime, ForeignKey, Text, Boolean
+import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -19,9 +20,11 @@ class IncomingSms(Base):
     recipient: Mapped[str] = mapped_column(String(20), nullable=False) # "to" shortcode / number
     content: Mapped[str] = mapped_column(Text, nullable=False)
     gateway_message_id: Mapped[str] = mapped_column(String(100), nullable=True)
+    sandbox_mode: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, server_default=sa.text('true'))
     received_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     deleted_at: Mapped[datetime] = mapped_column(DateTime, nullable=True, default=None)
+
 
     # Relationships
     user = relationship("User", backref="incoming_sms")

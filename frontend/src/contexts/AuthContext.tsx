@@ -21,6 +21,7 @@ export interface User {
   webhook_url: string | null;
   is_2fa_enabled: boolean;
   two_factor_method: 'totp' | 'sms' | 'email';
+  sandbox_mode: boolean;
   created_at: string;
 }
 
@@ -34,6 +35,7 @@ interface AuthContextValue {
   googleAuth: (credential: string) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
+  toggleSandboxMode: () => Promise<void>;
 }
 
 interface RegisterData {
@@ -119,6 +121,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshUser = fetchUser;
 
+  const toggleSandboxMode = useCallback(async () => {
+    if (!user) return;
+    const newMode = !user.sandbox_mode;
+    const resp = await api.put('/auth/sandbox-mode', { sandbox_mode: newMode });
+    setUser(resp.data);
+  }, [user]);
+
   return (
     <AuthContext.Provider
       value={{
@@ -131,6 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         googleAuth,
         logout,
         refreshUser,
+        toggleSandboxMode,
       }}
     >
       {children}

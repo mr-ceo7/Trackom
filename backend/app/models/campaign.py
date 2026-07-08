@@ -3,7 +3,8 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import String, DateTime, ForeignKey, Text, Integer, Numeric, Enum as SAEnum
+from sqlalchemy import String, DateTime, ForeignKey, Text, Integer, Numeric, Enum as SAEnum, Boolean
+import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -34,6 +35,8 @@ class Campaign(Base):
     deleted_at: Mapped[datetime] = mapped_column(DateTime, nullable=True, default=None)
     include_opt_out: Mapped[bool] = mapped_column(default=True, nullable=False)
     batch_number: Mapped[str] = mapped_column(String(100), nullable=True)
+    sandbox_mode: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, server_default=sa.text('true'))
+
 
 
     # Scheduling

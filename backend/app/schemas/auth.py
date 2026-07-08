@@ -90,9 +90,18 @@ class UserResponse(BaseModel):
     webhook_url: Optional[str] = None
     is_2fa_enabled: bool = False
     two_factor_method: str = "totp"
+    sandbox_mode: bool = True
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+    @classmethod
+    def model_validate(cls, obj, *args, **kwargs):
+        res = super().model_validate(obj, *args, **kwargs)
+        if hasattr(obj, 'sandbox_mode'):
+            res.sms_balance = obj.sandbox_sms_balance if obj.sandbox_mode else obj.sms_balance
+        return res
+
 
 
 class UserUpdateRequest(BaseModel):

@@ -32,12 +32,17 @@ async def list_campaigns(
     """Retrieve campaign history for the authenticated user."""
     result = await db.execute(
         select(Campaign)
-        .where(Campaign.user_id == current_user.id, Campaign.deleted_at.is_(None))
+        .where(
+            Campaign.user_id == current_user.id,
+            Campaign.deleted_at.is_(None),
+            Campaign.sandbox_mode == current_user.sandbox_mode
+        )
         .order_by(Campaign.created_at.desc())
         .offset((page - 1) * limit)
         .limit(limit)
     )
     return result.scalars().all()
+
 
 
 @router.post("", response_model=CampaignResponse, status_code=201)
@@ -80,10 +85,10 @@ async def create_campaign(
     parts = calc["parts"]
     total_cost = len(contacts) * parts
 
-    if current_user.sms_balance < total_cost:
+    if current_user.active_balance < total_cost:
         raise HTTPException(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
-            detail=f"Insufficient balance. Need {total_cost} credits, have {current_user.sms_balance}."
+            detail=f"Insufficient balance. Need {total_cost} credits, have {current_user.active_balance}."
         )
 
     db_scheduled_at = None
@@ -108,7 +113,9 @@ async def create_campaign(
         completed_at=None,
         include_opt_out=data.include_opt_out,
         batch_number=data.batch_number,
+        sandbox_mode=current_user.sandbox_mode,
     )
+
 
     db.add(campaign)
     await db.commit()
@@ -133,7 +140,8 @@ async def delete_campaign(
         select(Campaign).where(
             Campaign.id == uuid_mod.UUID(campaign_id),
             Campaign.user_id == current_user.id,
-            Campaign.deleted_at.is_(None)
+            Campaign.deleted_at.is_(None),
+            Campaign.sandbox_mode == current_user.sandbox_mode,
         )
     )
     campaign = result.scalar_one_or_none()
@@ -155,12 +163,14 @@ async def update_campaign(
         select(Campaign).where(
             Campaign.id == uuid_mod.UUID(campaign_id),
             Campaign.user_id == current_user.id,
-            Campaign.deleted_at.is_(None)
+            Campaign.deleted_at.is_(None),
+            Campaign.sandbox_mode == current_user.sandbox_mode,
         )
     )
     campaign = result.scalar_one_or_none()
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign not found")
+
     
     if campaign.status not in ("draft", "scheduled"):
         raise HTTPException(
@@ -219,7 +229,8 @@ async def cancel_campaign(
         select(Campaign).where(
             Campaign.id == uuid_mod.UUID(campaign_id),
             Campaign.user_id == current_user.id,
-            Campaign.deleted_at.is_(None)
+            Campaign.deleted_at.is_(None),
+            Campaign.sandbox_mode == current_user.sandbox_mode,
         )
     )
     campaign = result.scalar_one_or_none()
@@ -235,7 +246,7 @@ async def cancel_campaign(
     if campaign.status in ("draft", "scheduled"):
         # Full refund — no messages were sent yet
         refund = campaign.total_cost
-        current_user.sms_balance += float(refund)
+        current_user.active_balance += float(refund)
         campaign.status = "cancelled"
         campaign.completed_at = datetime.utcnow()
         db.add(Notification(
@@ -243,7 +254,8 @@ async def cancel_campaign(
             title=f"Campaign '{campaign.name}' Cancelled ⛔",
             message=f"Campaign was cancelled before sending. {int(refund)} credits refunded.",
             type="warning",
-            action_url="/dashboard/campaigns"
+            action_url="/dashboard/campaigns",
+            sandbox_mode=current_user.sandbox_mode,
         ))
     else:
         # sending or paused — just flip status; the running worker will detect and refund unsent
@@ -251,6 +263,7 @@ async def cancel_campaign(
 
     await db.commit()
     await db.refresh(campaign)
+
     return campaign
 
 
@@ -265,7 +278,8 @@ async def pause_campaign(
         select(Campaign).where(
             Campaign.id == uuid_mod.UUID(campaign_id),
             Campaign.user_id == current_user.id,
-            Campaign.deleted_at.is_(None)
+            Campaign.deleted_at.is_(None),
+            Campaign.sandbox_mode == current_user.sandbox_mode,
         )
     )
     campaign = result.scalar_one_or_none()
@@ -295,7 +309,8 @@ async def resume_campaign(
         select(Campaign).where(
             Campaign.id == uuid_mod.UUID(campaign_id),
             Campaign.user_id == current_user.id,
-            Campaign.deleted_at.is_(None)
+            Campaign.deleted_at.is_(None),
+            Campaign.sandbox_mode == current_user.sandbox_mode,
         )
     )
     campaign = result.scalar_one_or_none()
@@ -326,7 +341,8 @@ async def resend_campaign(
         select(Campaign).where(
             Campaign.id == uuid_mod.UUID(campaign_id),
             Campaign.user_id == current_user.id,
-            Campaign.deleted_at.is_(None)
+            Campaign.deleted_at.is_(None),
+            Campaign.sandbox_mode == current_user.sandbox_mode,
         )
     )
     old_campaign = result.scalar_one_or_none()
@@ -363,7 +379,7 @@ async def resend_campaign(
     calc = calculate_sms_parts(full_message)
     total_cost = len(contacts) * calc["parts"]
     
-    if current_user.sms_balance < total_cost:
+    if current_user.active_balance < total_cost:
         raise HTTPException(
             status_code=402,
             detail=f"Insufficient balance. Need {total_cost} credits to resend."
@@ -381,6 +397,7 @@ async def resend_campaign(
         group_id=old_campaign.group_id,
         include_opt_out=old_campaign.include_opt_out,
         batch_number=old_campaign.batch_number,
+        sandbox_mode=current_user.sandbox_mode,
     )
     
     db.add(new_campaign)
@@ -391,3 +408,4 @@ async def resend_campaign(
     background_tasks.add_task(send_campaign_messages, new_campaign.id)
     
     return new_campaign
+

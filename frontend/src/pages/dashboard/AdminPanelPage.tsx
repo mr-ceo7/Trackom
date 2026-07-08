@@ -102,6 +102,7 @@ export default function AdminPanelPage() {
   const [supportEmail, setSupportEmail] = useState('support@trackom.co.ke');
   const [supportPhone, setSupportPhone] = useState('+254 700 000 000');
   const [alertBanner, setAlertBanner] = useState('');
+  const [advantasmsDefaultShortcode, setAdvantasmsDefaultShortcode] = useState('ARVOCAP');
   const [savingSettings, setSavingSettings] = useState(false);
 
   // Load settings on mount
@@ -123,6 +124,7 @@ export default function AdminPanelPage() {
       if (data.supportEmail) setSupportEmail(data.supportEmail);
       if (data.supportPhone) setSupportPhone(data.supportPhone);
       if (data.alertBanner !== undefined) setAlertBanner(data.alertBanner);
+      if (data.advantasmsDefaultShortcode) setAdvantasmsDefaultShortcode(data.advantasmsDefaultShortcode);
     } catch { /* noop */ }
   }, []);
 
@@ -137,7 +139,7 @@ export default function AdminPanelPage() {
       const payload = {
         mpesaPaybill, mpesaTill, minDeposit, autoCredit, welcomeCredits, baseSmsCost,
         senderIdFee, starterRate, growthRate, enterpriseRate, maintenanceMode,
-        supportEmail, supportPhone, alertBanner
+        supportEmail, supportPhone, alertBanner, advantasmsDefaultShortcode
       };
       await api.put('/admin/settings', payload);
       alert('System Settings saved successfully!');
@@ -147,6 +149,7 @@ export default function AdminPanelPage() {
       setSavingSettings(false);
     }
   };
+
 
   // Rate Modal state
   const [selectedRateUser, setSelectedRateUser] = useState<AdminUser | null>(null);
@@ -1557,8 +1560,13 @@ export default function AdminPanelPage() {
                     <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Sender ID Registration Charge (KES)</label>
                     <input type="number" value={senderIdFee} onChange={e => setSenderIdFee(Number(e.target.value))} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
                   </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">AdvantaSMS Default Sender ID / Shortcode</label>
+                    <input type="text" value={advantasmsDefaultShortcode} onChange={e => setAdvantasmsDefaultShortcode(e.target.value)} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
+                  </div>
                 </div>
               </div>
+
 
               {/* CARD 3: DEFAULT TIER MULTIPLIERS */}
               <div className="clay-card rounded-3xl p-5 space-y-4">

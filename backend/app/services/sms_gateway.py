@@ -6,7 +6,26 @@ import logging
 import uuid
 from typing import List, Dict, Any
 
+import httpx
+
+from app.config import get_settings
+
 logger = logging.getLogger("trackom.sms_gateway")
+
+# AdvantaSMS response code descriptions
+ADVANTA_RESPONSE_CODES = {
+    200: "Success",
+    1001: "Invalid sender ID",
+    1002: "Network not allowed",
+    1003: "Invalid mobile number",
+    1004: "Low bulk credits",
+    1005: "System error",
+    1006: "Invalid credentials",
+    1007: "System error",
+    1008: "No Delivery Report",
+    1009: "Unsupported data type",
+    1010: "Low OTP credits",
+}
 
 
 class SmsGatewayException(Exception):
@@ -100,6 +119,234 @@ class AfricaTalkingSimulatorGateway(BaseSMSGateway):
         return results
 
 
+class AdvantaSMSGateway(BaseSMSGateway):
+    """
+    Real AdvantaSMS Gateway integration.
+    Calls the live AdvantaSMS API at https://quicksms.advantasms.com.
+    """
+
+    def __init__(self):
+        settings = get_settings()
+        self.api_key = settings.ADVANTA_API_KEY
+        self.partner_id = settings.ADVANTA_PARTNER_ID
+        self.base_url = settings.ADVANTA_BASE_URL
+        from app.routers.admin import load_system_settings
+        sys_settings = load_system_settings()
+        self.default_shortcode = sys_settings.get("advantasmsDefaultShortcode") or settings.ADVANTA_DEFAULT_SHORTCODE
+
+
+    @staticmethod
+    def _normalize_phone(phone: str) -> str:
+        """Normalize phone number for AdvantaSMS (strip +, ensure 254 prefix)."""
+        cleaned = phone.strip().replace(" ", "").replace("-", "")
+        # Strip leading +
+        if cleaned.startswith("+"):
+            cleaned = cleaned[1:]
+        # Convert 07xxx to 2547xxx for Kenyan numbers
+        if cleaned.startswith("07") and len(cleaned) == 10:
+            cleaned = "254" + cleaned[1:]
+        # Convert 01xxx to 2541xxx for Kenyan numbers
+        if cleaned.startswith("01") and len(cleaned) == 10:
+            cleaned = "254" + cleaned[1:]
+        # Convert 7xxx to 2547xxx
+        if cleaned.startswith("7") and len(cleaned) == 9:
+            cleaned = "254" + cleaned
+        return cleaned
+
+    async def send_messages(
+        self,
+        sender_id: str,
+        recipients: List[str],
+        message: str
+    ) -> List[Dict[str, Any]]:
+        """Send SMS via AdvantaSMS /api/services/sendsms endpoint."""
+        normalized = [self._normalize_phone(r) for r in recipients]
+        mobile_str = ",".join(normalized)
+
+        payload = {
+            "apikey": self.api_key,
+            "partnerID": self.partner_id,
+            "message": message,
+            "shortcode": sender_id or self.default_shortcode,
+            "mobile": mobile_str,
+        }
+
+        logger.info(
+            f"AdvantaSMS: Sending to {len(normalized)} recipient(s) "
+            f"via sender_id='{sender_id}'"
+        )
+
+        results = []
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                resp = await client.post(
+                    f"{self.base_url}/api/services/sendsms",
+                    json=payload,
+                )
+                logger.info(
+                    f"AdvantaSMS: HTTP {resp.status_code} response received"
+                )
+                resp_data = resp.json()
+                logger.debug(f"AdvantaSMS: Raw response: {resp_data}")
+
+            # Parse the response
+            responses = resp_data.get("responses", [])
+
+            if responses:
+                for item in responses:
+                    resp_code = item.get("response-code", item.get("responsecode", 0))
+                    resp_code = int(resp_code) if resp_code else 0
+                    msg_id = item.get("messageid", item.get("message-id"))
+                    recipient_phone = item.get("mobile", item.get("recipient", ""))
+                    is_success = resp_code == 200
+                    error_desc = None if is_success else ADVANTA_RESPONSE_CODES.get(
+                        resp_code, f"Unknown error (code: {resp_code})"
+                    )
+
+                    results.append({
+                        "recipient": recipient_phone,
+                        "status": "success" if is_success else "failed",
+                        "message_id": str(msg_id) if msg_id else None,
+                        "cost": 1.0,
+                        "error_message": error_desc,
+                    })
+
+                    logger.info(
+                        f"AdvantaSMS: to={recipient_phone} code={resp_code} "
+                        f"msg_id={msg_id} status={'success' if is_success else 'failed'}"
+                    )
+            else:
+                # Fallback: API returned a single-level response (no responses array)
+                resp_code = int(resp_data.get("response-code", resp_data.get("responsecode", 0)))
+                msg_id = resp_data.get("messageid", resp_data.get("message-id"))
+                is_success = resp_code == 200
+                error_desc = None if is_success else ADVANTA_RESPONSE_CODES.get(
+                    resp_code, f"Unknown error (code: {resp_code})"
+                )
+
+                # Map results back to original recipients
+                for i, phone in enumerate(normalized):
+                    results.append({
+                        "recipient": phone,
+                        "status": "success" if is_success else "failed",
+                        "message_id": str(msg_id) if msg_id else None,
+                        "cost": 1.0,
+                        "error_message": error_desc,
+                    })
+
+                logger.info(
+                    f"AdvantaSMS: Bulk result code={resp_code} "
+                    f"msg_id={msg_id} recipients={len(normalized)}"
+                )
+
+        except httpx.HTTPError as e:
+            logger.error(f"AdvantaSMS: HTTP error: {e}")
+            for phone in normalized:
+                results.append({
+                    "recipient": phone,
+                    "status": "failed",
+                    "message_id": None,
+                    "cost": 0.0,
+                    "error_message": f"HTTP error: {str(e)}",
+                })
+        except Exception as e:
+            logger.error(f"AdvantaSMS: Unexpected error: {e}")
+            for phone in normalized:
+                results.append({
+                    "recipient": phone,
+                    "status": "failed",
+                    "message_id": None,
+                    "cost": 0.0,
+                    "error_message": f"Gateway error: {str(e)}",
+                })
+
+        return results
+
+    async def check_balance(self) -> dict:
+        """Check AdvantaSMS account balance via /api/services/getbalance."""
+        params = {
+            "apikey": self.api_key,
+            "partnerID": self.partner_id,
+        }
+        try:
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                resp = await client.get(
+                    f"{self.base_url}/api/services/getbalance",
+                    params=params,
+                )
+                data = resp.json()
+                logger.info(f"AdvantaSMS: Balance check response: {data}")
+                return data
+        except Exception as e:
+            logger.error(f"AdvantaSMS: Balance check failed: {e}")
+            raise SmsGatewayException(f"Failed to check balance: {str(e)}")
+
+    async def get_delivery_report(self, message_id: str) -> dict:
+        """Fetch delivery report for a message via /api/services/getdlr."""
+        params = {
+            "apikey": self.api_key,
+            "partnerID": self.partner_id,
+            "messageID": message_id,
+        }
+        try:
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                resp = await client.get(
+                    f"{self.base_url}/api/services/getdlr",
+                    params=params,
+                )
+                data = resp.json()
+                logger.info(
+                    f"AdvantaSMS: DLR for message_id={message_id}: {data}"
+                )
+                return data
+        except Exception as e:
+            logger.error(f"AdvantaSMS: DLR fetch failed for {message_id}: {e}")
+            raise SmsGatewayException(f"Failed to fetch delivery report: {str(e)}")
+
+    async def send_bulk(self, sms_list: list) -> list:
+        """
+        Send personalized bulk SMS via /api/services/sendbulk.
+        
+        Args:
+            sms_list: List of dicts with keys: mobile, message, shortcode (optional),
+                      clientsmsid (optional).
+        
+        Returns:
+            List of response dicts per message.
+        """
+        formatted_list = []
+        for item in sms_list:
+            formatted_list.append({
+                "partnerID": self.partner_id,
+                "apikey": self.api_key,
+                "pass_type": "plain",
+                "clientsmsid": item.get("clientsmsid", str(uuid.uuid4().hex[:12])),
+                "mobile": self._normalize_phone(item["mobile"]),
+                "message": item["message"],
+                "shortcode": item.get("shortcode", self.default_shortcode),
+            })
+
+        payload = {
+            "count": len(formatted_list),
+            "smslist": formatted_list,
+        }
+
+        logger.info(f"AdvantaSMS: Sending bulk batch of {len(formatted_list)} messages")
+
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                resp = await client.post(
+                    f"{self.base_url}/api/services/sendbulk",
+                    json=payload,
+                )
+                data = resp.json()
+                logger.info(f"AdvantaSMS: Bulk send response: {data}")
+                return data.get("responses", [data])
+        except Exception as e:
+            logger.error(f"AdvantaSMS: Bulk send failed: {e}")
+            raise SmsGatewayException(f"Bulk send failed: {str(e)}")
+
+
 class DynamicLoadBalancedGateway:
     """
     Load balances outgoing SMS traffic between multiple configured gateways
@@ -111,8 +358,18 @@ class DynamicLoadBalancedGateway:
         sender_id: str,
         recipients: List[str],
         message: str,
-        db
+        db,
+        sandbox_mode: bool = True
     ) -> List[Dict[str, Any]]:
+        # If live mode, use AdvantaSMSGateway directly (bypass DB gateway selection)
+        if not sandbox_mode:
+            gateway = AdvantaSMSGateway()
+            logger.info(
+                f"Load Balancer: LIVE mode — routing {len(recipients)} messages "
+                f"via AdvantaSMSGateway"
+            )
+            return await gateway.send_messages(sender_id, recipients, message)
+
         import random
         from sqlalchemy import select
         from app.models.gateway import SmsGateway

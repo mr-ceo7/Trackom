@@ -3,6 +3,7 @@
 import uuid
 from datetime import datetime
 
+import sqlalchemy as sa
 from sqlalchemy import String, Boolean, DateTime, Enum as SAEnum, Text, Numeric, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -33,9 +34,23 @@ class User(Base):
         nullable=False,
     )
     sms_balance: Mapped[int] = mapped_column(default=10000)  # Free credits on signup
+    sandbox_sms_balance: Mapped[int] = mapped_column(default=10000, nullable=False, server_default=sa.text('10000'))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
+    sandbox_mode: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, server_default=sa.text('true'))
+
+    @property
+    def active_balance(self) -> int:
+        return self.sandbox_sms_balance if self.sandbox_mode else self.sms_balance
+
+    @active_balance.setter
+    def active_balance(self, value: int):
+        if self.sandbox_mode:
+            self.sandbox_sms_balance = value
+        else:
+            self.sms_balance = value
+
 
     # Admin configurations
     credit_rate: Mapped[float] = mapped_column(Numeric(10, 4), default=1.0, nullable=False)
