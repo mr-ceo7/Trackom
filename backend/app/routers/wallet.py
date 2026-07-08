@@ -5,7 +5,7 @@ import secrets
 from typing import List
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,6 +20,8 @@ router = APIRouter(prefix="/wallet", tags=["Wallet & Payments"])
 
 @router.get("/transactions", response_model=List[TransactionResponse])
 async def list_transactions(
+    page: int = Query(1, ge=1),
+    limit: int = Query(25, ge=1, le=100),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -28,6 +30,8 @@ async def list_transactions(
         select(Transaction)
         .where(Transaction.user_id == current_user.id)
         .order_by(Transaction.created_at.desc())
+        .offset((page - 1) * limit)
+        .limit(limit)
     )
     return result.scalars().all()
 

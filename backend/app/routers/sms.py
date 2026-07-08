@@ -451,10 +451,10 @@ async def incoming_sms_webhook(
     # Save to database
     incoming_msg = IncomingSms(
         user_id=user_id,
-        sender=from_val.strip(),
-        recipient=to_val.strip() if to_val else "TRACKOM",
+        sender=from_val.strip()[:20],
+        recipient=to_val.strip()[:20] if to_val else "TRACKOM",
         content=text_val.strip(),
-        gateway_message_id=msg_id.strip() if msg_id else None,
+        gateway_message_id=msg_id.strip()[:100] if msg_id else None,
         received_at=datetime.utcnow(),
     )
     db.add(incoming_msg)
@@ -463,17 +463,40 @@ async def incoming_sms_webhook(
     return {"status": "success", "message": "Inbound SMS received and logged."}
 
 
+@router.get("/incoming/unique-batches", response_model=List[str])
+async def list_unique_batches(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Retrieve list of unique batch numbers for the current user's outgoing messages."""
+    q = (
+        select(SmsMessage.batch_number)
+        .where(
+            SmsMessage.user_id == current_user.id,
+            SmsMessage.batch_number.isnot(None),
+            SmsMessage.batch_number != "",
+            SmsMessage.deleted_at.is_(None)
+        )
+        .distinct()
+        .order_by(SmsMessage.batch_number)
+    )
+    res = await db.execute(q)
+    return res.scalars().all()
+
+
 @router.get("/incoming", response_model=List[IncomingSmsResponse])
 async def list_incoming_sms(
     page: int = Query(1, ge=1),
     limit: int = Query(50, ge=1, le=100),
     sender: Optional[str] = Query(None),
     recipient: Optional[str] = Query(None),
+    group_id: Optional[str] = Query(None),
+    batch_number: Optional[str] = Query(None),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Retrieve incoming SMS message log history for the authenticated user."""
-    from app.models.contact import Contact
+    from app.models.contact import Contact, contact_group_members
     
     q = (
         select(IncomingSms, Contact.name, Contact.id)
@@ -488,6 +511,33 @@ async def list_incoming_sms(
         q = q.where(IncomingSms.sender.ilike(f"%{sender.strip()}%"))
     if recipient:
         q = q.where(IncomingSms.recipient.ilike(f"%{recipient.strip()}%"))
+        
+    if group_id:
+        try:
+            group_uuid = uuid_mod.UUID(group_id)
+            group_subq = (
+                select(Contact.phone)
+                .join(contact_group_members, contact_group_members.c.contact_id == Contact.id)
+                .where(
+                    contact_group_members.c.group_id == group_uuid,
+                    Contact.user_id == current_user.id,
+                    Contact.deleted_at.is_(None)
+                )
+            )
+            q = q.where(IncomingSms.sender.in_(group_subq))
+        except ValueError:
+            pass
+
+    if batch_number:
+        batch_subq = (
+            select(SmsMessage.recipient)
+            .where(
+                SmsMessage.batch_number == batch_number,
+                SmsMessage.user_id == current_user.id,
+                SmsMessage.deleted_at.is_(None)
+            )
+        )
+        q = q.where(IncomingSms.sender.in_(batch_subq))
         
     q = q.order_by(IncomingSms.received_at.desc())
     q = q.offset((page - 1) * limit).limit(limit)

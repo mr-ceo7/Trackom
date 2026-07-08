@@ -163,7 +163,11 @@ async def process_contacts_csv_import(
                         name = row[current_name_idx].strip() if (current_name_idx >= 0 and len(row) > current_name_idx) else "Unnamed"
                         email = row[current_email_idx].strip() if (current_email_idx < len(row) and row[current_email_idx].strip()) else None
                     
-                    cleaned_phone = clean_phone_number(raw_phone)
+                    # Sanitize lengths to prevent database crashes due to oversized CSV fields
+                    name = name[:255] if name else "Unnamed"
+                    email = email[:255] if email else None
+                    
+                    cleaned_phone = clean_phone_number(raw_phone)[:20]
                     
                     # Simple validation
                     if not cleaned_phone or len(cleaned_phone) < 8 or len(cleaned_phone) > 18:

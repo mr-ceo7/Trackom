@@ -49,6 +49,13 @@ class User(Base):
     # Developer settings
     webhook_url: Mapped[str] = mapped_column(String(500), nullable=True)
 
+    # 2FA settings
+    totp_secret: Mapped[str] = mapped_column(String(100), nullable=True)
+    is_2fa_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    two_factor_method: Mapped[str] = mapped_column(String(20), default="totp", nullable=False)
+    otp_code: Mapped[str] = mapped_column(String(10), nullable=True)
+    otp_expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)

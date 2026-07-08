@@ -74,3 +74,8 @@ def decode_token(token: str) -> Optional[dict]:
     except JWTError:
         return None
 
+
+def create_temp_2fa_token(user_id: str) -> str:
+    """Create a temporary token valid for 5 minutes for 2FA verification."""
+    return create_access_token({"sub": user_id, "scope": "2fa_login"}, expires_delta=timedelta(minutes=5))
+

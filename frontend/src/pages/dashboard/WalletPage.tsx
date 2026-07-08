@@ -28,6 +28,8 @@ export default function WalletPage() {
   const [transactions, setTransactions] = useState<TransactionData[]>([]);
   const [loading, setLoading] = useState(true);
   const [showTopup, setShowTopup] = useState(false);
+  const [page, setPage] = useState(1);
+  const LIMIT = 25;
   const [topupAmount, setTopupAmount] = useState('');
   const [phone, setPhone] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
@@ -44,11 +46,16 @@ export default function WalletPage() {
 
   const fetchTransactions = useCallback(async () => {
     try {
-      const resp = await api.get('/wallet/transactions');
+      const resp = await api.get('/wallet/transactions', {
+        params: {
+          page,
+          limit: LIMIT
+        }
+      });
       setTransactions(resp.data);
     } catch { /* noop */ }
     finally { setLoading(false); }
-  }, []);
+  }, [page]);
 
   const fetchPublicSettings = useCallback(async () => {
     try {
@@ -202,6 +209,29 @@ export default function WalletPage() {
             ))}
             {transactions.length === 0 && (
               <div className="text-center py-8 text-sm text-slate-500 dark:text-gray-400">No transactions recorded yet.</div>
+            )}
+
+            {/* Pagination controls */}
+            {transactions.length > 0 && (
+              <div className="px-5 py-3 border-t border-slate-100 dark:divide-white/[0.03] flex items-center justify-between text-xs text-slate-500">
+                <button 
+                  type="button"
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-3 py-1.5 rounded-xl clay-button-secondary disabled:opacity-50 cursor-pointer transition-all"
+                >
+                  Previous
+                </button>
+                <span className="font-semibold text-slate-600 dark:text-gray-400">Page {page}</span>
+                <button 
+                  type="button"
+                  onClick={() => setPage(p => p + 1)}
+                  disabled={transactions.length < LIMIT}
+                  className="px-3 py-1.5 rounded-xl clay-button-secondary disabled:opacity-50 cursor-pointer transition-all"
+                >
+                  Next
+                </button>
+              </div>
             )}
           </div>
         )}

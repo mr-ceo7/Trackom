@@ -57,6 +57,12 @@ export default function InboxPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [contactFilter, setContactFilter] = useState('all');
 
+  // Contact groups and Campaign batches filter state
+  const [groups, setGroups] = useState<{ id: string, name: string }[]>([]);
+  const [selectedGroupId, setSelectedGroupId] = useState('');
+  const [batches, setBatches] = useState<string[]>([]);
+  const [selectedBatch, setSelectedBatch] = useState('');
+
   // Debounce search filter inputs
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -82,16 +88,33 @@ export default function InboxPage() {
       };
       if (searchSender.trim()) params.sender = searchSender.trim();
       if (searchRecipient.trim()) params.recipient = searchRecipient.trim();
+      if (selectedGroupId) params.group_id = selectedGroupId;
+      if (selectedBatch) params.batch_number = selectedBatch;
       
       const resp = await api.get('/messages/incoming', { params });
       setMessages(resp.data);
     } catch { /* noop */ }
     finally { setLoading(false); }
-  }, [searchSender, searchRecipient, page]);
+  }, [searchSender, searchRecipient, page, selectedGroupId, selectedBatch]);
+
+  const fetchFiltersData = useCallback(async () => {
+    try {
+      const [groupsResp, batchesResp] = await Promise.all([
+        api.get('/contacts/groups'),
+        api.get('/messages/incoming/unique-batches')
+      ]);
+      setGroups(groupsResp.data);
+      setBatches(batchesResp.data);
+    } catch { /* noop */ }
+  }, []);
 
   useEffect(() => {
     fetchMessages();
   }, [fetchMessages]);
+
+  useEffect(() => {
+    fetchFiltersData();
+  }, [fetchFiltersData]);
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this message?')) return;
@@ -132,6 +155,7 @@ export default function InboxPage() {
       setSimSuccess('Simulation request triggered successfully! Message received.');
       setSimContent('');
       await fetchMessages();
+      await fetchFiltersData(); // Refresh unique batches if simulation added a new batch/number context
     } catch (err: any) {
       setSimError(err.response?.data?.detail || 'Failed to simulate incoming message.');
     } finally {
@@ -212,6 +236,8 @@ export default function InboxPage() {
     }
     return true;
   });
+
+  const isFiltered = inputSender || inputRecipient || selectedGroupId || selectedBatch || contactFilter !== 'all';
 
   return (
     <div className="max-w-6xl space-y-6">
@@ -310,86 +336,146 @@ export default function InboxPage() {
         {/* Right Column: Inbound SMS List */}
         <div className="lg:col-span-2 space-y-4">
           {/* Filters Card */}
-          <div className="clay-card rounded-3xl p-4 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-3 flex-1">
-              {filteredMessages.length > 0 && (
-                <label className="flex items-center gap-2 cursor-pointer select-none text-xs font-semibold text-slate-500 dark:text-gray-400 shrink-0">
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.length === filteredMessages.length && filteredMessages.length > 0}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedIds(filteredMessages.map(m => m.id));
-                      } else {
-                        setSelectedIds([]);
-                      }
-                    }}
-                    className="rounded border-slate-300 dark:border-white/10 text-brand-primary focus:ring-brand-primary w-4 h-4 cursor-pointer"
+          <div className="clay-card rounded-3xl p-4 flex flex-col gap-3">
+            <div className="flex flex-wrap items-center gap-3 justify-between">
+              <div className="flex flex-wrap items-center gap-3 flex-1">
+                {filteredMessages.length > 0 && (
+                  <label className="flex items-center gap-2 cursor-pointer select-none text-xs font-semibold text-slate-500 dark:text-gray-400 shrink-0">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.length === filteredMessages.length && filteredMessages.length > 0}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedIds(filteredMessages.map(m => m.id));
+                        } else {
+                          setSelectedIds([]);
+                        }
+                      }}
+                      className="rounded border-slate-300 dark:border-white/10 text-brand-primary focus:ring-brand-primary w-4 h-4 cursor-pointer"
+                    />
+                    <span>Select All</span>
+                  </label>
+                )}
+
+                <div className="relative flex-1 min-w-[140px] max-w-[200px]">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input 
+                    type="text"
+                    placeholder="Search sender number..."
+                    value={inputSender}
+                    onChange={e => setInputSender(e.target.value)}
+                    className="clay-input w-full pl-10 pr-4 py-2 rounded-2xl text-xs text-slate-900 dark:text-white focus:outline-none transition-all"
                   />
-                  <span>Select All</span>
-                </label>
+                </div>
+                
+                <div className="relative flex-1 min-w-[140px] max-w-[200px]">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input 
+                    type="text"
+                    placeholder="Filter shortcode..."
+                    value={inputRecipient}
+                    onChange={e => setInputRecipient(e.target.value)}
+                    className="clay-input w-full pl-10 pr-4 py-2 rounded-2xl text-xs text-slate-900 dark:text-white focus:outline-none transition-all"
+                  />
+                </div>
+
+                {/* Saved/Unsaved Filter */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <Sliders className="w-3.5 h-3.5 text-slate-400" />
+                  <select
+                    value={contactFilter}
+                    onChange={(e) => {
+                      setContactFilter(e.target.value);
+                      setPage(1);
+                    }}
+                    className="clay-input px-3 py-1.5 rounded-xl text-slate-900 dark:text-white focus:outline-none text-xs cursor-pointer"
+                  >
+                    <option value="all">All Senders</option>
+                    <option value="unsaved">Unsaved Only</option>
+                    <option value="saved">Contacts Only</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Bulk Actions */}
+              {selectedIds.length > 0 && (
+                <div className="flex items-center gap-2 animate-fade-in shrink-0">
+                  <span className="text-xs text-slate-400 font-mono font-semibold">
+                    {selectedIds.length} selected
+                  </span>
+                  <button
+                    onClick={openBulkReplyModal}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-primary/10 border border-brand-primary/20 text-brand-primary hover:bg-brand-primary/20 text-[11px] font-bold transition-all cursor-pointer"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" /> Reply Selected
+                  </button>
+                  <button
+                    onClick={handleBulkDelete}
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 hover:bg-rose-500/20 text-[11px] font-bold transition-all cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Delete Selected
+                  </button>
+                </div>
               )}
-
-              <div className="relative flex-1 min-w-[140px] max-w-[200px]">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <input 
-                  type="text"
-                  placeholder="Search sender number..."
-                  value={inputSender}
-                  onChange={e => setInputSender(e.target.value)}
-                  className="clay-input w-full pl-10 pr-4 py-2 rounded-2xl text-xs text-slate-900 dark:text-white focus:outline-none transition-all"
-                />
-              </div>
-              
-              <div className="relative flex-1 min-w-[140px] max-w-[200px]">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <input 
-                  type="text"
-                  placeholder="Filter shortcode..."
-                  value={inputRecipient}
-                  onChange={e => setInputRecipient(e.target.value)}
-                  className="clay-input w-full pl-10 pr-4 py-2 rounded-2xl text-xs text-slate-900 dark:text-white focus:outline-none transition-all"
-                />
-              </div>
-
-              {/* Saved/Unsaved Filter */}
-              <div className="flex items-center gap-1 shrink-0">
-                <Sliders className="w-3.5 h-3.5 text-slate-400" />
-                <select
-                  value={contactFilter}
-                  onChange={(e) => {
-                    setContactFilter(e.target.value);
-                    setPage(1);
-                  }}
-                  className="clay-input px-3 py-1.5 rounded-xl text-slate-900 dark:text-white focus:outline-none text-xs cursor-pointer"
-                >
-                  <option value="all">All Senders</option>
-                  <option value="unsaved">Unsaved Only</option>
-                  <option value="saved">Contacts Only</option>
-                </select>
-              </div>
             </div>
 
-            {/* Bulk Actions */}
-            {selectedIds.length > 0 && (
-              <div className="flex items-center gap-2 animate-fade-in shrink-0">
-                <span className="text-xs text-slate-400 font-mono font-semibold">
-                  {selectedIds.length} selected
-                </span>
-                <button
-                  onClick={openBulkReplyModal}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-primary/10 border border-brand-primary/20 text-brand-primary hover:bg-brand-primary/20 text-[11px] font-bold transition-all cursor-pointer"
+            {/* Sub-Filters: Groups & Batches */}
+            <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-slate-200/20">
+              {/* Contact Group Filter */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Group:</span>
+                <select
+                  value={selectedGroupId}
+                  onChange={(e) => {
+                    setSelectedGroupId(e.target.value);
+                    setPage(1);
+                  }}
+                  className="clay-input px-2.5 py-1.5 rounded-xl text-slate-900 dark:text-white focus:outline-none text-[11px] cursor-pointer min-w-[120px]"
                 >
-                  <MessageSquare className="w-3.5 h-3.5" /> Reply Selected
-                </button>
-                <button
-                  onClick={handleBulkDelete}
-                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 hover:bg-rose-500/20 text-[11px] font-bold transition-all cursor-pointer"
-                >
-                  <Trash2 className="w-3.5 h-3.5" /> Delete Selected
-                </button>
+                  <option value="">- All Groups -</option>
+                  {groups.map(g => (
+                    <option key={g.id} value={g.id}>{g.name}</option>
+                  ))}
+                </select>
               </div>
-            )}
+
+              {/* Campaign Batch Filter */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Campaign Batch:</span>
+                <select
+                  value={selectedBatch}
+                  onChange={(e) => {
+                    setSelectedBatch(e.target.value);
+                    setPage(1);
+                  }}
+                  className="clay-input px-2.5 py-1.5 rounded-xl text-slate-900 dark:text-white focus:outline-none text-[11px] cursor-pointer min-w-[120px] font-mono"
+                >
+                  <option value="">- All Batches -</option>
+                  {batches.map(b => (
+                    <option key={b} value={b}>{b}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Clear Filters Link */}
+              {isFiltered && (
+                <button
+                  onClick={() => {
+                    setInputSender('');
+                    setInputRecipient('');
+                    setSearchSender('');
+                    setSearchRecipient('');
+                    setSelectedGroupId('');
+                    setSelectedBatch('');
+                    setContactFilter('all');
+                    setPage(1);
+                  }}
+                  className="text-xs font-semibold text-rose-500 hover:text-rose-600 cursor-pointer ml-auto transition-colors"
+                >
+                  Clear Filters
+                </button>
+              )}
+            </div>
           </div>
 
           {/* List content */}
@@ -475,8 +561,8 @@ export default function InboxPage() {
                   <Inbox className="w-12 h-12 text-slate-300 dark:text-gray-600 mx-auto mb-4" />
                   <h3 className="text-sm font-semibold text-slate-700 dark:text-gray-300">No messages found</h3>
                   <p className="text-xs text-slate-500 dark:text-gray-400 mt-1 max-w-sm mx-auto">
-                    {contactFilter !== 'all' 
-                      ? `There are no messages matching the "${contactFilter}" filter.` 
+                    {isFiltered 
+                      ? 'There are no messages matching your selected filters.' 
                       : 'Use the Gateway Webhook Simulator on the left to fire a test payload.'}
                   </p>
                 </div>
@@ -543,7 +629,7 @@ export default function InboxPage() {
                   onChange={e => setContactPhone(e.target.value)}
                   required
                   readOnly
-                  className="clay-input w-full px-3.5 py-2.5 rounded-xl text-xs text-slate-505 focus:outline-none bg-slate-100/50 dark:bg-white/5 font-mono cursor-not-allowed"
+                  className="clay-input w-full px-3.5 py-2.5 rounded-xl text-xs text-slate-500 focus:outline-none bg-slate-100/50 dark:bg-white/5 font-mono cursor-not-allowed"
                 />
               </div>
 

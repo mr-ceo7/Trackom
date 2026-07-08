@@ -356,6 +356,8 @@ export default function CampaignsPage() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
+  const [page, setPage] = useState(1);
+  const LIMIT = 10;
   
   // Form fields
   const [campaignName, setCampaignName] = useState('');
@@ -492,12 +494,18 @@ export default function CampaignsPage() {
   };
 
   const fetchCampaigns = useCallback(async () => {
+    setLoading(true);
     try {
-      const resp = await api.get('/campaigns');
+      const resp = await api.get('/campaigns', {
+        params: {
+          page,
+          limit: LIMIT
+        }
+      });
       setCampaigns(resp.data);
     } catch { /* noop */ }
     finally { setLoading(false); }
-  }, []);
+  }, [page]);
 
   const fetchGroups = useCallback(async () => {
     try {
@@ -625,6 +633,29 @@ export default function CampaignsPage() {
             <div className="text-center py-12 border border-dashed border-slate-200 dark:border-white/10 rounded-2xl">
               <Megaphone className="w-10 h-10 text-slate-300 dark:text-gray-600 mx-auto mb-3" />
               <p className="text-sm text-slate-500 dark:text-gray-400">No campaigns launched yet.</p>
+            </div>
+          )}
+
+          {/* Pagination controls */}
+          {campaigns.length > 0 && (
+            <div className="px-5 py-3 flex items-center justify-between text-xs text-slate-500">
+              <button 
+                type="button"
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-3 py-1.5 rounded-xl clay-button-secondary disabled:opacity-50 cursor-pointer transition-all"
+              >
+                Previous
+              </button>
+              <span className="font-semibold text-slate-600 dark:text-gray-400">Page {page}</span>
+              <button 
+                type="button"
+                onClick={() => setPage(p => p + 1)}
+                disabled={campaigns.length < LIMIT}
+                className="px-3 py-1.5 rounded-xl clay-button-secondary disabled:opacity-50 cursor-pointer transition-all"
+              >
+                Next
+              </button>
             </div>
           )}
         </div>

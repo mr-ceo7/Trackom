@@ -19,6 +19,8 @@ export interface User {
   is_verified: boolean;
   is_superuser: boolean;
   webhook_url: string | null;
+  is_2fa_enabled: boolean;
+  two_factor_method: 'totp' | 'sms' | 'email';
   created_at: string;
 }
 
@@ -26,7 +28,8 @@ interface AuthContextValue {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<{ require_2fa?: boolean; temp_token?: string; method?: 'totp' | 'sms' | 'email' } | void>;
+  login2Fa: (tempToken: string, code: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   googleAuth: (credential: string) => Promise<void>;
   logout: () => void;
@@ -80,6 +83,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     const resp = await api.post('/auth/login', { email, password });
+    if (resp.data.require_2fa) {
+      return resp.data;
+    }
+    saveTokens(resp.data.access_token, resp.data.refresh_token);
+    await fetchUser();
+    return resp.data;
+  };
+
+  const login2Fa = async (tempToken: string, code: string) => {
+    const resp = await api.post('/auth/login/2fa', { temp_token: tempToken, code });
     saveTokens(resp.data.access_token, resp.data.refresh_token);
     await fetchUser();
   };
@@ -113,6 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!user,
         isLoading,
         login,
+        login2Fa,
         register,
         googleAuth,
         logout,

@@ -899,6 +899,29 @@ export default function AdminPanelPage() {
                   </tbody>
                 </table>
               </div>
+              
+              {/* Pagination controls */}
+              {users.length > 0 && (
+                <div className="px-5 py-3 border-t border-slate-200/20 dark:border-white/5 flex items-center justify-between text-xs text-slate-500">
+                  <button 
+                    type="button"
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="px-3 py-1.5 rounded-xl clay-button-secondary disabled:opacity-50 cursor-pointer transition-all"
+                  >
+                    Previous
+                  </button>
+                  <span className="font-semibold text-slate-600 dark:text-gray-400">Page {page}</span>
+                  <button 
+                    type="button"
+                    onClick={() => setPage(p => p + 1)}
+                    disabled={users.length < limit}
+                    className="px-3 py-1.5 rounded-xl clay-button-secondary disabled:opacity-50 cursor-pointer transition-all"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>

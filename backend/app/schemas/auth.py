@@ -88,6 +88,8 @@ class UserResponse(BaseModel):
     is_verified: bool
     is_superuser: bool
     webhook_url: Optional[str] = None
+    is_2fa_enabled: bool = False
+    two_factor_method: str = "totp"
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -109,4 +111,29 @@ class ChangePasswordRequest(BaseModel):
     @classmethod
     def check_new_password(cls, v: str) -> str:
         return validate_password_complexity(v)
+
+
+class LoginResponse(BaseModel):
+    require_2fa: bool = False
+    temp_token: Optional[str] = None
+    method: Optional[str] = None
+    access_token: Optional[str] = None
+    refresh_token: Optional[str] = None
+    token_type: Optional[str] = "bearer"
+
+
+class Login2FaRequest(BaseModel):
+    temp_token: str
+    code: str
+
+
+class TwoFactorSetupResponse(BaseModel):
+    secret: Optional[str] = None
+    otpauth_url: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+
+
+class TwoFactorCodeRequest(BaseModel):
+    code: str
 
