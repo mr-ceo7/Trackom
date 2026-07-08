@@ -40,6 +40,18 @@ class Settings(BaseSettings):
     ADVANTA_BASE_URL: str = "https://quicksms.advantasms.com"
     ADVANTA_DEFAULT_SHORTCODE: str = "ARVOCAP"
 
+    # Google Auth
+    GOOGLE_CLIENT_ID: str = "REDACTED_GOOGLE_CLIENT_ID"
+
+    # M-Pesa Integration
+    MPESA_CONSUMER_KEY: str = "REDACTED_MPESA_CONSUMER_KEY"
+    MPESA_CONSUMER_SECRET: str = "REDACTED_MPESA_CONSUMER_SECRET"
+    MPESA_SHORTCODE: str = "174379"
+    MPESA_PASSKEY: str = "REDACTED_MPESA_PASSKEY"
+    MPESA_CALLBACK_URL: str = "REDACTED_MPESA_CALLBACK_URL"
+    MPESA_ENV: str = "sandbox"
+    MPESA_CALLBACK_SECRET: str = "REDACTED_MPESA_CALLBACK_SECRET"
+
     # Email / SMTP
     SMTP_HOST: str = "smtp.gmail.com"
     SMTP_PORT: int = 587

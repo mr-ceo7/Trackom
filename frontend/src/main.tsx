@@ -3,6 +3,9 @@ import { createRoot } from 'react-dom/client';
 import ErrorBoundary from './components/ErrorBoundary';
 import App from './App.tsx';
 import './index.css';
+import { GoogleOAuthProvider } from '@react-oauth/google';
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '123456789-default.apps.googleusercontent.com';
 
 // Global error handlers
 window.addEventListener('unhandledrejection', (event) => {
@@ -17,7 +20,10 @@ window.onerror = (message, source, lineno, colno, error) => {
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
-      <App />
+      <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+        <App />
+      </GoogleOAuthProvider>
     </ErrorBoundary>
   </StrictMode>,
 );
+
