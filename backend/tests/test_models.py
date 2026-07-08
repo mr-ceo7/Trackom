@@ -69,7 +69,7 @@ class TestCampaignModel:
         user = User(email="camp@test.com", full_name="Camp User", hashed_password="x")
         db_session.add(user)
         await db_session.flush()
-        camp = Campaign(user_id=user.id, name="Test Campaign", message_content="Hi!")
+        camp = Campaign(user_id=user.id, name="Test Campaign", message_content="Hi!", sender_id="TRACKOM")
         db_session.add(camp)
         await db_session.flush()
         assert camp.status == "draft"

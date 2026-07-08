@@ -12,6 +12,7 @@ from app.database import get_db
 from app.models.user import User
 from app.models.sms import SmsMessage
 from app.models.transaction import Transaction
+from app.models.sender_id import SenderIdRequest
 from app.middleware.auth import get_current_user
 from app.utils.security import hash_password
 
@@ -132,6 +133,14 @@ async def create_reseller_user(
     )
     db.add(sub_user)
     await db.flush()
+
+    # Seed default approved 'TRACKOM' Sender ID
+    db.add(SenderIdRequest(
+        user_id=sub_user.id,
+        sender_id="TRACKOM",
+        purpose="System Default Sender ID",
+        status="approved"
+    ))
     return sub_user
 
 

@@ -1,0 +1,16 @@
+{
+    "mpesaPaybill": "400200",
+    "mpesaTill": "900100",
+    "minDeposit": 500,
+    "autoCredit": true,
+    "welcomeCredits": 10000,
+    "baseSmsCost": 0.1,
+    "senderIdFee": 10000,
+    "starterRate": 1.0,
+    "growthRate": 0.85,
+    "enterpriseRate": 0.7,
+    "maintenanceMode": false,
+    "supportEmail": "support@trackom.co.ke",
+    "supportPhone": "+254 700 000 000",
+    "alertBanner": ""
+}

@@ -130,3 +130,22 @@ export function calculateSmsParts(text: string): SmsPartsResult {
   }
 }
 
+/**
+ * Safely parses API error messages to avoid objects as React children.
+ */
+export function parseApiError(err: any, fallback: string = 'Something went wrong. Please try again.'): string {
+  const detail = err.response?.data?.detail;
+  if (!detail) return fallback;
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail)) {
+    return detail.map((d: any) => {
+      const field = d.loc ? d.loc[d.loc.length - 1] : '';
+      return field ? `${field}: ${d.msg}` : d.msg;
+    }).join(', ');
+  }
+  if (typeof detail === 'object') {
+    return detail.message || JSON.stringify(detail);
+  }
+  return fallback;
+}
+

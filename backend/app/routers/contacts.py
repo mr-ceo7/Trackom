@@ -98,6 +98,7 @@ async def list_contacts(
     limit: int = Query(50, ge=1, le=100000),
     search: Optional[str] = None,
     group_id: Optional[str] = None,
+    is_blacklisted: Optional[bool] = None,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -112,6 +113,9 @@ async def list_contacts(
             pass
     if search:
         count_q = count_q.where((Contact.name.ilike(f"%{search}%") | Contact.phone.ilike(f"%{search}%")))
+    if is_blacklisted is not None:
+        count_q = count_q.where(Contact.is_blacklisted == is_blacklisted)
+        
     count_res = await db.execute(count_q)
     total_count = count_res.scalar() or 0
     response.headers["X-Total-Count"] = str(total_count)
@@ -125,6 +129,9 @@ async def list_contacts(
             pass
     if search:
         q = q.where((Contact.name.ilike(f"%{search}%") | Contact.phone.ilike(f"%{search}%")))
+    if is_blacklisted is not None:
+        q = q.where(Contact.is_blacklisted == is_blacklisted)
+        
     q = q.order_by(Contact.name).offset((page - 1) * limit).limit(limit)
     result = await db.execute(q)
     return result.scalars().all()
@@ -142,6 +149,7 @@ async def create_contact(
         phone=data.phone,
         email=data.email,
         custom_attributes=data.custom_attributes or {},
+        is_blacklisted=data.is_blacklisted or False,
     )
     if data.group_id:
         group_result = await db.execute(

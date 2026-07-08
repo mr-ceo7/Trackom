@@ -41,13 +41,7 @@ async def list_approved_sender_ids(
             SenderIdRequest.status == "approved"
         )
     )
-    approved_list = list(result.scalars().all())
-    
-    # Always allow the default TRACKOM sender
-    if "TRACKOM" not in approved_list:
-        approved_list.insert(0, "TRACKOM")
-        
-    return approved_list
+    return list(result.scalars().all())
 
 
 @router.post("", response_model=SenderIdRequestResponse, status_code=status.HTTP_201_CREATED)

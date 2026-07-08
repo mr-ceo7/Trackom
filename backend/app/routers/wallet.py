@@ -44,8 +44,20 @@ async def mpesa_topup(
     result = await db.execute(stmt)
     user = result.scalar_one()
 
-    # 1 KES = 10 SMS credits
-    credits_to_add = int(data.amount * 10)
+    # Load system settings for dynamic pricing
+    from app.routers.admin import load_system_settings
+    settings = load_system_settings()
+    base_cost = settings.get("baseSmsCost", 1.0)
+    
+    # Get user plan rate multiplier
+    plan_key = f"{user.plan}Rate"  # e.g. starterRate, growthRate, enterpriseRate
+    multiplier = settings.get(plan_key, 1.0)
+    
+    cost_per_credit = base_cost * multiplier
+    if cost_per_credit <= 0:
+        cost_per_credit = 1.0  # Avoid division by zero
+        
+    credits_to_add = int(data.amount / cost_per_credit)
     checkout_id = f"ws_CO_{secrets.token_hex(8)}"
     merchant_id = f"ws_MR_{secrets.token_hex(4)}"
 

@@ -44,11 +44,14 @@ async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         await conn.execute(text("ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS include_opt_out BOOLEAN DEFAULT TRUE;"))
+        await conn.execute(text("ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS batch_number VARCHAR(100) NULL;"))
+        await conn.execute(text("ALTER TABLE contacts ADD COLUMN IF NOT EXISTS is_blacklisted BOOLEAN DEFAULT FALSE;"))
 
 
 async def seed_demo_user():
     """Seed a default demo user account for testing purposes."""
     from app.models.user import User
+    from app.models.sender_id import SenderIdRequest
     from app.utils.security import hash_password
     from sqlalchemy import select
 
@@ -71,6 +74,27 @@ async def seed_demo_user():
             )
             session.add(demo)
             await session.commit()
+            
+            # Fetch again to get the saved user with ID
+            result = await session.execute(select(User).where(User.email == "demo@trackom.co.ke"))
+            existing_user = result.scalar_one()
+
+        # Seed TRACKOM sender ID for demo user
+        result_sender = await session.execute(
+            select(SenderIdRequest).where(
+                SenderIdRequest.user_id == existing_user.id,
+                SenderIdRequest.sender_id == "TRACKOM"
+            )
+        )
+        if not result_sender.scalar_one_or_none():
+            demo_sender = SenderIdRequest(
+                user_id=existing_user.id,
+                sender_id="TRACKOM",
+                purpose="System Default Sender ID",
+                status="approved"
+            )
+            session.add(demo_sender)
+            await session.commit()
 
         # Seed default admin user
         result_admin = await session.execute(select(User).where(User.email == "admin@trackom.co.ke"))
@@ -90,4 +114,25 @@ async def seed_demo_user():
                 is_superuser=True
             )
             session.add(admin_user)
+            await session.commit()
+            
+            # Fetch again to get the saved admin with ID
+            result_admin = await session.execute(select(User).where(User.email == "admin@trackom.co.ke"))
+            existing_admin = result_admin.scalar_one()
+
+        # Seed TRACKOM sender ID for admin user
+        result_admin_sender = await session.execute(
+            select(SenderIdRequest).where(
+                SenderIdRequest.user_id == existing_admin.id,
+                SenderIdRequest.sender_id == "TRACKOM"
+            )
+        )
+        if not result_admin_sender.scalar_one_or_none():
+            admin_sender = SenderIdRequest(
+                user_id=existing_admin.id,
+                sender_id="TRACKOM",
+                purpose="System Default Sender ID",
+                status="approved"
+            )
+            session.add(admin_sender)
             await session.commit()

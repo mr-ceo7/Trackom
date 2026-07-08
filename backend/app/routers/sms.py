@@ -7,7 +7,7 @@ import io
 import csv
 import math
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Form, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,8 +15,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.models.sms import SmsMessage
 from app.models.user import User
+from app.models.incoming import IncomingSms
+from app.models.sender_id import SenderIdRequest
 from app.middleware.auth import get_current_user
-from app.schemas.sms import SmsSendRequest, SmsSendResponse, SmsMessageResponse
+from app.schemas.sms import SmsSendRequest, SmsSendResponse, SmsMessageResponse, IncomingSmsResponse, BulkDeleteRequest
 from app.utils.sms_calc import calculate_sms_parts
 from app.services.sms_gateway import get_sms_gateway
 
@@ -358,3 +360,202 @@ async def cancel_scheduled_message(
     current_user.sms_balance += refund_amount
     await db.commit()
     return {"message": "Scheduled message cancelled successfully.", "refunded_credits": refund_amount}
+
+
+@router.post("/incoming/webhook")
+async def incoming_sms_webhook(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Receives incoming SMS webhook from SMS gateway (e.g. Africa's Talking or simulator).
+    Supports both JSON and Form payloads.
+    """
+    payload = {}
+    content_type = request.headers.get("content-type", "")
+    
+    if "application/json" in content_type:
+        try:
+            payload = await request.json()
+        except Exception:
+            pass
+    else:
+        try:
+            form_data = await request.form()
+            payload = dict(form_data)
+        except Exception:
+            pass
+
+    # Extract fields with multiple fallbacks
+    from_val = payload.get("from") or payload.get("sender") or payload.get("From")
+    to_val = payload.get("to") or payload.get("recipient") or payload.get("To") or "TRACKOM"
+    text_val = payload.get("text") or payload.get("content") or payload.get("message") or payload.get("Body")
+    msg_id = payload.get("id") or payload.get("messageId") or payload.get("gateway_message_id")
+    
+    if not from_val or not text_val:
+        # Check if they are in query params as last resort
+        from_val = from_val or request.query_params.get("from")
+        to_val = to_val or request.query_params.get("to") or "TRACKOM"
+        text_val = text_val or request.query_params.get("text")
+        msg_id = msg_id or request.query_params.get("id")
+
+    if not from_val or not text_val:
+        raise HTTPException(status_code=400, detail="Missing required parameters: from and text/content")
+
+    # Match recipient (shortcode/number) to a user in the database
+    user_id = None
+
+    # Try to extract user from Authorization header first (for simulated local requests from the UI)
+    from app.utils.security import decode_token
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split(" ", 1)[1]
+        payload = decode_token(token)
+        if payload and payload.get("type") == "access":
+            sub = payload.get("sub")
+            if sub:
+                try:
+                    user_uuid = uuid_mod.UUID(sub)
+                    user_q = select(User).where(User.id == user_uuid)
+                    user_res = await db.execute(user_q)
+                    if user_res.scalar_one_or_none():
+                        user_id = user_uuid
+                except ValueError:
+                    pass
+
+    # Check sender_id_requests where sender_id = to_val (case-insensitive) and status = 'approved'
+    if not user_id and to_val:
+        sender_q = select(SenderIdRequest).where(
+            SenderIdRequest.sender_id.ilike(to_val.strip()),
+            SenderIdRequest.status == "approved"
+        )
+        sender_res = await db.execute(sender_q)
+        sender_req = sender_res.scalar_one_or_none()
+        if sender_req:
+            user_id = sender_req.user_id
+
+    # Fallback: if not matched, associate with the default demo user or the first active user
+    if not user_id:
+        user_q = select(User).where(User.email == "demo@trackom.co.ke")
+        user_res = await db.execute(user_q)
+        demo_user = user_res.scalar_one_or_none()
+        if demo_user:
+            user_id = demo_user.id
+        else:
+            first_user_q = select(User).limit(1)
+            first_user_res = await db.execute(first_user_q)
+            first_user = first_user_res.scalar_one_or_none()
+            if first_user:
+                user_id = first_user.id
+
+    # Save to database
+    incoming_msg = IncomingSms(
+        user_id=user_id,
+        sender=from_val.strip(),
+        recipient=to_val.strip() if to_val else "TRACKOM",
+        content=text_val.strip(),
+        gateway_message_id=msg_id.strip() if msg_id else None,
+        received_at=datetime.utcnow(),
+    )
+    db.add(incoming_msg)
+    await db.commit()
+
+    return {"status": "success", "message": "Inbound SMS received and logged."}
+
+
+@router.get("/incoming", response_model=List[IncomingSmsResponse])
+async def list_incoming_sms(
+    page: int = Query(1, ge=1),
+    limit: int = Query(50, ge=1, le=100),
+    sender: Optional[str] = Query(None),
+    recipient: Optional[str] = Query(None),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Retrieve incoming SMS message log history for the authenticated user."""
+    from app.models.contact import Contact
+    
+    q = (
+        select(IncomingSms, Contact.name, Contact.id)
+        .outerjoin(Contact, (Contact.phone == IncomingSms.sender) & (Contact.user_id == current_user.id) & (Contact.deleted_at.is_(None)))
+        .where(
+            IncomingSms.user_id == current_user.id,
+            IncomingSms.deleted_at.is_(None)
+        )
+    )
+    
+    if sender:
+        q = q.where(IncomingSms.sender.ilike(f"%{sender.strip()}%"))
+    if recipient:
+        q = q.where(IncomingSms.recipient.ilike(f"%{recipient.strip()}%"))
+        
+    q = q.order_by(IncomingSms.received_at.desc())
+    q = q.offset((page - 1) * limit).limit(limit)
+    
+    res = await db.execute(q)
+    rows = res.all()
+    
+    response_data = []
+    for msg, contact_name, contact_id in rows:
+        response_data.append(IncomingSmsResponse(
+            id=msg.id,
+            sender=msg.sender,
+            recipient=msg.recipient,
+            content=msg.content,
+            gateway_message_id=msg.gateway_message_id,
+            received_at=msg.received_at,
+            created_at=msg.created_at,
+            contact_name=contact_name,
+            contact_id=contact_id
+        ))
+    return response_data
+
+
+@router.delete("/incoming/{message_id}", status_code=204)
+async def delete_incoming_sms(
+    message_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Soft delete an incoming SMS message."""
+    try:
+        msg_uuid = uuid_mod.UUID(message_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid message ID format.")
+        
+    q = select(IncomingSms).where(
+        IncomingSms.id == msg_uuid,
+        IncomingSms.user_id == current_user.id,
+        IncomingSms.deleted_at.is_(None)
+    )
+    res = await db.execute(q)
+    msg = res.scalar_one_or_none()
+    if not msg:
+        raise HTTPException(status_code=404, detail="Incoming message not found")
+        
+    msg.deleted_at = datetime.utcnow()
+    await db.commit()
+    return None
+
+
+@router.post("/incoming/bulk-delete", status_code=204)
+async def bulk_delete_incoming_sms(
+    data: BulkDeleteRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Bulk soft delete incoming SMS messages."""
+    q = select(IncomingSms).where(
+        IncomingSms.id.in_(data.ids),
+        IncomingSms.user_id == current_user.id,
+        IncomingSms.deleted_at.is_(None)
+    )
+    res = await db.execute(q)
+    messages = res.scalars().all()
+    
+    now = datetime.utcnow()
+    for msg in messages:
+        msg.deleted_at = now
+        
+    await db.commit()
+    return None

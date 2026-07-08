@@ -28,6 +28,7 @@ class Contact(Base):
     email: Mapped[str] = mapped_column(String(255), nullable=True)
     notes: Mapped[str] = mapped_column(Text, nullable=True)
     custom_attributes: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
+    is_blacklisted: Mapped[bool] = mapped_column(default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     deleted_at: Mapped[datetime] = mapped_column(DateTime, nullable=True, default=None)
 

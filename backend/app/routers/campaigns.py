@@ -14,6 +14,7 @@ from app.models.campaign import Campaign
 from app.models.user import User
 from app.models.contact import Contact, ContactGroup
 from app.models.sms import SmsMessage
+from app.models.notification import Notification
 from app.middleware.auth import get_current_user
 from app.schemas.campaigns import CampaignCreate, CampaignResponse, CampaignUpdate
 from app.utils.sms_calc import calculate_sms_parts
@@ -106,6 +107,7 @@ async def create_campaign(
         started_at=None,
         completed_at=None,
         include_opt_out=data.include_opt_out,
+        batch_number=data.batch_number,
     )
 
     db.add(campaign)
@@ -206,6 +208,112 @@ async def update_campaign(
     return campaign
 
 
+@router.post("/{campaign_id}/cancel", response_model=CampaignResponse)
+async def cancel_campaign(
+    campaign_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Cancel a campaign. Refunds credits immediately for draft/scheduled, or lets the worker handle partial refund for sending/paused."""
+    result = await db.execute(
+        select(Campaign).where(
+            Campaign.id == uuid_mod.UUID(campaign_id),
+            Campaign.user_id == current_user.id,
+            Campaign.deleted_at.is_(None)
+        )
+    )
+    campaign = result.scalar_one_or_none()
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+
+    if campaign.status not in ("draft", "scheduled", "sending", "paused"):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot cancel a campaign with status '{campaign.status}'."
+        )
+
+    if campaign.status in ("draft", "scheduled"):
+        # Full refund — no messages were sent yet
+        refund = campaign.total_cost
+        current_user.sms_balance += float(refund)
+        campaign.status = "cancelled"
+        campaign.completed_at = datetime.utcnow()
+        db.add(Notification(
+            user_id=current_user.id,
+            title=f"Campaign '{campaign.name}' Cancelled ⛔",
+            message=f"Campaign was cancelled before sending. {int(refund)} credits refunded.",
+            type="warning",
+            action_url="/dashboard/campaigns"
+        ))
+    else:
+        # sending or paused — just flip status; the running worker will detect and refund unsent
+        campaign.status = "cancelled"
+
+    await db.commit()
+    await db.refresh(campaign)
+    return campaign
+
+
+@router.post("/{campaign_id}/pause", response_model=CampaignResponse)
+async def pause_campaign(
+    campaign_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Pause an actively sending campaign."""
+    result = await db.execute(
+        select(Campaign).where(
+            Campaign.id == uuid_mod.UUID(campaign_id),
+            Campaign.user_id == current_user.id,
+            Campaign.deleted_at.is_(None)
+        )
+    )
+    campaign = result.scalar_one_or_none()
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+
+    if campaign.status != "sending":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Can only pause a sending campaign. Current status: '{campaign.status}'."
+        )
+
+    campaign.status = "paused"
+    await db.commit()
+    await db.refresh(campaign)
+    return campaign
+
+
+@router.post("/{campaign_id}/resume", response_model=CampaignResponse)
+async def resume_campaign(
+    campaign_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Resume a paused campaign."""
+    result = await db.execute(
+        select(Campaign).where(
+            Campaign.id == uuid_mod.UUID(campaign_id),
+            Campaign.user_id == current_user.id,
+            Campaign.deleted_at.is_(None)
+        )
+    )
+    campaign = result.scalar_one_or_none()
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+
+    if campaign.status != "paused":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Can only resume a paused campaign. Current status: '{campaign.status}'."
+        )
+
+    campaign.status = "sending"
+    await db.commit()
+    await db.refresh(campaign)
+    return campaign
+
+
 @router.post("/{campaign_id}/resend", response_model=CampaignResponse, status_code=201)
 async def resend_campaign(
     campaign_id: str,
@@ -272,6 +380,7 @@ async def resend_campaign(
         total_cost=total_cost,
         group_id=old_campaign.group_id,
         include_opt_out=old_campaign.include_opt_out,
+        batch_number=old_campaign.batch_number,
     )
     
     db.add(new_campaign)

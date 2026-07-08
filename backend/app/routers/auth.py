@@ -12,6 +12,7 @@ from app.database import get_db
 from app.models.user import User
 from app.models.notification import Notification
 from app.models.transaction import Transaction
+from app.models.sender_id import SenderIdRequest
 from app.schemas.auth import (
     RegisterRequest,
     LoginRequest,
@@ -44,6 +45,10 @@ async def register(request: Request, data: RegisterRequest, db: AsyncSession = D
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
 
     # Create user
+    from app.routers.admin import load_system_settings
+    settings = load_system_settings()
+    welcome_balance = settings.get("welcomeCredits", 10000)
+
     user = User(
         email=data.email,
         full_name=data.full_name,
@@ -51,16 +56,24 @@ async def register(request: Request, data: RegisterRequest, db: AsyncSession = D
         company=data.company,
         hashed_password=hash_password(data.password),
         account_type=data.account_type,
-        sms_balance=10000,  # Free credits
+        sms_balance=welcome_balance,
     )
     db.add(user)
     await db.flush()  # Get user.id
+
+    # Seed default approved 'TRACKOM' Sender ID
+    db.add(SenderIdRequest(
+        user_id=user.id,
+        sender_id="TRACKOM",
+        purpose="System Default Sender ID",
+        status="approved"
+    ))
 
     # Create welcome notification
     notification = Notification(
         user_id=user.id,
         title="Welcome to Trackom! 🎉",
-        message="Your account has been created with 10,000 free SMS credits. Start sending!",
+        message=f"Your account has been created with {welcome_balance:,} free SMS credits. Start sending!",
         type="success",
         action_url="/dashboard",
     )
@@ -71,9 +84,9 @@ async def register(request: Request, data: RegisterRequest, db: AsyncSession = D
         user_id=user.id,
         type="bonus",
         amount=0,
-        sms_credits=10000,
-        balance_after=10000,
-        description="Welcome bonus - 10,000 free SMS credits",
+        sms_credits=welcome_balance,
+        balance_after=welcome_balance,
+        description=f"Welcome bonus - {welcome_balance:,} free SMS credits",
         status="completed",
     )
     db.add(transaction)
@@ -150,6 +163,14 @@ async def google_auth(data: GoogleAuthRequest, db: AsyncSession = Depends(get_db
         )
         db.add(user)
         await db.flush()
+
+        # Seed default approved 'TRACKOM' Sender ID
+        db.add(SenderIdRequest(
+            user_id=user.id,
+            sender_id="TRACKOM",
+            purpose="System Default Sender ID",
+            status="approved"
+        ))
 
         # Welcome notification + bonus
         db.add(Notification(

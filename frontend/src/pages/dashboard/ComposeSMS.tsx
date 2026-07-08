@@ -2,6 +2,7 @@
  * ComposeSMS - send SMS to individual numbers or contact groups.
  */
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Send, Users, Hash, MessageSquare, AlertCircle, CheckCircle2, ChevronDown, Clock, Sliders, X } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -14,10 +15,11 @@ import { calculateSmsParts } from '../../utils';
 
 export default function ComposeSMS() {
   const { user, refreshUser } = useAuth();
+  const [searchParams] = useSearchParams();
   const [sendMode, setSendMode] = useState<'single' | 'bulk' | 'group'>('single');
   const [recipients, setRecipients] = useState('');
-  const [senderId, setSenderId] = useState('TRACKOM');
-  const [senderIds, setSenderIds] = useState<string[]>(['TRACKOM']);
+  const [senderId, setSenderId] = useState('');
+  const [senderIds, setSenderIds] = useState<string[]>([]);
 
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -228,6 +230,30 @@ export default function ComposeSMS() {
     loadSenderIds();
     fetchTemplates();
   }, [fetchGroups, fetchTemplates]);
+
+  useEffect(() => {
+    const toParam = searchParams.get('to') || searchParams.get('phone');
+    if (toParam) {
+      if (toParam.includes(',')) {
+        setRecipients(toParam.split(',').join('\n'));
+        setSendMode('bulk');
+      } else {
+        setRecipients(toParam);
+        setSendMode('single');
+      }
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    const templateId = searchParams.get('template_id');
+    if (templateId && templates.length > 0) {
+      const match = templates.find(t => t.id === templateId);
+      if (match) {
+        setSelectedTemplateId(templateId);
+        setMessage(match.content);
+      }
+    }
+  }, [searchParams, templates]);
 
   const handleSaveTemplate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -500,7 +526,7 @@ export default function ComposeSMS() {
           api.post('/messages/send', {
             recipients: phones,
             message: message,
-            sender_id: senderId || 'TRACKOM',
+            sender_id: senderId,
             batch_number: batchNumber || undefined,
             scheduled_at: isSched && schedAt ? new Date(schedAt).toISOString() : undefined,
             include_opt_out: includeOptOut,
@@ -636,8 +662,9 @@ export default function ComposeSMS() {
         await api.post('/campaigns', {
           name: campaignName,
           message_content: message,
-          sender_id: senderId || 'TRACKOM',
+          sender_id: senderId,
           group_id: gid || undefined,
+          batch_number: batchNumber || undefined,
           scheduled_at: isSched && schedAt ? new Date(schedAt).toISOString() : undefined,
           include_opt_out: includeOptOut,
         });
@@ -879,12 +906,19 @@ export default function ComposeSMS() {
 
           {/* Message */}
           <div className="clay-card rounded-3xl p-5 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <h3 className="font-display font-semibold text-sm text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
-                <MessageSquare className="w-4 h-4 text-brand-emerald" /> Compose Message {includeOptOut && <span className="text-amber-500 font-medium text-[11px] ml-1">[15 characters are automatically added for opt out]</span>}
-              </h3>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 flex-wrap">
+              <div className="space-y-0.5 text-left">
+                <h3 className="font-display font-semibold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-brand-emerald" /> Compose Message
+                </h3>
+                {includeOptOut && (
+                  <span className="text-amber-500 font-medium text-[10px] block">
+                    [15 characters are automatically added for opt out]
+                  </span>
+                )}
+              </div>
               
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2 max-w-full">
                 <select
                   value={selectedTemplateId}
                   onChange={(e) => handleTemplateSelect(e.target.value)}
@@ -973,7 +1007,10 @@ export default function ComposeSMS() {
               </div>
             )}
           </div>
+        </div>
 
+        {/* Right - Summary & Send */}
+        <div className="space-y-5">
           {/* Advanced Options (Scheduling & Tracking) */}
           <div className="clay-card rounded-3xl p-5 space-y-4">
             <h3 className="font-display font-semibold text-sm text-slate-900 dark:text-white flex items-center gap-2">
@@ -996,16 +1033,13 @@ export default function ComposeSMS() {
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Right - Summary & Send */}
-        <div className="space-y-5">
           <div className="clay-card rounded-3xl p-5 space-y-4 sticky top-20">
             <h3 className="font-display font-semibold text-sm text-slate-900 dark:text-white">Summary</h3>
 
             <div className="space-y-3">
               {[
-                { label: 'Sender ID', value: senderId || 'TRACKOM' },
+                { label: 'Sender ID', value: senderId || 'None Selected' },
                 { label: 'Recipients', value: recipientCount.toString() },
                 { label: 'SMS Parts', value: smsCount.toString() },
                 { label: 'Est. Credits', value: estimatedCost.toLocaleString() },

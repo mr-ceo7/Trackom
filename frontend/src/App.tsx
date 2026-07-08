@@ -28,9 +28,12 @@ const ResellerPage = lazy(() => import('./pages/solutions/ResellerPage'));
 const DashboardLayout = lazy(() => import('./layouts/DashboardLayout'));
 const DashboardOverview = lazy(() => import('./pages/dashboard/DashboardOverview'));
 const ComposeSMS = lazy(() => import('./pages/dashboard/ComposeSMS'));
+const InboxPage = lazy(() => import('./pages/dashboard/InboxPage'));
 const ContactsPage = lazy(() => import('./pages/dashboard/ContactsPage'));
 const CampaignsPage = lazy(() => import('./pages/dashboard/CampaignsPage'));
 const ReportsPage = lazy(() => import('./pages/dashboard/ReportsPage'));
+const TemplatesPage = lazy(() => import('./pages/dashboard/TemplatesPage'));
+const SenderIdsPage = lazy(() => import('./pages/dashboard/SenderIdsPage'));
 const WalletPage = lazy(() => import('./pages/dashboard/WalletPage'));
 const ApiKeysPage = lazy(() => import('./pages/dashboard/ApiKeysPage'));
 const SettingsPage = lazy(() => import('./pages/dashboard/SettingsPage'));
@@ -78,15 +81,27 @@ export default function App() {
             >
               <Route index element={<DashboardOverview />} />
               <Route path="compose" element={<ComposeSMS />} />
+              <Route path="inbox" element={<InboxPage />} />
               <Route path="contacts" element={<ContactsPage />} />
               <Route path="campaigns" element={<CampaignsPage />} />
+              <Route path="templates" element={<TemplatesPage />} />
+              <Route path="sender-ids" element={<SenderIdsPage />} />
               <Route path="reports" element={<ReportsPage />} />
               <Route path="wallet" element={<WalletPage />} />
               <Route path="api-keys" element={<ApiKeysPage />} />
               <Route path="settings" element={<SettingsPage />} />
-              <Route path="admin" element={<AdminPanelPage />} />
               <Route path="reseller" element={<ResellerPanelPage />} />
             </Route>
+
+            {/* Standalone Admin Console Route */}
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <AdminPanelPage />
+                </ProtectedRoute>
+              }
+            />
 
             {/* 404 */}
             <Route path="*" element={<NotFoundPage />} />

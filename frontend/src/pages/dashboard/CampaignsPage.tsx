@@ -1,8 +1,8 @@
 /**
  * CampaignsPage - view and create SMS campaigns with groups targeting & scheduling.
  */
-import React, { useState, useEffect, useCallback } from 'react';
-import { Megaphone, Plus, Clock, CheckCircle2, XCircle, Send, BarChart3, X, Calendar, Users, Edit, Trash2 } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Megaphone, Plus, Clock, CheckCircle2, XCircle, Send, BarChart3, X, Calendar, Users, Edit, Trash2, Pause, Play, Ban } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import api from '../../services/api';
 import Loader from '../../components/Loader';
@@ -39,6 +39,29 @@ const statusConfig: Record<string, { icon: any; color: string; bg: string }> = {
   draft: { icon: Clock, color: 'text-slate-400', bg: 'bg-slate-100 dark:bg-white/5' },
   scheduled: { icon: Clock, color: 'text-amber-500', bg: 'bg-amber-500/10' },
   failed: { icon: XCircle, color: 'text-red-500', bg: 'bg-red-500/10' },
+  paused: { icon: Pause, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+  cancelled: { icon: Ban, color: 'text-slate-400', bg: 'bg-slate-200/10 dark:bg-white/5' },
+};
+
+const getCarrierFromPhone = (phone: string): string => {
+  const clean = phone.replace(/[^0-9]/g, '');
+  let localNum = clean;
+  if (localNum.startsWith('254')) {
+    localNum = localNum.slice(3);
+  } else if (localNum.startsWith('0')) {
+    localNum = localNum.slice(1);
+  }
+  
+  if (/^(70|71|72|74|79|110|111|112|113|114|115)/.test(localNum)) {
+    return 'Safaricom';
+  }
+  if (/^(73|75|78|100|101|102)/.test(localNum)) {
+    return 'Airtel';
+  }
+  if (/^(77|104)/.test(localNum)) {
+    return 'Telkom';
+  }
+  return 'Safaricom';
 };
 
 const CampaignRow: React.FC<{ 
@@ -47,40 +70,75 @@ const CampaignRow: React.FC<{
   onDelete: (id: string) => Promise<void>;
   onResend: (id: string) => Promise<void>;
   onEdit: (c: CampaignData) => void;
-}> = ({ c, statusConfig, onDelete, onResend, onEdit }) => {
-  const [expanded, setExpanded] = useState(c.status === 'queued' || c.status === 'sending');
+  onPause: (id: string) => Promise<void>;
+  onResume: (id: string) => Promise<void>;
+  onCancel: (id: string) => Promise<void>;
+}> = ({ c, statusConfig, onDelete, onResend, onEdit, onPause, onResume, onCancel }) => {
+  const [expanded, setExpanded] = useState(c.status === 'queued' || c.status === 'sending' || c.status === 'paused');
   const [liveLogs, setLiveLogs] = useState<string[]>([]);
+  const logContainerRef = useRef<HTMLDivElement>(null);
 
   // Automatically expand active ones
   useEffect(() => {
-    if (c.status === 'queued' || c.status === 'sending') {
+    if (c.status === 'queued' || c.status === 'sending' || c.status === 'paused') {
       setExpanded(true);
     }
   }, [c.status]);
 
-  // Generate simulated streaming log lines for active dispatches
+  // Load real logs from the API
   useEffect(() => {
-    if (c.status !== 'queued' && c.status !== 'sending') {
-      return;
-    }
+    if (!expanded) return;
     
-    if (liveLogs.length === 0) {
-      setLiveLogs([`⚡ [SYSTEM] Spawning campaign worker for ${c.name}...`]);
-    }
+    const isActive = c.status === 'queued' || c.status === 'sending' || c.status === 'paused';
+    
+    const fetchLogs = async () => {
+      try {
+        const resp = await api.get('/messages/history', {
+          params: {
+            campaign_id: c.id,
+            limit: 100
+          }
+        });
+        
+        const messages = [...resp.data].reverse();
+        const formattedLogs: string[] = [];
+        formattedLogs.push(`⚡ [SYSTEM] Spawning campaign worker for ${c.name}...`);
+        
+        messages.forEach((msg: any) => {
+          const timestamp = new Date(msg.created_at).toLocaleTimeString();
+          const carrier = getCarrierFromPhone(msg.recipient);
+          let statusStr = 'Success';
+          if (msg.status === 'failed' || msg.status === 'rejected') {
+            statusStr = `Failed${msg.error_message ? `: ${msg.error_message}` : ''}`;
+          } else if (msg.status === 'queued') {
+            statusStr = 'Queued';
+          } else if (msg.status === 'scheduled') {
+            statusStr = 'Scheduled';
+          }
+          
+          formattedLogs.push(`[${timestamp}] 📡 DISPATCH: Sent payload to ${msg.recipient} (${carrier}) -> ${statusStr}`);
+        });
+        
+        setLiveLogs(formattedLogs);
+      } catch (err) {
+        console.error("Failed to fetch campaign logs:", err);
+      }
+    };
 
-    const carriers = ['Safaricom', 'Airtel', 'Telkom'];
-    const interval = setInterval(() => {
-      const carrier = carriers[Math.floor(Math.random() * carriers.length)];
-      const prefix = carrier === 'Safaricom' ? '71' : carrier === 'Airtel' ? '73' : '77';
-      const randomPhone = `+254${prefix}${Math.floor(1000000 + Math.random() * 9000000)}`;
-      const timestamp = new Date().toLocaleTimeString();
-      
-      const newLog = `[${timestamp}] 📡 DISPATCH: Sent payload to ${randomPhone} (${carrier}) -> Success`;
-      setLiveLogs(prev => [...prev.slice(-15), newLog]);
-    }, 700);
+    fetchLogs();
+    
+    if (!isActive) return;
 
+    const interval = setInterval(fetchLogs, 2000);
     return () => clearInterval(interval);
-  }, [c.status, c.name, liveLogs.length]);
+  }, [c.status, c.id, c.name, expanded]);
+
+  // Auto-scroll logs to bottom when new logs arrive
+  useEffect(() => {
+    if (logContainerRef.current) {
+      logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
+    }
+  }, [liveLogs]);
 
   const cfg = statusConfig[c.status] || statusConfig.draft;
   const Icon = cfg.icon;
@@ -145,6 +203,36 @@ const CampaignRow: React.FC<{
 
           {/* Action buttons */}
           <div className="flex items-center gap-1 border-l border-slate-200/20 dark:border-white/5 pl-4 shrink-0">
+            {/* Pause/Resume for active campaigns */}
+            {c.status === 'sending' && (
+              <button 
+                onClick={(e) => { e.stopPropagation(); onPause(c.id); }}
+                className="p-2 rounded-xl text-amber-500 hover:bg-amber-500/10 cursor-pointer transition-all"
+                title="Pause Campaign"
+              >
+                <Pause className="w-4 h-4" />
+              </button>
+            )}
+            {c.status === 'paused' && (
+              <button 
+                onClick={(e) => { e.stopPropagation(); onResume(c.id); }}
+                className="p-2 rounded-xl text-brand-emerald hover:bg-brand-emerald/10 cursor-pointer transition-all"
+                title="Resume Campaign"
+              >
+                <Play className="w-4 h-4" />
+              </button>
+            )}
+            {/* Cancel for active/scheduled/paused campaigns */}
+            {(c.status === 'sending' || c.status === 'paused' || c.status === 'scheduled') && (
+              <button 
+                onClick={(e) => { e.stopPropagation(); onCancel(c.id); }}
+                className="p-2 rounded-xl text-rose-500 hover:bg-rose-500/10 cursor-pointer transition-all"
+                title="Cancel Campaign"
+              >
+                <Ban className="w-4 h-4" />
+              </button>
+            )}
+            {/* Existing Edit button */}
             <button 
               onClick={(e) => { e.stopPropagation(); onEdit(c); }}
               className="p-2 rounded-xl text-slate-400 hover:text-brand-primary hover:bg-brand-primary/5 dark:hover:bg-brand-primary/10 cursor-pointer transition-all"
@@ -152,7 +240,7 @@ const CampaignRow: React.FC<{
             >
               <Edit className="w-4 h-4" />
             </button>
-            {(c.status !== 'sending' && c.status !== 'queued') && (
+            {(c.status !== 'sending' && c.status !== 'queued' && c.status !== 'paused') && (
               <button 
                 onClick={(e) => { e.stopPropagation(); onResend(c.id); }}
                 className="p-2 rounded-xl text-slate-400 hover:text-brand-emerald hover:bg-brand-emerald/5 dark:hover:bg-brand-emerald/10 cursor-pointer transition-all"
@@ -181,7 +269,7 @@ const CampaignRow: React.FC<{
             className="clay-inset border-t border-slate-200/20 dark:border-white/5 px-5 py-4 space-y-4"
             onClick={(e) => e.stopPropagation()} // Prevent collapse on content click
           >
-            {(c.status === 'queued' || c.status === 'sending') ? (
+            {(c.status === 'queued' || c.status === 'sending' || c.status === 'paused') ? (
               <div className="space-y-3.5">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                   <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider flex items-center gap-1.5">
@@ -200,8 +288,15 @@ const CampaignRow: React.FC<{
                   />
                 </div>
 
+                {c.status === 'paused' && (
+                  <div className="flex items-center gap-2 py-2 px-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-500 text-xs font-semibold">
+                    <Pause className="w-3.5 h-3.5" />
+                    Campaign paused — {c.sent_count} of {c.total_recipients} messages sent so far
+                  </div>
+                )}
+
                 {liveLogs.length > 0 && (
-                  <div className="bg-slate-950 border border-slate-800 dark:border-white/5 rounded-xl p-3.5 font-mono text-[9px] text-slate-400 space-y-1 h-36 overflow-y-auto custom-scrollbar">
+                  <div ref={logContainerRef} className="bg-slate-950 border border-slate-800 dark:border-white/5 rounded-xl p-3.5 font-mono text-[9px] text-slate-400 space-y-1 h-36 overflow-y-auto custom-scrollbar">
                     {liveLogs.map((log, index) => (
                       <div 
                         key={index}
@@ -265,8 +360,8 @@ export default function CampaignsPage() {
   // Form fields
   const [campaignName, setCampaignName] = useState('');
   const [messageContent, setMessageContent] = useState('');
-  const [senderId, setSenderId] = useState('TRACKOM');
-  const [senderIds, setSenderIds] = useState<string[]>(['TRACKOM']);
+  const [senderId, setSenderId] = useState('');
+  const [senderIds, setSenderIds] = useState<string[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState('');
   const [isScheduled, setIsScheduled] = useState(false);
   const [scheduledAt, setScheduledAt] = useState('');
@@ -331,7 +426,7 @@ export default function CampaignsPage() {
           name: editName.startsWith('Resend: ') ? editName : `Resend: ${editName}`,
           message_content: editMessageContent,
           group_id: editGroupId || null,
-          sender_id: editingCampaign.sender_id || 'TRACKOM',
+          sender_id: editingCampaign.sender_id,
           scheduled_at: editIsScheduled && editScheduledAt ? new Date(editScheduledAt).toISOString() : null,
           include_opt_out: editIncludeOptOut,
         });
@@ -364,6 +459,35 @@ export default function CampaignsPage() {
       await refreshUser();
     } catch (err: any) {
       alert(err.response?.data?.detail || 'Failed to resend campaign.');
+    }
+  };
+
+  const handlePauseCampaign = async (id: string) => {
+    try {
+      await api.post(`/campaigns/${id}/pause`);
+      await fetchCampaigns();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Failed to pause campaign.');
+    }
+  };
+
+  const handleResumeCampaign = async (id: string) => {
+    try {
+      await api.post(`/campaigns/${id}/resume`);
+      await fetchCampaigns();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Failed to resume campaign.');
+    }
+  };
+
+  const handleCancelCampaign = async (id: string) => {
+    if (!confirm('Are you sure you want to cancel this campaign? This cannot be undone. Unused credits will be refunded.')) return;
+    try {
+      await api.post(`/campaigns/${id}/cancel`);
+      await fetchCampaigns();
+      await refreshUser();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Failed to cancel campaign.');
     }
   };
 
@@ -408,7 +532,7 @@ export default function CampaignsPage() {
 
   // Poll active campaigns
   useEffect(() => {
-    const hasActive = campaigns.some(c => c.status === 'queued' || c.status === 'sending');
+    const hasActive = campaigns.some(c => c.status === 'queued' || c.status === 'sending' || c.status === 'paused');
     if (!hasActive) return;
 
     const interval = setInterval(() => {
@@ -427,7 +551,7 @@ export default function CampaignsPage() {
       await api.post('/campaigns', {
         name: campaignName,
         message_content: messageContent,
-        sender_id: senderId || 'TRACKOM',
+        sender_id: senderId,
         group_id: selectedGroupId || null,
         scheduled_at: isScheduled && scheduledAt ? new Date(scheduledAt).toISOString() : null,
         include_opt_out: includeOptOut,
@@ -492,6 +616,9 @@ export default function CampaignsPage() {
               onDelete={handleDeleteCampaign}
               onResend={handleResendCampaign}
               onEdit={openEditModal}
+              onPause={handlePauseCampaign}
+              onResume={handleResumeCampaign}
+              onCancel={handleCancelCampaign}
             />
           ))}
           {campaigns.length === 0 && (

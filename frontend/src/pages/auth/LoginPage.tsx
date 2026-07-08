@@ -29,7 +29,8 @@ export default function LoginPage() {
       await login(email, password);
       navigate(from, { replace: true });
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Login failed. Please try again.');
+      const { parseApiError } = await import('../../utils');
+      setError(parseApiError(err, 'Login failed. Please try again.'));
     } finally {
       setIsSubmitting(false);
     }

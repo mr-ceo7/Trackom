@@ -17,9 +17,9 @@ class Campaign(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     message_content: Mapped[str] = mapped_column(Text, nullable=False)
-    sender_id: Mapped[str] = mapped_column(String(20), default="TRACKOM")
+    sender_id: Mapped[str] = mapped_column(String(20))
     status: Mapped[str] = mapped_column(
-        SAEnum("draft", "scheduled", "sending", "completed", "failed", "cancelled", name="campaign_status_enum"),
+        SAEnum("draft", "scheduled", "sending", "paused", "completed", "failed", "cancelled", name="campaign_status_enum"),
         default="draft",
         nullable=False,
         index=True
@@ -33,6 +33,7 @@ class Campaign(Base):
     group_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("contact_groups.id", ondelete="SET NULL"), nullable=True)
     deleted_at: Mapped[datetime] = mapped_column(DateTime, nullable=True, default=None)
     include_opt_out: Mapped[bool] = mapped_column(default=True, nullable=False)
+    batch_number: Mapped[str] = mapped_column(String(100), nullable=True)
 
 
     # Scheduling

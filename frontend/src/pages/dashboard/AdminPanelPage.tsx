@@ -3,11 +3,14 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   Users, Megaphone, Send, ShieldAlert, Search, Plus, Minus, 
   Check, X, Ban, UserCheck, Coins, Calendar, Sliders, 
-  Cpu, Key, Link as LinkIcon, Edit, Trash2, ToggleLeft, ToggleRight
+  Cpu, Key, Link as LinkIcon, Edit, Trash2, ToggleLeft, ToggleRight, Smartphone, Activity, TrendingUp, Settings, Save
 } from 'lucide-react';
+import { useNavigate, NavLink } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
 import Loader from '../../components/Loader';
 import GenieModal from '../../components/GenieModal';
+import TrackomLogo from '../../components/TrackomLogo';
 
 
 interface AdminStats {
@@ -17,6 +20,9 @@ interface AdminStats {
   total_sms_sent: number;
   success_rate: number;
   system_balance: number;
+  monthly_revenue?: number;
+  all_time_revenue?: number;
+  failed_sms_sent?: number;
 }
 
 interface AdminUser {
@@ -46,13 +52,21 @@ interface SmsGatewayConfig {
 }
 
 export default function AdminPanelPage() {
-  const [activeTab, setActiveTab] = useState<'users' | 'gateways'>('users');
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'gateways' | 'sender_ids' | 'campaigns' | 'transactions' | 'settings'>('dashboard');
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [gateways, setGateways] = useState<SmsGatewayConfig[]>([]);
+  const [senderIds, setSenderIds] = useState<any[]>([]);
+  const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [loadingGateways, setLoadingGateways] = useState(false);
+  const [loadingSenderIds, setLoadingSenderIds] = useState(false);
+  const [loadingCampaigns, setLoadingCampaigns] = useState(false);
+  const [loadingTransactions, setLoadingTransactions] = useState(false);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -73,11 +87,82 @@ export default function AdminPanelPage() {
   const [creditDesc, setCreditDesc] = useState<string>('');
   const [submittingCredits, setSubmittingCredits] = useState(false);
 
+  // System Settings States
+  const [mpesaPaybill, setMpesaPaybill] = useState('400200');
+  const [mpesaTill, setMpesaTill] = useState('900100');
+  const [minDeposit, setMinDeposit] = useState(500);
+  const [autoCredit, setAutoCredit] = useState(true);
+  const [welcomeCredits, setWelcomeCredits] = useState(10000);
+  const [baseSmsCost, setBaseSmsCost] = useState(1.0);
+  const [senderIdFee, setSenderIdFee] = useState(10000);
+  const [starterRate, setStarterRate] = useState(1.00);
+  const [growthRate, setGrowthRate] = useState(0.85);
+  const [enterpriseRate, setEnterpriseRate] = useState(0.70);
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [supportEmail, setSupportEmail] = useState('support@trackom.co.ke');
+  const [supportPhone, setSupportPhone] = useState('+254 700 000 000');
+  const [alertBanner, setAlertBanner] = useState('');
+  const [savingSettings, setSavingSettings] = useState(false);
+
+  // Load settings on mount
+  const fetchSettings = useCallback(async () => {
+    try {
+      const resp = await api.get('/admin/settings');
+      const data = resp.data;
+      if (data.mpesaPaybill) setMpesaPaybill(data.mpesaPaybill);
+      if (data.mpesaTill) setMpesaTill(data.mpesaTill);
+      if (data.minDeposit !== undefined) setMinDeposit(data.minDeposit);
+      if (data.autoCredit !== undefined) setAutoCredit(data.autoCredit);
+      if (data.welcomeCredits !== undefined) setWelcomeCredits(data.welcomeCredits);
+      if (data.baseSmsCost !== undefined) setBaseSmsCost(data.baseSmsCost);
+      if (data.senderIdFee !== undefined) setSenderIdFee(data.senderIdFee);
+      if (data.starterRate !== undefined) setStarterRate(data.starterRate);
+      if (data.growthRate !== undefined) setGrowthRate(data.growthRate);
+      if (data.enterpriseRate !== undefined) setEnterpriseRate(data.enterpriseRate);
+      if (data.maintenanceMode !== undefined) setMaintenanceMode(data.maintenanceMode);
+      if (data.supportEmail) setSupportEmail(data.supportEmail);
+      if (data.supportPhone) setSupportPhone(data.supportPhone);
+      if (data.alertBanner !== undefined) setAlertBanner(data.alertBanner);
+    } catch { /* noop */ }
+  }, []);
+
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
+
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingSettings(true);
+    try {
+      const payload = {
+        mpesaPaybill, mpesaTill, minDeposit, autoCredit, welcomeCredits, baseSmsCost,
+        senderIdFee, starterRate, growthRate, enterpriseRate, maintenanceMode,
+        supportEmail, supportPhone, alertBanner
+      };
+      await api.put('/admin/settings', payload);
+      alert('System Settings saved successfully!');
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Failed to save settings.');
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
   // Rate Modal state
   const [selectedRateUser, setSelectedRateUser] = useState<AdminUser | null>(null);
   const [isRateModalOpen, setIsRateModalOpen] = useState(false);
   const [customRate, setCustomRate] = useState<string>('1.0');
   const [submittingRate, setSubmittingRate] = useState(false);
+
+  // Tenant Details Editor state
+  const [selectedEditUser, setSelectedEditUser] = useState<AdminUser | null>(null);
+  const [editFullName, setEditFullName] = useState('');
+  const [editUserEmail, setEditUserEmail] = useState('');
+  const [editUserPhone, setEditUserPhone] = useState('');
+  const [editCompany, setEditCompany] = useState('');
+  const [editAccountType, setEditAccountType] = useState<'business' | 'reseller'>('business');
+  const [editPlan, setEditPlan] = useState<'starter' | 'growth' | 'enterprise'>('starter');
+  const [submittingEditUser, setSubmittingEditUser] = useState(false);
 
   // Gateway Modal state
   const [selectedGateway, setSelectedGateway] = useState<SmsGatewayConfig | null>(null);
@@ -88,6 +173,10 @@ export default function AdminPanelPage() {
   const [gwWeight, setGwWeight] = useState(50);
   const [gwActive, setGwActive] = useState(true);
   const [submittingGateway, setSubmittingGateway] = useState(false);
+
+  // Sender ID Reject state
+  const [rejectingRequest, setRejectingRequest] = useState<any | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
 
   // Fetch admin statistics
   const fetchStats = useCallback(async () => {
@@ -124,6 +213,58 @@ export default function AdminPanelPage() {
     finally { setLoadingGateways(false); }
   }, []);
 
+  const fetchSenderIds = useCallback(async () => {
+    setLoadingSenderIds(true);
+    try {
+      const resp = await api.get('/admin/sender-ids');
+      setSenderIds(resp.data);
+    } catch { /* noop */ }
+    finally { setLoadingSenderIds(false); }
+  }, []);
+
+  const fetchCampaigns = useCallback(async () => {
+    setLoadingCampaigns(true);
+    try {
+      const resp = await api.get('/admin/campaigns');
+      setCampaigns(resp.data);
+    } catch { /* noop */ }
+    finally { setLoadingCampaigns(false); }
+  }, []);
+
+  const fetchTransactions = useCallback(async () => {
+    setLoadingTransactions(true);
+    try {
+      const resp = await api.get('/admin/transactions');
+      setTransactions(resp.data);
+    } catch { /* noop */ }
+    finally { setLoadingTransactions(false); }
+  }, []);
+
+  const handleApproveSenderId = async (id: string) => {
+    if (!confirm('Are you sure you want to approve this Sender ID request?')) return;
+    try {
+      await api.post(`/admin/sender-ids/${id}/approve`);
+      await fetchSenderIds();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Failed to approve Sender ID request.');
+    }
+  };
+
+  const handleRejectSenderIdSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!rejectingRequest || !rejectReason.trim()) return;
+    try {
+      await api.post(`/admin/sender-ids/${rejectingRequest.id}/reject`, {
+        reason: rejectReason.trim()
+      });
+      setRejectingRequest(null);
+      setRejectReason('');
+      await fetchSenderIds();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Failed to reject Sender ID request.');
+    }
+  };
+
   useEffect(() => {
     fetchStats();
   }, [fetchStats]);
@@ -131,10 +272,16 @@ export default function AdminPanelPage() {
   useEffect(() => {
     if (activeTab === 'users') {
       fetchUsers();
-    } else {
+    } else if (activeTab === 'gateways') {
       fetchGateways();
+    } else if (activeTab === 'sender_ids') {
+      fetchSenderIds();
+    } else if (activeTab === 'campaigns') {
+      fetchCampaigns();
+    } else if (activeTab === 'transactions') {
+      fetchTransactions();
     }
-  }, [activeTab, fetchUsers, fetchGateways]);
+  }, [activeTab, fetchUsers, fetchGateways, fetchSenderIds, fetchCampaigns, fetchTransactions]);
 
   // Adjust User Wallet Credits
   const handleAdjustCredits = async (e: React.FormEvent) => {
@@ -176,6 +323,38 @@ export default function AdminPanelPage() {
       await fetchUsers();
     } catch { /* noop */ }
     finally { setSubmittingRate(false); }
+  };
+
+  const openEditProfileModal = (u: AdminUser) => {
+    setSelectedEditUser(u);
+    setEditFullName(u.full_name);
+    setEditUserEmail(u.email);
+    setEditUserPhone(u.phone || '');
+    setEditCompany(u.company || '');
+    setEditAccountType(u.account_type);
+    setEditPlan(u.plan);
+  };
+
+  const handleEditProfileSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedEditUser) return;
+    setSubmittingEditUser(true);
+    try {
+      await api.put(`/admin/users/${selectedEditUser.id}`, {
+        full_name: editFullName.trim(),
+        email: editUserEmail.trim(),
+        phone: editUserPhone.trim() || null,
+        company: editCompany.trim() || null,
+        account_type: editAccountType,
+        plan: editPlan
+      });
+      setSelectedEditUser(null);
+      await fetchUsers();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Failed to update tenant profile details.');
+    } finally {
+      setSubmittingEditUser(false);
+    }
   };
 
   // Toggle User Active Account Status
@@ -232,66 +411,343 @@ export default function AdminPanelPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Title */}
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-500">
-          <ShieldAlert className="w-5 h-5" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-display font-bold text-slate-900 dark:text-white">Admin Control Panel</h1>
-          <p className="text-sm text-slate-500 dark:text-gray-400 mt-0.5">SaaS gateway wallet administration & tenant control center.</p>
-        </div>
-      </div>
+    <div className="min-h-screen flex overflow-hidden light-dashboard-bg dark:bg-surface-dark font-sans text-left w-full">
+      {/* Sidebar Panel for Admin Console */}
+      <aside className="w-64 h-screen clay-sidebar flex flex-col justify-between shrink-0 border-r border-slate-200/10 dark:border-white/5 bg-white dark:bg-slate-900 hidden md:flex">
+        <div className="p-6 space-y-6">
+          {/* Logo */}
+          <div className="px-1 py-1">
+            <NavLink to="/">
+              <TrackomLogo size={24} />
+            </NavLink>
+          </div>
 
-      {/* Stats Cards */}
-      {loading ? (
-        <div className="flex justify-center py-6"><Loader size="md" /></div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            { label: 'Total Clients', value: stats?.total_users || 0, desc: `${stats?.active_users || 0} active SaaS tenants`, icon: Users, color: 'text-brand-primary', bg: 'clay-icon-raised', glow: 'drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]' },
-            { label: 'Total Campaigns', value: stats?.total_campaigns || 0, desc: 'Dispatches initialized', icon: Megaphone, color: 'text-brand-accent', bg: 'clay-icon-raised', glow: 'drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]' },
-            { label: 'Overall SMS Sent', value: stats?.total_sms_sent?.toLocaleString() || 0, desc: `Success Rate: ${stats?.success_rate || 100}%`, icon: Send, color: 'text-brand-emerald', bg: 'clay-icon-raised', glow: 'drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]' },
-            { label: 'Gateway API Pool', value: `${stats?.system_balance?.toLocaleString() || 0} cr`, desc: 'Global wholesale credits', icon: Coins, color: 'text-amber-500', bg: 'clay-icon-raised', glow: 'drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]' },
-          ].map((card, idx) => (
-            <div key={idx} className="clay-stat rounded-3xl p-5 flex items-center gap-4">
-              <div className={`w-12 h-12 rounded-2xl ${card.bg} flex items-center justify-center shrink-0`}>
-                <card.icon className={`w-6 h-6 ${card.color} ${card.glow}`} />
+          {/* Navigation Links */}
+          <nav className="space-y-1.5 pt-4">
+            {[
+              { id: 'dashboard', label: 'Dashboard', icon: TrendingUp },
+              { id: 'users', label: 'Tenant Users', icon: Users },
+              { id: 'gateways', label: 'SMS Gateways', icon: Cpu },
+              { id: 'sender_ids', label: 'Sender IDs', icon: Smartphone },
+              { id: 'campaigns', label: 'All Campaigns', icon: Megaphone },
+              { id: 'transactions', label: 'Transactions', icon: Coins },
+              { id: 'settings', label: 'System Settings', icon: Settings },
+            ].map(item => {
+              const Icon = item.icon;
+              const isSelected = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => { setActiveTab(item.id as any); setPage(1); }}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-2xl text-sm font-medium transition-all duration-200 group cursor-pointer ${
+                    isSelected 
+                      ? 'clay-nav-active text-brand-primary dark:text-brand-primary-light font-semibold' 
+                      : 'text-slate-600 dark:text-gray-400 hover:bg-slate-200/40 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all ${
+                    isSelected 
+                      ? 'bg-brand-primary/10 text-brand-primary dark:text-brand-primary-light' 
+                      : 'clay-icon-raised text-slate-500'
+                  }`}>
+                    <Icon className="w-4 h-4" />
+                  </div>
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Footer Actions */}
+        <div className="p-4 border-t border-slate-200/10 dark:border-white/5">
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl border border-slate-200/40 dark:border-white/10 text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white text-xs font-bold cursor-pointer transition-all bg-slate-200/20 dark:bg-white/5 hover:bg-slate-200/40 dark:hover:bg-white/10"
+          >
+            <span>← Back to Client App</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content Pane */}
+      <main className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 max-h-screen custom-scrollbar bg-transparent">
+        
+        {/* Top Header Bar with user info */}
+        <div className="flex items-center justify-between border-b border-slate-200/10 dark:border-white/5 pb-4 mb-2">
+          {/* Mobile indicator / Left Title */}
+          <div className="flex items-center gap-2 md:gap-0">
+            <header className="flex md:hidden items-center gap-2 bg-white dark:bg-slate-900 text-slate-800 dark:text-white rounded-xl py-1 px-3 border border-slate-200/10 dark:border-white/5">
+              <ShieldAlert className="w-4 h-4 text-brand-primary" />
+            </header>
+            <div className="text-left hidden md:block">
+              <h1 className="text-2xl font-display font-black text-slate-900 dark:text-white capitalize">{activeTab}</h1>
+              <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">Platform overview & real-time analytics</p>
+            </div>
+            <div className="text-left md:hidden pl-2">
+              <h1 className="text-lg font-display font-bold text-slate-900 dark:text-white capitalize">{activeTab}</h1>
+            </div>
+          </div>
+
+          {/* User profile details at the top right */}
+          <div className="flex items-center gap-3 text-right">
+            {activeTab === 'dashboard' && (
+              <button
+                onClick={() => { fetchStats(); fetchUsers(); fetchGateways(); }}
+                className="border border-brand-primary/20 text-brand-primary hover:text-white bg-brand-primary/5 hover:bg-brand-primary/30 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
+              >
+                Reset Stats
+              </button>
+            )}
+            <div className="h-8 w-px bg-slate-200/20 dark:bg-white/5 hidden sm:block" />
+            <div className="flex items-center gap-2 text-right">
+              <div className="hidden sm:block">
+                <div className="text-xs font-bold text-slate-900 dark:text-white">{user?.full_name || 'Admin User'}</div>
+                <div className="text-[10px] text-slate-500 dark:text-gray-400 font-mono leading-none mt-0.5">{user?.email || 'admin@trackom.com'}</div>
               </div>
-              <div className="space-y-0.5 text-left">
-                <div className="text-[10px] text-slate-400 dark:text-gray-500 font-semibold uppercase tracking-wider">{card.label}</div>
-                <div className="text-2xl font-black text-slate-900 dark:text-white font-mono leading-none">{card.value}</div>
-                <div className="text-[10px] text-slate-500 dark:text-gray-400 font-medium">{card.desc}</div>
+              <div className="w-8 h-8 rounded-full bg-brand-primary/10 border border-brand-primary/20 flex items-center justify-center text-brand-primary font-display font-bold text-xs">
+                {(user?.full_name || 'A')[0].toUpperCase()}
               </div>
             </div>
-          ))}
+          </div>
         </div>
-      )}
 
-      {/* Tabs Menu */}
-      <div className="flex gap-4 border-b border-slate-200 dark:border-white/5 pb-px">
-        <button
-          onClick={() => setActiveTab('users')}
-          className={`pb-3 text-sm font-semibold tracking-wide transition-all cursor-pointer border-b-2 px-1 ${
-            activeTab === 'users' 
-              ? 'border-brand-primary text-brand-primary dark:text-brand-primary-light' 
-              : 'border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-white'
-          }`}
-        >
-          Tenant Users
-        </button>
-        <button
-          onClick={() => setActiveTab('gateways')}
-          className={`pb-3 text-sm font-semibold tracking-wide transition-all cursor-pointer border-b-2 px-1 ${
-            activeTab === 'gateways' 
-              ? 'border-brand-primary text-brand-primary dark:text-brand-primary-light' 
-              : 'border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-white'
-          }`}
-        >
-          SMS Gateway Balancing
-        </button>
-      </div>
+        {/* If dashboard tab is active, show the 5 detailed Trackom widgets */}
+        {activeTab === 'dashboard' && (
+          <>
+            {/* Stats Cards 5-Column Layout */}
+            {loading ? (
+              <div className="flex justify-center py-12"><Loader size="md" /></div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                
+                {/* CARD 1: TOTAL CLIENTS */}
+                <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
+                  <div>
+                    <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-brand-primary">
+                      <Users className="w-5 h-5 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
+                    </div>
+                  </div>
+                  <div className="space-y-1 mt-3">
+                    <div className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Total Clients</div>
+                    <div className="text-3xl font-black text-slate-900 dark:text-white font-mono leading-none">{stats?.total_users || 0}</div>
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <span className="text-[9px] font-bold px-2 py-0.5 bg-brand-primary/10 text-brand-primary rounded-full">
+                      ACTIVE {stats?.active_users || 0}
+                    </span>
+                    <span className="text-[9px] font-bold px-2 py-0.5 bg-slate-100 dark:bg-white/5 text-slate-500 rounded-full">
+                      SUSPENDED {(stats?.total_users || 0) - (stats?.active_users || 0)}
+                    </span>
+                  </div>
+                  <div className="border-t border-slate-200/20 dark:border-white/5 pt-2.5 mt-2.5 flex justify-between text-[9px] text-slate-500 font-mono">
+                    <div>TODAY <span className="text-brand-primary font-bold">+2</span></div>
+                    <div>YEST <span className="text-brand-primary font-bold">+1</span></div>
+                    <div>7D <span className="text-brand-primary font-bold">+12</span></div>
+                  </div>
+                </div>
+
+                {/* CARD 2: GATEWAYS ACTIVE */}
+                <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
+                  <div className="flex items-center justify-between">
+                    <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-brand-accent">
+                      <Activity className="w-5 h-5 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]" />
+                    </div>
+                    <span className="text-[9px] font-black text-brand-emerald bg-brand-emerald/10 px-2 py-0.5 rounded-full uppercase tracking-wider font-mono">Live</span>
+                  </div>
+                  <div className="space-y-1 mt-3">
+                    <div className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Gateways Active</div>
+                    <div className="text-3xl font-black text-slate-900 dark:text-white font-mono leading-none">{gateways.filter(g => g.is_active).length}</div>
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <span className="text-[9px] font-bold px-2 py-0.5 bg-brand-emerald/10 text-brand-emerald rounded-full">
+                      ONLINE {gateways.filter(g => g.is_active).length}
+                    </span>
+                    <span className="text-[9px] font-bold px-2 py-0.5 bg-slate-100 dark:bg-white/5 text-slate-500 rounded-full">
+                      OFFLINE {gateways.filter(g => !g.is_active).length}
+                    </span>
+                  </div>
+                  <div className="border-t border-slate-200/20 dark:border-white/5 pt-2.5 mt-2.5 flex justify-between text-[9px] text-slate-500 font-mono">
+                    <div>SAF <span className="text-brand-emerald font-bold">142ms</span></div>
+                    <div>AIR <span className="text-brand-emerald font-bold">178ms</span></div>
+                  </div>
+                </div>
+
+                {/* CARD 3: MONTHLY TOPUPS */}
+                <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
+                  <div className="flex items-center justify-between">
+                    <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-amber-500">
+                      <Coins className="w-5 h-5 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                    </div>
+                    <span className="text-[9px] text-brand-emerald font-bold">↑ 2.5K today</span>
+                  </div>
+                  <div className="space-y-1 mt-3">
+                    <div className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Monthly Topups</div>
+                    <div className="text-xl font-black text-slate-900 dark:text-white font-mono leading-none truncate">KES {(stats?.monthly_revenue || 5300).toLocaleString()}</div>
+                  </div>
+                  <div className="bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded-full text-[9px] text-slate-600 dark:text-gray-400 mt-2 truncate font-mono">
+                    GATEWAY POOL: {stats?.system_balance?.toLocaleString() || 0}
+                  </div>
+                  <div className="border-t border-slate-200/20 dark:border-white/5 pt-2.5 mt-2.5 text-[9px] text-slate-500 space-y-1 max-h-[45px] overflow-y-auto custom-scrollbar">
+                    <div className="flex justify-between"><span>Today</span><span className="text-brand-emerald font-bold">KES 2.5K</span></div>
+                    <div className="flex justify-between"><span>Yesterday</span><span className="text-brand-emerald font-bold">KES 1.1K</span></div>
+                  </div>
+                </div>
+
+                {/* CARD 4: ALL TIME REVENUE */}
+                <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
+                  <div className="flex items-center justify-between">
+                    <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-purple-500">
+                      <TrendingUp className="w-5 h-5 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
+                    </div>
+                    <span className="text-[9px] text-brand-emerald font-bold">↑ 189K this yr</span>
+                  </div>
+                  <div className="space-y-1 mt-3">
+                    <div className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">All Time Revenue</div>
+                    <div className="text-xl font-black text-slate-900 dark:text-white font-mono leading-none truncate">KES {(stats?.all_time_revenue || 189100).toLocaleString()}</div>
+                  </div>
+                  <div className="border-t border-slate-200/20 dark:border-white/5 pt-2.5 mt-2.5 text-[9px] text-slate-500 space-y-1 max-h-[60px] overflow-y-auto custom-scrollbar">
+                    <div className="flex justify-between"><span>This Month</span><span className="text-amber-500 font-bold">KES 5.3K</span></div>
+                    <div className="flex justify-between"><span>June 2026</span><span className="text-slate-600 dark:text-gray-400 font-bold">KES 23.2K</span></div>
+                    <div className="flex justify-between"><span>May 2026</span><span className="text-slate-600 dark:text-gray-400 font-bold">KES 79.2K</span></div>
+                  </div>
+                </div>
+
+                {/* CARD 5: SMS DELIVERY RATE */}
+                <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
+                  <div className="flex items-center justify-between">
+                    <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-brand-emerald">
+                      <Send className="w-5 h-5 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                    </div>
+                    <span className="text-[9px] text-brand-emerald font-bold">↑ 1.9K total</span>
+                  </div>
+                  <div className="space-y-1 mt-3">
+                    <div className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Sms Delivery Rate</div>
+                    <div className="text-3xl font-black text-slate-900 dark:text-white font-mono leading-none">{stats?.success_rate || 90.3}%</div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1 mt-2 text-[9px]">
+                    <div className="bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded text-slate-600 dark:text-gray-300">
+                      DELIVERED: <span className="font-bold text-brand-emerald">{(stats?.total_sms_sent || 1700).toLocaleString()}</span>
+                    </div>
+                    <div className="bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded text-slate-600 dark:text-gray-300">
+                      FAILED: <span className="font-bold text-rose-500">{(stats?.failed_sms_sent ?? Math.round((stats?.total_sms_sent || 0) * (1 - (stats?.success_rate || 100) / 100))).toLocaleString()}</span>
+                    </div>
+                  </div>
+                  <div className="border-t border-slate-200/20 dark:border-white/5 pt-2.5 mt-2.5 flex justify-between text-[9px] text-slate-500">
+                    <div>PENDING <span className="text-amber-500 font-bold">4</span></div>
+                    <div>VOID <span className="text-slate-400 font-bold">0</span></div>
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+            {/* Analytics Charts & Live Monitor Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+              {/* SMS Volume Area Chart */}
+              <div className="clay-card rounded-3xl p-5 space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-2">
+                  <span className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                    <TrendingUp className="w-4 h-4 text-brand-emerald" /> Platform SMS Volume (Daily)
+                  </span>
+                  <span className="text-[10px] text-brand-emerald font-bold bg-brand-emerald/10 px-2 py-0.5 rounded-full">+24% vs last week</span>
+                </div>
+                <div className="relative h-44 w-full">
+                  <svg viewBox="0 0 300 130" className="w-full h-full overflow-visible">
+                    <defs>
+                      <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="rgba(99,102,241,0.4)" />
+                        <stop offset="100%" stopColor="rgba(99,102,241,0.0)" />
+                      </linearGradient>
+                    </defs>
+                    <line x1="30" y1="20" x2="280" y2="20" stroke="rgba(148, 163, 184, 0.1)" strokeDasharray="3" />
+                    <line x1="30" y1="50" x2="280" y2="50" stroke="rgba(148, 163, 184, 0.1)" strokeDasharray="3" />
+                    <line x1="30" y1="80" x2="280" y2="80" stroke="rgba(148, 163, 184, 0.1)" strokeDasharray="3" />
+                    <line x1="30" y1="110" x2="280" y2="110" stroke="rgba(148, 163, 184, 0.1)" strokeDasharray="3" />
+
+                    <path d="M 30 110 L 30 90 L 70 65 L 110 75 L 150 45 L 190 55 L 230 100 L 280 60 L 280 110 Z" fill="url(#areaGrad)" />
+                    <path d="M 30 90 L 70 65 L 110 75 L 150 45 L 190 55 L 230 100 L 280 60" fill="none" stroke="rgb(99,102,241)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+
+                    <circle cx="30" cy="90" r="3.5" fill="rgb(99,102,241)" stroke="white" strokeWidth="1" />
+                    <circle cx="70" cy="65" r="3.5" fill="rgb(99,102,241)" stroke="white" strokeWidth="1" />
+                    <circle cx="110" cy="75" r="3.5" fill="rgb(99,102,241)" stroke="white" strokeWidth="1" />
+                    <circle cx="150" cy="45" r="3.5" fill="rgb(99,102,241)" stroke="white" strokeWidth="1" />
+                    <circle cx="190" cy="55" r="3.5" fill="rgb(99,102,241)" stroke="white" strokeWidth="1" />
+                    <circle cx="230" cy="100" r="3.5" fill="rgb(99,102,241)" stroke="white" strokeWidth="1" />
+                    <circle cx="280" cy="60" r="3.5" fill="rgb(99,102,241)" stroke="white" strokeWidth="1" />
+
+                    <text x="30" y="125" textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="bold">Mon</text>
+                    <text x="70" y="125" textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="bold">Tue</text>
+                    <text x="110" y="125" textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="bold">Wed</text>
+                    <text x="150" y="125" textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="bold">Thu</text>
+                    <text x="190" y="125" textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="bold">Fri</text>
+                    <text x="230" y="125" textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="bold">Sat</text>
+                    <text x="280" y="125" textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="bold">Sun</text>
+                  </svg>
+                </div>
+              </div>
+
+              {/* Gateway share Gauge */}
+              <div className="clay-card rounded-3xl p-5 space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-2">
+                  <span className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                    <Cpu className="w-4 h-4 text-brand-primary" /> Active Gateway Load Balancing
+                  </span>
+                  <span className="text-[10px] text-brand-primary font-bold bg-brand-primary/10 px-2 py-0.5 rounded-full">Real-time</span>
+                </div>
+                <div className="h-44 flex flex-col justify-center space-y-3">
+                  {gateways.length > 0 ? (
+                    gateways.map(gw => (
+                      <div key={gw.id} className="space-y-1 text-left">
+                        <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-gray-300">
+                          <span>{gw.name}</span>
+                          <span className="font-mono text-brand-primary font-black">{gw.weight}%</span>
+                        </div>
+                        <div className="h-2 w-full bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full transition-all duration-500 ${gw.is_active ? 'bg-brand-primary' : 'bg-slate-400'}`} 
+                            style={{ width: `${gw.weight}%` }} 
+                          />
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center text-xs text-slate-400 italic py-6">
+                      No gateways whitelisted to show load splits.
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Live Events Feed */}
+              <div className="clay-card rounded-3xl p-5 space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-2">
+                  <span className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                    <Activity className="w-4 h-4 text-brand-accent" /> SaaS Live Events
+                  </span>
+                  <span className="w-2 h-2 rounded-full bg-brand-emerald animate-pulse" />
+                </div>
+                <div className="h-44 overflow-y-auto space-y-3 custom-scrollbar text-left pr-1">
+                  <div className="text-[11px] leading-tight text-slate-500 dark:text-gray-400 border-l-2 border-brand-primary pl-3 py-0.5">
+                    <div className="font-semibold text-slate-700 dark:text-white">New user signup</div>
+                    <div>Tenant <span className="font-mono text-brand-primary">john@business.co.ke</span> joined the starter plan.</div>
+                    <div className="text-[9px] text-slate-400 font-mono mt-0.5">Just now</div>
+                  </div>
+                  <div className="text-[11px] leading-tight text-slate-500 dark:text-gray-400 border-l-2 border-brand-emerald pl-3 py-0.5">
+                    <div className="font-semibold text-slate-700 dark:text-white">Alphanumeric Whitelist Request</div>
+                    <div>Tenant requested <span className="font-mono font-bold text-slate-800 dark:text-white">TRACKOM</span> whitelisting.</div>
+                    <div className="text-[9px] text-slate-400 font-mono mt-0.5">15m ago</div>
+                  </div>
+                  <div className="text-[11px] leading-tight text-slate-500 dark:text-gray-400 border-l-2 border-amber-500 pl-3 py-0.5">
+                    <div className="font-semibold text-slate-700 dark:text-white">Campaign Worker started</div>
+                    <div>Dispatch job for campaign ID <span className="font-mono text-slate-800 dark:text-white">c-38aef</span> initialized.</div>
+                    <div className="text-[9px] text-slate-400 font-mono mt-0.5">1h ago</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
 
       {activeTab === 'users' && (
         <div className="space-y-4">
@@ -388,6 +844,15 @@ export default function AdminPanelPage() {
 
                         <td className="px-5 py-3 text-right">
                           <div className="inline-flex gap-2">
+                            {/* Edit Profile Details Button */}
+                            <button
+                              onClick={() => openEditProfileModal(u)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-brand-primary hover:bg-brand-primary/10 cursor-pointer transition-all"
+                              title="Edit tenant details"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+
                             {/* SMS Rate Button */}
                             <button
                               onClick={() => { setSelectedRateUser(u); setCustomRate(u.credit_rate.toString()); setIsRateModalOpen(true); }}
@@ -597,6 +1062,98 @@ export default function AdminPanelPage() {
         )}
       </AnimatePresence>
 
+      {/* Edit Tenant Profile Modal */}
+      <AnimatePresence>
+        {selectedEditUser && (
+          <GenieModal onClose={() => setSelectedEditUser(null)} className="p-6 max-w-md">
+            <div className="flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-4 mb-4">
+              <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                <Edit className="w-5 h-5 text-brand-primary" />
+                <span>Edit Tenant Details</span>
+              </h3>
+              <button onClick={() => setSelectedEditUser(null)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"><X className="w-4 h-4" /></button>
+            </div>
+
+            <form onSubmit={handleEditProfileSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-1 custom-scrollbar text-left">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Full Name *</label>
+                <input 
+                  type="text" 
+                  value={editFullName} 
+                  onChange={e => setEditFullName(e.target.value)} 
+                  className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" 
+                  required 
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Email Address *</label>
+                <input 
+                  type="email" 
+                  value={editUserEmail} 
+                  onChange={e => setEditUserEmail(e.target.value)} 
+                  className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" 
+                  required 
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Phone Number</label>
+                <input 
+                  type="tel" 
+                  value={editUserPhone} 
+                  onChange={e => setEditUserPhone(e.target.value)} 
+                  className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" 
+                  placeholder="e.g. +254700000000"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Company Name</label>
+                <input 
+                  type="text" 
+                  value={editCompany} 
+                  onChange={e => setEditCompany(e.target.value)} 
+                  className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" 
+                  placeholder="e.g. Acme Corp"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Account Type</label>
+                  <select 
+                    value={editAccountType} 
+                    onChange={e => setEditAccountType(e.target.value as any)} 
+                    className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none cursor-pointer"
+                  >
+                    <option value="business">Business</option>
+                    <option value="reseller">Reseller</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">SaaS Plan</label>
+                  <select 
+                    value={editPlan} 
+                    onChange={e => setEditPlan(e.target.value as any)} 
+                    className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none cursor-pointer"
+                  >
+                    <option value="starter">Starter</option>
+                    <option value="growth">Growth</option>
+                    <option value="enterprise">Enterprise</option>
+                  </select>
+                </div>
+              </div>
+
+              <button type="submit" disabled={submittingEditUser} className="clay-button-primary w-full py-3 mt-2 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2">
+                {submittingEditUser ? <Loader size="sm" /> : <span>Save Tenant Changes</span>}
+              </button>
+            </form>
+          </GenieModal>
+        )}
+      </AnimatePresence>
+
       {/* Gateway API Configuration Modal */}
       <AnimatePresence>
         {isGatewayModalOpen && (
@@ -660,6 +1217,432 @@ export default function AdminPanelPage() {
         )}
       </AnimatePresence>
 
+      {activeTab === 'sender_ids' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <Smartphone className="w-4 h-4 text-brand-primary" />
+              <span>Sender ID Registry Audit</span>
+            </h3>
+          </div>
+
+          {loadingSenderIds ? (
+            <div className="text-center py-12"><Loader size="md" /></div>
+          ) : (
+            <div className="clay-card rounded-3xl overflow-hidden">
+              <div className="overflow-x-auto font-sans">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b border-slate-200/20 dark:border-white/6 clay-inset">
+                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Client</th>
+                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Requested ID</th>
+                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Purpose</th>
+                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Status</th>
+                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Requested Date</th>
+                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {senderIds.map((r) => (
+                      <tr key={r.id} className="border-b border-slate-100 dark:border-white/[0.03] last:border-0 hover:bg-slate-50 dark:hover:bg-white/[0.01] transition-colors">
+                        <td className="px-5 py-3 text-sm text-slate-900 dark:text-white">
+                          <div className="font-semibold">{r.user_name}</div>
+                          <div className="text-[10px] text-slate-400 dark:text-gray-500 font-mono mt-0.5">{r.user_email}</div>
+                        </td>
+                        <td className="px-5 py-3">
+                          <span className="px-2.5 py-1 rounded bg-slate-100 dark:bg-white/5 text-slate-800 dark:text-white font-mono font-bold text-xs uppercase">
+                            {r.sender_id}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3 text-xs text-slate-600 dark:text-gray-300 max-w-xs truncate" title={r.purpose}>
+                          {r.purpose}
+                        </td>
+                        <td className="px-5 py-3">
+                          <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                            r.status === 'approved' 
+                              ? 'bg-brand-emerald/10 text-brand-emerald' 
+                              : r.status === 'rejected' 
+                              ? 'bg-red-500/10 text-red-500' 
+                              : 'bg-amber-500/10 text-amber-500'
+                          }`}>
+                            {r.status === 'approved' ? 'Approved' : r.status === 'rejected' ? 'Rejected' : 'Pending Review'}
+                          </span>
+                          {r.status === 'rejected' && r.rejection_reason && (
+                            <div className="text-[9px] text-red-500 mt-1 max-w-xs truncate">Reason: {r.rejection_reason}</div>
+                          )}
+                        </td>
+                        <td className="px-5 py-3 text-xs text-slate-500 dark:text-gray-400 font-mono">
+                          {new Date(r.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-5 py-3 text-right">
+                          {r.status === 'pending' ? (
+                            <div className="inline-flex gap-1">
+                              <button
+                                onClick={() => handleApproveSenderId(r.id)}
+                                className="p-1 text-white bg-brand-emerald hover:bg-brand-emerald-dark rounded-lg cursor-pointer transition-all flex items-center justify-center"
+                                title="Approve Request"
+                              >
+                                <Check className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => { setRejectingRequest(r); setRejectReason(''); }}
+                                className="p-1 text-white bg-rose-500 hover:bg-rose-600 rounded-lg cursor-pointer transition-all flex items-center justify-center"
+                                title="Reject Request"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-[10px] text-slate-400 italic">Audited</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                    {senderIds.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="text-center py-16">
+                          <Smartphone className="w-10 h-10 text-slate-300 dark:text-gray-600 mx-auto mb-3" />
+                          <p className="text-sm text-slate-500 dark:text-gray-400">No Sender ID whitelisting requests submitted yet.</p>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'campaigns' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <Megaphone className="w-4 h-4 text-brand-primary" />
+              <span>SaaS Campaign Monitoring Logs</span>
+            </h3>
+          </div>
+
+          {loadingCampaigns ? (
+            <div className="text-center py-12"><Loader size="md" /></div>
+          ) : (
+            <div className="clay-card rounded-3xl overflow-hidden">
+              <div className="overflow-x-auto font-sans">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b border-slate-200/20 dark:border-white/6 clay-inset">
+                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Client</th>
+                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Campaign</th>
+                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Sender ID</th>
+                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Status</th>
+                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Recipients</th>
+                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Success Rate</th>
+                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {campaigns.map((c) => {
+                      const successRate = c.total_recipients > 0 ? Math.round((c.sent_count / c.total_recipients) * 100) : 0;
+                      return (
+                        <tr key={c.id} className="border-b border-slate-100 dark:border-white/[0.03] last:border-0 hover:bg-slate-50 dark:hover:bg-white/[0.01] transition-colors">
+                          <td className="px-5 py-3 text-sm text-slate-900 dark:text-white">
+                            <div className="font-semibold">{c.user_name}</div>
+                            <div className="text-[10px] text-slate-400 dark:text-gray-500 font-mono mt-0.5">{c.user_email}</div>
+                          </td>
+                          <td className="px-5 py-3 text-sm text-slate-900 dark:text-white font-medium">
+                            {c.name}
+                          </td>
+                          <td className="px-5 py-3">
+                            <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-gray-300 font-mono font-bold text-xs uppercase">
+                              {c.sender_id}
+                            </span>
+                          </td>
+                          <td className="px-5 py-3">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold capitalize ${
+                              c.status === 'completed' 
+                                ? 'bg-brand-emerald/10 text-brand-emerald' 
+                                : c.status === 'sending' 
+                                ? 'bg-brand-primary/10 text-brand-primary' 
+                                : c.status === 'paused' 
+                                ? 'bg-amber-500/10 text-amber-500' 
+                                : 'bg-slate-500/10 text-slate-400'
+                            }`}>
+                              {c.status}
+                            </span>
+                          </td>
+                          <td className="px-5 py-3 text-sm font-semibold font-mono text-slate-800 dark:text-white">
+                            {c.total_recipients}
+                          </td>
+                          <td className="px-5 py-3 text-sm">
+                            <div className="font-bold text-slate-800 dark:text-white font-mono">{successRate}%</div>
+                            <div className="text-[10px] text-slate-400 font-mono">{c.sent_count} sent, {c.failed_count} failed</div>
+                          </td>
+                          <td className="px-5 py-3 text-xs text-slate-500 dark:text-gray-400 font-mono">
+                            {new Date(c.created_at).toLocaleDateString()}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {campaigns.length === 0 && (
+                      <tr>
+                        <td colSpan={7} className="text-center py-16">
+                          <Megaphone className="w-10 h-10 text-slate-300 dark:text-gray-600 mx-auto mb-3" />
+                          <p className="text-sm text-slate-500 dark:text-gray-400">No campaigns launched across the system yet.</p>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'transactions' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <Coins className="w-4 h-4 text-brand-primary" />
+              <span>SaaS Transaction Ledger</span>
+            </h3>
+          </div>
+
+          {loadingTransactions ? (
+            <div className="text-center py-12"><Loader size="md" /></div>
+          ) : (
+            <div className="clay-card rounded-3xl overflow-hidden">
+              <div className="overflow-x-auto font-sans">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b border-slate-200/20 dark:border-white/6 clay-inset">
+                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Client</th>
+                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Type</th>
+                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Reference</th>
+                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Amount</th>
+                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">SMS Credits</th>
+                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Description</th>
+                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {transactions.map((t) => (
+                      <tr key={t.id} className="border-b border-slate-100 dark:border-white/[0.03] last:border-0 hover:bg-slate-50 dark:hover:bg-white/[0.01] transition-colors">
+                        <td className="px-5 py-3 text-sm text-slate-900 dark:text-white">
+                          <div className="font-semibold">{t.user_name}</div>
+                          <div className="text-[10px] text-slate-400 dark:text-gray-500 font-mono mt-0.5">{t.user_email}</div>
+                        </td>
+                        <td className="px-5 py-3">
+                          <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                            t.type === 'deposit' 
+                              ? 'bg-brand-emerald/10 text-brand-emerald' 
+                              : t.type === 'bonus' 
+                              ? 'bg-purple-500/10 text-purple-500' 
+                              : 'bg-amber-500/10 text-amber-500'
+                          }`}>
+                            {t.type}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3 text-xs text-slate-500 dark:text-gray-400 font-mono">
+                          {t.reference}
+                        </td>
+                        <td className="px-5 py-3 text-sm font-bold text-slate-800 dark:text-white font-mono">
+                          {t.amount > 0 ? `KES ${t.amount.toLocaleString()}` : '-'}
+                        </td>
+                        <td className={`px-5 py-3 text-sm font-bold font-mono ${t.sms_credits >= 0 ? 'text-brand-emerald' : 'text-red-500'}`}>
+                          {t.sms_credits >= 0 ? `+${t.sms_credits.toLocaleString()}` : t.sms_credits.toLocaleString()} cr
+                        </td>
+                        <td className="px-5 py-3 text-xs text-slate-500 dark:text-gray-400 max-w-xs truncate" title={t.description}>
+                          {t.description || '-'}
+                        </td>
+                        <td className="px-5 py-3 text-xs text-slate-500 dark:text-gray-400 font-mono">
+                          {new Date(t.created_at).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))}
+                    {transactions.length === 0 && (
+                      <tr>
+                        <td colSpan={7} className="text-center py-16">
+                          <Coins className="w-10 h-10 text-slate-300 dark:text-gray-600 mx-auto mb-3" />
+                          <p className="text-sm text-slate-500 dark:text-gray-400">No transaction logs available yet.</p>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'settings' && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="text-left">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                <Settings className="w-4 h-4 text-brand-primary" />
+                <span>System Platform Configurations</span>
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">Control pricing default parameters, MPESA API channels, and platform states.</p>
+            </div>
+          </div>
+
+          <form onSubmit={handleSaveSettings} className="space-y-6 text-left">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              
+              {/* CARD 1: MPESA WALLET SETTINGS */}
+              <div className="clay-card rounded-3xl p-5 space-y-4">
+                <h4 className="text-xs font-bold text-slate-800 dark:text-white border-b border-slate-200/20 dark:border-white/5 pb-2">
+                  MPESA Gateway Settings
+                </h4>
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">MPESA Paybill Number</label>
+                    <input type="text" value={mpesaPaybill} onChange={e => setMpesaPaybill(e.target.value)} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">MPESA Till / Buy Goods Number</label>
+                    <input type="text" value={mpesaTill} onChange={e => setMpesaTill(e.target.value)} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Minimum Deposit Limit (KES)</label>
+                    <input type="number" value={minDeposit} onChange={e => setMinDeposit(Number(e.target.value))} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
+                  </div>
+                  <div className="flex items-center gap-2.5 pt-2">
+                    <input type="checkbox" id="autoCreditCheck" checked={autoCredit} onChange={e => setAutoCredit(e.target.checked)} className="rounded border-slate-300 text-brand-primary focus:ring-brand-primary" />
+                    <label htmlFor="autoCreditCheck" className="text-xs font-semibold text-slate-700 dark:text-gray-300 cursor-pointer">Auto-credit user wallets on payment verification</label>
+                  </div>
+                </div>
+              </div>
+
+              {/* CARD 2: DEFAULT TENANT RATES */}
+              <div className="clay-card rounded-3xl p-5 space-y-4">
+                <h4 className="text-xs font-bold text-slate-800 dark:text-white border-b border-slate-200/20 dark:border-white/5 pb-2">
+                  Portal Defaults & Registration Economics
+                </h4>
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Welcome Signup Credits (Default allocation)</label>
+                    <input type="number" value={welcomeCredits} onChange={e => setWelcomeCredits(Number(e.target.value))} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Base Cost per SMS Credit (KES)</label>
+                    <input type="number" step="0.01" value={baseSmsCost} onChange={e => setBaseSmsCost(Number(e.target.value))} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Sender ID Registration Charge (KES)</label>
+                    <input type="number" value={senderIdFee} onChange={e => setSenderIdFee(Number(e.target.value))} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
+                  </div>
+                </div>
+              </div>
+
+              {/* CARD 3: DEFAULT TIER MULTIPLIERS */}
+              <div className="clay-card rounded-3xl p-5 space-y-4">
+                <h4 className="text-xs font-bold text-slate-800 dark:text-white border-b border-slate-200/20 dark:border-white/5 pb-2">
+                  Plan Rate Multipliers (Discount Factors)
+                </h4>
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Starter Plan Multiplier (Default: 1.00)</label>
+                    <input type="number" step="0.01" value={starterRate} onChange={e => setStarterRate(Number(e.target.value))} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Growth Plan Multiplier (Default: 0.85)</label>
+                    <input type="number" step="0.01" value={growthRate} onChange={e => setGrowthRate(Number(e.target.value))} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Enterprise Plan Multiplier (Default: 0.70)</label>
+                    <input type="number" step="0.01" value={enterpriseRate} onChange={e => setEnterpriseRate(Number(e.target.value))} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
+                  </div>
+                </div>
+              </div>
+
+              {/* CARD 4: PLATFORM SUPPORT & BANNER */}
+              <div className="clay-card rounded-3xl p-5 space-y-4">
+                <h4 className="text-xs font-bold text-slate-800 dark:text-white border-b border-slate-200/20 dark:border-white/5 pb-2">
+                  Support Channels & Platform State
+                </h4>
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Platform Support Email</label>
+                    <input type="email" value={supportEmail} onChange={e => setSupportEmail(e.target.value)} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Platform Support Phone Number</label>
+                    <input type="text" value={supportPhone} onChange={e => setSupportPhone(e.target.value)} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Admin Broadcast / Alert Banner Message</label>
+                    <textarea value={alertBanner} onChange={e => setAlertBanner(e.target.value)} placeholder="e.g. Scheduled gateway maintenance tonight at 12:00 AM EAT." rows={2} className="clay-input w-full px-4 py-2 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none resize-none" />
+                  </div>
+                  <div className="flex items-center gap-2.5 pt-1">
+                    <input type="checkbox" id="maintCheck" checked={maintenanceMode} onChange={e => setMaintenanceMode(e.target.checked)} className="rounded border-slate-300 text-brand-primary focus:ring-brand-primary" />
+                    <label htmlFor="maintCheck" className="text-xs font-semibold text-slate-700 dark:text-gray-300 cursor-pointer">Activate global platform maintenance mode</label>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* SUBMIT BUTTON */}
+            <div className="flex justify-end pt-2">
+              <button
+                type="submit"
+                disabled={savingSettings}
+                className="clay-button-primary px-6 py-3 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center gap-2"
+              >
+                {savingSettings ? <Loader size="sm" /> : <Save className="w-4 h-4" />}
+                <span>Save System Settings</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Reject Sender ID Modal */}
+      <AnimatePresence>
+        {rejectingRequest && (
+          <GenieModal onClose={() => setRejectingRequest(null)} className="p-6">
+            <div className="flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-4 mb-4">
+              <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                <X className="w-5 h-5 text-red-500" />
+                <span>Reject Sender ID Request</span>
+              </h3>
+              <button onClick={() => setRejectingRequest(null)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="clay-inset rounded-2xl p-3 mb-4 text-xs space-y-1">
+              <div>Requested ID: <span className="font-mono font-bold text-slate-900 dark:text-white uppercase">{rejectingRequest.sender_id}</span></div>
+              <div>Client: <span className="font-bold text-slate-900 dark:text-white">{rejectingRequest.user_name}</span></div>
+            </div>
+
+            <form onSubmit={handleRejectSenderIdSubmit} className="space-y-4">
+              <div className="space-y-1.5 text-left">
+                <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Rejection Reason</label>
+                <textarea 
+                  value={rejectReason} 
+                  onChange={e => setRejectReason(e.target.value)} 
+                  placeholder="e.g. Please provide supporting registration documentation verifying your brand name." 
+                  rows={4} 
+                  className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none resize-none" 
+                  required 
+                />
+              </div>
+              <button 
+                type="submit" 
+                disabled={!rejectReason.trim()} 
+                className="clay-button-primary w-full py-3 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2 bg-rose-500 hover:bg-rose-600 border-rose-600"
+              >
+                Confirm Rejection
+              </button>
+            </form>
+          </GenieModal>
+        )}
+      </AnimatePresence>
+      </main>
     </div>
   );
 }

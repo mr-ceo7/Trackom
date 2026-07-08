@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   LayoutDashboard, Send, Users, Megaphone, BarChart3,
   Wallet, Key, Settings, LogOut, Menu, X, Bell, ChevronDown,
-  MessageSquare, CheckCircle2, AlertCircle, Info, AlertTriangle, Shield
+  MessageSquare, CheckCircle2, AlertCircle, Info, AlertTriangle, Shield, FileText, Inbox, Smartphone
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import ThemeToggle from '../components/ThemeToggle';
@@ -26,8 +26,11 @@ interface NotificationData {
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Overview', end: true },
   { to: '/dashboard/compose', icon: Send, label: 'Compose SMS' },
+  { to: '/dashboard/inbox', icon: Inbox, label: 'Inbox' },
   { to: '/dashboard/contacts', icon: Users, label: 'Contacts' },
   { to: '/dashboard/campaigns', icon: Megaphone, label: 'Campaigns' },
+  { to: '/dashboard/templates', icon: FileText, label: 'Templates' },
+  { to: '/dashboard/sender-ids', icon: Smartphone, label: 'Sender IDs' },
   { to: '/dashboard/reports', icon: BarChart3, label: 'Reports' },
   { to: '/dashboard/wallet', icon: Wallet, label: 'Wallet' },
   { to: '/dashboard/api-keys', icon: Key, label: 'API Keys' },
@@ -57,7 +60,7 @@ export default function DashboardLayout() {
   
   const currentNavItems = [...navItems];
   if (user?.is_superuser) {
-    currentNavItems.push({ to: '/dashboard/admin', icon: Shield, label: 'Admin Control' });
+    currentNavItems.push({ to: '/admin', icon: Shield, label: 'Admin Control' });
   }
   if (user?.account_type === 'reseller') {
     currentNavItems.push({ to: '/dashboard/reseller', icon: Key, label: 'Reseller Panel' });
@@ -68,9 +71,9 @@ export default function DashboardLayout() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [clickedItem, setClickedItem] = useState<string | null>(null);
   
-  // Notification state
   const [notifications, setNotifications] = useState<NotificationData[]>([]);
   const [notiOpen, setNotiOpen] = useState(false);
+  const [publicSettings, setPublicSettings] = useState<any>(null);
 
   const fetchNotifications = useCallback(async () => {
     try {
@@ -79,11 +82,22 @@ export default function DashboardLayout() {
     } catch { /* noop */ }
   }, []);
 
+  const fetchPublicSettings = useCallback(async () => {
+    try {
+      const resp = await api.get('/admin/settings/public');
+      setPublicSettings(resp.data);
+    } catch { /* noop */ }
+  }, []);
+
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 15000); // refresh every 15s
+    fetchPublicSettings();
+    const interval = setInterval(() => {
+      fetchNotifications();
+      fetchPublicSettings();
+    }, 15000); // refresh every 15s
     return () => clearInterval(interval);
-  }, [fetchNotifications]);
+  }, [fetchNotifications, fetchPublicSettings]);
 
   const handleLogout = () => {
     logout();
@@ -257,7 +271,29 @@ export default function DashboardLayout() {
         </header>
 
         {/* PAGE CONTENT */}
-        <main className="flex-1 p-4 sm:p-6 overflow-y-auto min-h-0">
+        <main className="flex-1 p-4 sm:p-6 overflow-y-auto min-h-0 space-y-4">
+          {/* Admin Announcement Alert Banner */}
+          {publicSettings?.alertBanner && (
+            <div className="bg-brand-primary/10 border border-brand-primary/20 text-brand-primary dark:text-brand-primary-light px-4 py-3 rounded-2xl text-xs font-semibold flex items-center gap-2 shadow-sm text-left">
+              <span className="flex h-2 w-2 relative shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-primary opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-primary"></span>
+              </span>
+              <span><strong>Announcement:</strong> {publicSettings.alertBanner}</span>
+            </div>
+          )}
+
+          {/* Maintenance Mode Banner */}
+          {publicSettings?.maintenanceMode && (
+            <div className="bg-amber-500/10 border border-amber-500/20 text-amber-500 px-4 py-3 rounded-2xl text-xs font-semibold flex items-center gap-2 shadow-sm text-left">
+              <span className="flex h-2 w-2 relative shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+              </span>
+              <span><strong>Notice:</strong> Platform is currently in scheduled maintenance. Outbound broadcasts might experience minor dispatch delays.</span>
+            </div>
+          )}
+
           <Outlet />
         </main>
       </div>

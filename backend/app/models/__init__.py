@@ -12,6 +12,7 @@ from app.models.inquiry import ContactInquiry
 from app.models.sender_id import SenderIdRequest
 from app.models.gateway import SmsGateway
 from app.models.template import SmsTemplate
+from app.models.incoming import IncomingSms
 
 __all__ = [
     "User",
@@ -29,4 +30,5 @@ __all__ = [
     "SenderIdRequest",
     "SmsGateway",
     "SmsTemplate",
+    "IncomingSms",
 ]

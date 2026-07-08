@@ -26,6 +26,7 @@ class ContactCreate(BaseModel):
     email: Optional[str] = None
     group_id: Optional[uuid.UUID] = None
     custom_attributes: Optional[dict] = Field(default_factory=dict)
+    is_blacklisted: Optional[bool] = False
 
 
 class ContactUpdate(BaseModel):
@@ -34,6 +35,7 @@ class ContactUpdate(BaseModel):
     email: Optional[str] = None
     group_id: Optional[uuid.UUID] = None
     custom_attributes: Optional[dict] = None
+    is_blacklisted: Optional[bool] = None
 
 
 class ContactResponse(BaseModel):
@@ -42,6 +44,7 @@ class ContactResponse(BaseModel):
     phone: str
     email: Optional[str]
     custom_attributes: dict = Field(default_factory=dict)
+    is_blacklisted: bool = False
     created_at: datetime
     model_config = {"from_attributes": True}
 

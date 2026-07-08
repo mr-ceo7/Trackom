@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   Users, Plus, Search, Upload, Trash2, X, UserPlus, 
   FolderPlus, FileSpreadsheet, Layers, AlertCircle, CheckCircle2,
-  FolderMinus, Download, Edit3, Edit
+  FolderMinus, Download, Edit3, Edit, Ban, ShieldAlert
 } from 'lucide-react';
 import api from '../../services/api';
 import Loader from '../../components/Loader';
@@ -19,6 +19,7 @@ interface Contact {
   phone: string; 
   email: string | null; 
   custom_attributes?: Record<string, any>;
+  is_blacklisted?: boolean;
   groups?: Group[];
   created_at: string; 
 }
@@ -53,6 +54,7 @@ export default function ContactsPage() {
   const [newPhone, setNewPhone] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [newContactGroupId, setNewContactGroupId] = useState('');
+  const [newIsBlacklisted, setNewIsBlacklisted] = useState(false);
   const [savingContact, setSavingContact] = useState(false);
   const [customFields, setCustomFields] = useState<{ key: string; value: string }[]>([]);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
@@ -60,10 +62,12 @@ export default function ContactsPage() {
   const [editPhone, setEditPhone] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editContactGroupId, setEditContactGroupId] = useState('');
+  const [editIsBlacklisted, setEditIsBlacklisted] = useState(false);
   const [editCustomFields, setEditCustomFields] = useState<{ key: string; value: string }[]>([]);
   const [page, setPage] = useState(1);
   const [limit] = useState(50);
   const [totalContactsCount, setTotalContactsCount] = useState(0);
+  const [blacklistFilter, setBlacklistFilter] = useState<'all' | 'active' | 'blacklisted'>('all');
 
   useEffect(() => {
     setPage(1);
@@ -122,11 +126,11 @@ export default function ContactsPage() {
     }
   }, [loadingContacts]);
 
-  // Clear selection on tab, search, page navigation, or filter change
+  // Clear selection on tab, search, page navigation, filter change, or blacklist filter change
   useEffect(() => {
     setSelectedIds([]);
     setSelectAllTotal(false);
-  }, [activeTab, debouncedSearch, page, filterGroupId]);
+  }, [activeTab, debouncedSearch, page, filterGroupId, blacklistFilter]);
 
   // Auto-scroll terminal logs to bottom on update
   useEffect(() => {
@@ -143,7 +147,9 @@ export default function ContactsPage() {
           page,
           limit,
           ...(debouncedSearch ? { search: debouncedSearch } : {}),
-          ...(filterGroupId ? { group_id: filterGroupId } : {})
+          ...(filterGroupId ? { group_id: filterGroupId } : {}),
+          ...(blacklistFilter === 'active' ? { is_blacklisted: false } : {}),
+          ...(blacklistFilter === 'blacklisted' ? { is_blacklisted: true } : {})
         } 
       });
       setContacts(resp.data);
@@ -155,7 +161,7 @@ export default function ContactsPage() {
       }
     } catch { /* noop */ }
     finally { setLoadingContacts(false); }
-  }, [page, limit, debouncedSearch, filterGroupId]);
+  }, [page, limit, debouncedSearch, filterGroupId, blacklistFilter]);
 
   const fetchGroups = useCallback(async () => {
     setLoadingGroups(true);
@@ -192,12 +198,14 @@ export default function ContactsPage() {
         phone: newPhone, 
         email: newEmail || null,
         group_id: newContactGroupId || null,
-        custom_attributes: customAttrs
+        custom_attributes: customAttrs,
+        is_blacklisted: newIsBlacklisted
       });
       setNewName(''); 
       setNewPhone(''); 
       setNewEmail(''); 
       setNewContactGroupId('');
+      setNewIsBlacklisted(false);
       setCustomFields([]);
       setShowAddContact(false);
       await fetchContacts();
@@ -218,6 +226,7 @@ export default function ContactsPage() {
     setEditName(c.name);
     setEditPhone(c.phone);
     setEditEmail(c.email || '');
+    setEditIsBlacklisted(c.is_blacklisted || false);
     const firstGroupId = c.groups && c.groups.length > 0 ? c.groups[0].id : '';
     setEditContactGroupId(firstGroupId);
 
@@ -244,13 +253,23 @@ export default function ContactsPage() {
         phone: editPhone, 
         email: editEmail || null,
         group_id: editContactGroupId || null,
-        custom_attributes: customAttrs
+        custom_attributes: customAttrs,
+        is_blacklisted: editIsBlacklisted
       });
       
       setEditingContact(null);
       await fetchContacts();
     } catch { /* noop */ }
     finally { setSavingContact(false); }
+  };
+
+  const handleToggleBlacklist = async (c: Contact) => {
+    try {
+      await api.put(`/contacts/${c.id}`, {
+        is_blacklisted: !c.is_blacklisted
+      });
+      await fetchContacts();
+    } catch { /* noop */ }
   };
 
   const handleBulkExport = async () => {
@@ -706,6 +725,49 @@ export default function ContactsPage() {
             />
           </div>
 
+          {/* Blacklist sub-filters */}
+          <div className="flex gap-2 p-1 bg-slate-100 dark:bg-white/5 w-fit rounded-2xl">
+            <button
+              onClick={() => { setBlacklistFilter('all'); setPage(1); }}
+              className={`px-4 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all ${
+                blacklistFilter === 'all' 
+                  ? 'bg-white dark:bg-surface-card text-brand-primary shadow-sm font-bold' 
+                  : 'text-slate-500 dark:text-gray-400 hover:text-slate-800 dark:hover:text-white'
+              }`}
+            >
+              All Contacts
+            </button>
+            <button
+              onClick={() => { setBlacklistFilter('active'); setPage(1); }}
+              className={`px-4 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all ${
+                blacklistFilter === 'active' 
+                  ? 'bg-white dark:bg-surface-card text-brand-primary shadow-sm font-bold' 
+                  : 'text-slate-500 dark:text-gray-400 hover:text-slate-800 dark:hover:text-white'
+              }`}
+            >
+              Active
+            </button>
+            <button
+              onClick={() => { setBlacklistFilter('blacklisted'); setPage(1); }}
+              className={`px-4 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all ${
+                blacklistFilter === 'blacklisted' 
+                  ? 'bg-white dark:bg-surface-card text-rose-500 shadow-sm font-bold' 
+                  : 'text-slate-500 dark:text-gray-400 hover:text-slate-800 dark:hover:text-white'
+              }`}
+            >
+              Blacklisted
+            </button>
+          </div>
+
+          {blacklistFilter === 'blacklisted' && (
+            <div className="p-3.5 bg-slate-100 dark:bg-white/5 border border-slate-200/25 dark:border-white/5 rounded-2xl text-xs text-slate-500 dark:text-gray-400 leading-normal">
+              <strong className="text-slate-700 dark:text-white flex items-center gap-1.5 mb-1 text-xs">
+                <ShieldAlert className="w-4 h-4 text-rose-500" /> Blacklisted contacts
+              </strong>
+              Contacts added here will not receive bulk messages, you will not incur any charges when sending messages. On outbox, message will appear with delivery description of <code className="px-1 py-0.5 rounded bg-slate-200 dark:bg-white/10 font-mono text-[10px] text-brand-primary">In Account Blacklist</code>. Transactional messages will still be sent normally.
+            </div>
+          )}
+
           {filterGroupId && (
             <div className="flex items-center gap-2 px-4 py-2 bg-brand-primary/15 border border-brand-primary/25 text-brand-primary dark:text-brand-primary-light text-xs font-semibold rounded-2xl w-fit">
               <span>Segment Filter Active: <strong>{groups.find(g => g.id === filterGroupId)?.name || 'Filtered'}</strong></span>
@@ -801,10 +863,17 @@ export default function ContactsPage() {
                         </td>
                         <td className="px-5 py-3">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-primary/20 to-brand-accent/20 flex items-center justify-center text-brand-primary text-xs font-bold shrink-0">
+                            <div className={`w-8 h-8 rounded-lg ${c.is_blacklisted ? 'bg-rose-500/15 text-rose-500 font-bold' : 'bg-gradient-to-br from-brand-primary/20 to-brand-accent/20 text-brand-primary font-bold'} flex items-center justify-center text-xs shrink-0`}>
                               {c.name.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase()}
                             </div>
-                            <span className="text-sm font-medium text-slate-900 dark:text-white">{c.name}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium text-slate-900 dark:text-white">{c.name}</span>
+                              {c.is_blacklisted && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20">
+                                  Blacklisted
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </td>
                         <td className="px-5 py-3 text-sm text-slate-600 dark:text-gray-400 font-mono">{c.phone}</td>
@@ -821,6 +890,17 @@ export default function ContactsPage() {
                           )}
                         </td>
                         <td className="px-5 py-3 text-right">
+                          <button 
+                            onClick={() => handleToggleBlacklist(c)} 
+                            className={`p-1.5 rounded-lg mr-1.5 cursor-pointer transition-all ${
+                              c.is_blacklisted 
+                                ? 'text-rose-500 bg-rose-500/10 hover:bg-rose-500/20' 
+                                : 'text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10'
+                            }`}
+                            title={c.is_blacklisted ? "Whitelist Contact" : "Blacklist Contact"}
+                          >
+                            <Ban className="w-3.5 h-3.5" />
+                          </button>
                           <button 
                             onClick={() => openEditContactModal(c)} 
                             className="p-1.5 rounded-lg text-slate-400 hover:text-brand-primary hover:bg-brand-primary/5 dark:hover:bg-brand-primary/10 cursor-pointer transition-all mr-1.5"
@@ -1091,6 +1171,19 @@ export default function ContactsPage() {
                 </select>
               </div>
 
+              <div className="flex items-center gap-3 pt-1">
+                <input
+                  type="checkbox"
+                  id="newIsBlacklisted"
+                  checked={newIsBlacklisted}
+                  onChange={e => setNewIsBlacklisted(e.target.checked)}
+                  className="rounded border-slate-300 dark:border-white/10 text-rose-500 focus:ring-rose-500 cursor-pointer w-4 h-4"
+                />
+                <label htmlFor="newIsBlacklisted" className="text-xs font-semibold text-slate-700 dark:text-gray-300 cursor-pointer select-none">
+                  Blacklist this contact (exclude from bulk SMS)
+                </label>
+              </div>
+
               {/* Custom Attributes Fields List */}
               <div className="space-y-2 pt-2 border-t border-slate-200/20 dark:border-white/5">
                 <div className="flex items-center justify-between">
@@ -1215,6 +1308,19 @@ export default function ContactsPage() {
                     <option key={g.id} value={g.id}>{g.name}</option>
                   ))}
                 </select>
+              </div>
+
+              <div className="flex items-center gap-3 pt-1">
+                <input
+                  type="checkbox"
+                  id="editIsBlacklisted"
+                  checked={editIsBlacklisted}
+                  onChange={e => setEditIsBlacklisted(e.target.checked)}
+                  className="rounded border-slate-300 dark:border-white/10 text-rose-500 focus:ring-rose-500 cursor-pointer w-4 h-4"
+                />
+                <label htmlFor="editIsBlacklisted" className="text-xs font-semibold text-slate-700 dark:text-gray-300 cursor-pointer select-none">
+                  Blacklist this contact (exclude from bulk SMS)
+                </label>
               </div>
 
               {/* Custom Attributes Fields List */}

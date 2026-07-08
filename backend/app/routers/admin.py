@@ -14,6 +14,8 @@ from app.models.campaign import Campaign
 from app.models.sms import SmsMessage
 from app.models.transaction import Transaction
 from app.models.gateway import SmsGateway
+from app.models.sender_id import SenderIdRequest
+from app.models.notification import Notification
 from app.middleware.auth import get_current_user
 
 router = APIRouter(prefix="/admin", tags=["Admin Control Panel"])
@@ -60,6 +62,14 @@ class UpdateUserStatusRequest(BaseModel):
 
 class UpdateUserRateRequest(BaseModel):
     credit_rate: float
+
+class AdminUpdateUserRequest(BaseModel):
+    full_name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    company: Optional[str] = None
+    account_type: Optional[str] = None
+    plan: Optional[str] = None
 
 class AdminGatewayResponse(BaseModel):
     id: uuid.UUID
@@ -201,6 +211,44 @@ async def update_user_rate(
     return {"message": "User credit rate updated successfully", "credit_rate": user.credit_rate}
 
 
+@router.put("/users/{user_id}")
+async def admin_update_user(
+    user_id: uuid.UUID,
+    data: AdminUpdateUserRequest,
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Update tenant profile configuration parameters."""
+    res = await db.execute(select(User).where(User.id == user_id))
+    user = res.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if data.full_name is not None:
+        user.full_name = data.full_name
+    if data.email is not None:
+        # Check duplicate email
+        if data.email != user.email:
+            dup = await db.execute(select(User).where(User.email == data.email))
+            if dup.scalar_one_or_none():
+                raise HTTPException(status_code=400, detail="Email already registered by another user.")
+            user.email = data.email
+    if data.phone is not None:
+        user.phone = data.phone
+    if data.company is not None:
+        user.company = data.company
+    if data.account_type is not None:
+        user.account_type = data.account_type
+    if data.plan is not None:
+        user.plan = data.plan
+        settings = load_system_settings()
+        plan_key = f"{data.plan}Rate"
+        user.credit_rate = settings.get(plan_key, 1.0)
+        
+    await db.flush()
+    return {"message": "User profile updated successfully."}
+
+
 @router.get("/gateways", response_model=List[AdminGatewayResponse])
 async def list_gateways(
     admin: User = Depends(get_current_admin),
@@ -259,3 +307,239 @@ async def delete_gateway(
     await db.delete(gateway)
     await db.flush()
     return {"message": "Gateway configuration deleted successfully"}
+
+
+class RejectSenderIdRequest(BaseModel):
+    reason: str
+
+
+@router.get("/sender-ids")
+async def list_all_sender_ids(
+    status_filter: Optional[str] = Query(None),
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """List all Sender ID registration requests across the system."""
+    q = select(SenderIdRequest).order_by(SenderIdRequest.created_at.desc())
+    if status_filter:
+        q = q.where(SenderIdRequest.status == status_filter)
+    res = await db.execute(q)
+    requests = res.scalars().all()
+    # Serialize with user email/name for clarity
+    return [
+        {
+            "id": r.id,
+            "sender_id": r.sender_id,
+            "purpose": r.purpose,
+            "status": r.status,
+            "rejection_reason": r.rejection_reason,
+            "created_at": r.created_at,
+            "user_email": r.user.email if r.user else "Unknown User",
+            "user_name": r.user.full_name if r.user else "Unknown"
+        }
+        for r in requests
+    ]
+
+
+@router.post("/sender-ids/{request_id}/approve")
+async def approve_sender_id(
+    request_id: uuid.UUID,
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Approve a pending Sender ID whitelist request."""
+    res = await db.execute(select(SenderIdRequest).where(SenderIdRequest.id == request_id))
+    req = res.scalar_one_or_none()
+    if not req:
+        raise HTTPException(status_code=404, detail="Request not found")
+    
+    req.status = "approved"
+    req.rejection_reason = None
+    
+    # Notify user
+    db.add(Notification(
+        user_id=req.user_id,
+        title="Sender ID Approved! 🎉",
+        message=f"Your request for Sender ID '{req.sender_id}' has been approved by administrators.",
+        type="success",
+        action_url="/dashboard/sender-ids"
+    ))
+    await db.flush()
+    return {"message": f"Sender ID {req.sender_id} approved successfully."}
+
+
+@router.post("/sender-ids/{request_id}/reject")
+async def reject_sender_id(
+    request_id: uuid.UUID,
+    data: RejectSenderIdRequest,
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Reject a pending Sender ID whitelist request with audit reason."""
+    res = await db.execute(select(SenderIdRequest).where(SenderIdRequest.id == request_id))
+    req = res.scalar_one_or_none()
+    if not req:
+        raise HTTPException(status_code=404, detail="Request not found")
+    
+    req.status = "rejected"
+    req.rejection_reason = data.reason
+    
+    # Notify user
+    db.add(Notification(
+        user_id=req.user_id,
+        title="Sender ID Rejected ⚠️",
+        message=f"Your request for Sender ID '{req.sender_id}' was rejected. Reason: {data.reason}",
+        type="error",
+        action_url="/dashboard/sender-ids"
+    ))
+    await db.flush()
+    return {"message": f"Sender ID {req.sender_id} rejected."}
+
+
+@router.get("/campaigns")
+async def list_all_campaigns(
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """List recent campaigns sent by any user for monitoring."""
+    q = select(Campaign).order_by(Campaign.created_at.desc()).limit(100)
+    res = await db.execute(q)
+    campaigns = res.scalars().all()
+    return [
+        {
+            "id": c.id,
+            "name": c.name,
+            "sender_id": c.sender_id,
+            "status": c.status,
+            "total_recipients": c.total_recipients,
+            "sent_count": c.sent_count,
+            "failed_count": c.failed_count,
+            "total_cost": c.total_cost,
+            "created_at": c.created_at,
+            "user_email": c.user.email if c.user else "Unknown User",
+            "user_name": c.user.full_name if c.user else "Unknown"
+        }
+        for c in campaigns
+    ]
+
+
+@router.get("/transactions")
+async def list_all_transactions(
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """List recent transactions across all tenants."""
+    q = select(Transaction).order_by(Transaction.created_at.desc()).limit(100)
+    res = await db.execute(q)
+    txs = res.scalars().all()
+    return [
+        {
+            "id": t.id,
+            "type": t.type,
+            "amount": t.amount,
+            "sms_credits": t.sms_credits,
+            "balance_after": t.balance_after,
+            "reference": t.reference,
+            "description": t.description,
+            "payment_method": t.payment_method,
+            "status": t.status,
+            "created_at": t.created_at,
+            "user_email": t.user.email if t.user else "Unknown User",
+            "user_name": t.user.full_name if t.user else "Unknown"
+        }
+        for t in txs
+    ]
+
+
+import json
+import os
+
+SETTINGS_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "config_settings.json")
+DEFAULT_SETTINGS = {
+    "mpesaPaybill": "400200",
+    "mpesaTill": "900100",
+    "minDeposit": 500,
+    "autoCredit": True,
+    "welcomeCredits": 10000,
+    "baseSmsCost": 0.10,
+    "senderIdFee": 10000,
+    "starterRate": 1.00,
+    "growthRate": 0.85,
+    "enterpriseRate": 0.70,
+    "maintenanceMode": False,
+    "supportEmail": "support@trackom.co.ke",
+    "supportPhone": "+254 700 000 000",
+    "alertBanner": ""
+}
+
+def load_system_settings():
+    if not os.path.exists(SETTINGS_FILE):
+        return DEFAULT_SETTINGS.copy()
+    try:
+        with open(SETTINGS_FILE, "r") as f:
+            data = json.load(f)
+            merged = DEFAULT_SETTINGS.copy()
+            merged.update(data)
+            return merged
+    except Exception:
+        return DEFAULT_SETTINGS.copy()
+
+def save_system_settings(settings):
+    try:
+        with open(SETTINGS_FILE, "w") as f:
+            json.dump(settings, f, indent=4)
+        return True
+    except Exception:
+        return False
+
+class SystemSettingsUpdateRequest(BaseModel):
+    mpesaPaybill: str
+    mpesaTill: str
+    minDeposit: int
+    autoCredit: bool
+    welcomeCredits: int
+    baseSmsCost: float
+    senderIdFee: int
+    starterRate: float
+    growthRate: float
+    enterpriseRate: float
+    maintenanceMode: bool
+    supportEmail: str
+    supportPhone: str
+    alertBanner: str
+
+@router.get("/settings")
+async def get_settings(admin: User = Depends(get_current_admin)):
+    """Retrieve all admin settings."""
+    return load_system_settings()
+
+@router.put("/settings")
+async def update_settings(
+    data: SystemSettingsUpdateRequest,
+    admin: User = Depends(get_current_admin)
+):
+    """Update system settings."""
+    payload = data.model_dump()
+    if save_system_settings(payload):
+        return payload
+    raise HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail="Failed to persist system settings configurations."
+    )
+
+@router.get("/settings/public")
+async def get_public_settings(current_user: User = Depends(get_current_user)):
+    """Retrieve public system settings (no admin auth required)."""
+    settings = load_system_settings()
+    # Return only non-sensitive keys that the client needs
+    return {
+        "mpesaPaybill": settings.get("mpesaPaybill"),
+        "mpesaTill": settings.get("mpesaTill"),
+        "minDeposit": settings.get("minDeposit"),
+        "baseSmsCost": settings.get("baseSmsCost"),
+        "supportEmail": settings.get("supportEmail"),
+        "supportPhone": settings.get("supportPhone"),
+        "alertBanner": settings.get("alertBanner"),
+        "maintenanceMode": settings.get("maintenanceMode"),
+        "senderIdFee": settings.get("senderIdFee"),
+    }

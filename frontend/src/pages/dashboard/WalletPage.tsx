@@ -38,6 +38,7 @@ export default function WalletPage() {
   const [stkPin, setStkPin] = useState('');
   const [stkStep, setStkStep] = useState<'prompt' | 'sending' | 'success' | 'error'>('prompt');
   const [stkError, setStkError] = useState('');
+  const [publicSettings, setPublicSettings] = useState<any>(null);
 
   const presets = [500, 1000, 2500, 5000, 10000];
 
@@ -49,9 +50,17 @@ export default function WalletPage() {
     finally { setLoading(false); }
   }, []);
 
+  const fetchPublicSettings = useCallback(async () => {
+    try {
+      const resp = await api.get('/admin/settings/public');
+      setPublicSettings(resp.data);
+    } catch { /* noop */ }
+  }, []);
+
   useEffect(() => {
     fetchTransactions();
-  }, [fetchTransactions]);
+    fetchPublicSettings();
+  }, [fetchTransactions, fetchPublicSettings]);
 
   const handleOpenStk = () => {
     if (!topupAmount || !phone) return;
@@ -153,9 +162,13 @@ export default function WalletPage() {
               <span>Simulate M-Pesa Pay</span>
             </button>
           </div>
-          {topupAmount && Number(topupAmount) > 0 && (
-            <p className="text-xs text-slate-500 dark:text-gray-400">You'll receive <span className="font-bold text-brand-primary">{(Number(topupAmount) * 10).toLocaleString()} SMS credits</span> (KES 0.10/SMS)</p>
-          )}
+          {topupAmount && Number(topupAmount) > 0 && (() => {
+            const costPerCredit = (publicSettings?.baseSmsCost || 1.0) * (user?.credit_rate || 1.0);
+            const creditsToReceive = costPerCredit > 0 ? Math.floor(Number(topupAmount) / costPerCredit) : 0;
+            return (
+              <p className="text-xs text-slate-500 dark:text-gray-400">You'll receive <span className="font-bold text-brand-primary">{creditsToReceive.toLocaleString()} SMS credits</span> (KES {costPerCredit.toFixed(2)}/SMS)</p>
+            );
+          })()}
         </div>
       )}
 
@@ -206,7 +219,7 @@ export default function WalletPage() {
                 <div className="bg-[#1C2035] rounded-2xl p-4 border border-white/5 space-y-3">
                   <div className="text-[10px] text-brand-emerald font-bold tracking-widest uppercase">M-PESA SIM TOOLKIT</div>
                   <div className="text-sm font-semibold text-gray-200">
-                    Do you want to pay <span className="text-brand-emerald font-bold font-mono">KES {Number(topupAmount).toLocaleString()}</span> to <span className="font-bold text-white">TRACKOM B2B</span>?
+                    Do you want to pay <span className="text-brand-emerald font-bold font-mono">KES {Number(topupAmount).toLocaleString()}</span> to <span className="font-bold text-white">TRACKOM B2B</span> (Paybill: <span className="font-mono text-brand-accent">{publicSettings?.mpesaPaybill || '400200'}</span>)?
                   </div>
                   
                   {/* Simulated PIN Boxes */}

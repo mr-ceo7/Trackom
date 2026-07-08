@@ -172,13 +172,54 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
             sent_count = 0
             delivered_count = 0
             failed_count = 0
+            total_refund = 0
 
             for i in range(0, total_recipients, batch_size):
                 batch_contacts = contacts[i:i+batch_size]
-                
+
+                # --- Check for pause/cancel between batches ---
+                while True:
+                    await db.refresh(campaign)
+                    if campaign.status == "cancelled":
+                        # Refund credits for unsent contacts
+                        unsent_count = total_recipients - sent_count
+                        refund = unsent_count * sms_parts
+                        user_result_refund = await db.execute(select(User).where(User.id == campaign.user_id))
+                        user_refund = user_result_refund.scalar_one_or_none()
+                        if user_refund:
+                            user_refund.sms_balance += refund
+                        campaign.completed_at = datetime.utcnow()
+                        db.add(Notification(
+                            user_id=user.id,
+                            title=f"Campaign '{campaign.name}' Cancelled ⛔",
+                            message=f"Campaign was cancelled. {sent_count} of {total_recipients} messages were sent. {refund} credits refunded.",
+                            type="warning",
+                            action_url="/dashboard/campaigns"
+                        ))
+                        await db.commit()
+                        logger.info(f"Campaign {campaign_id} cancelled after {sent_count} sends. Refunded {refund} credits.")
+                        return
+                    elif campaign.status == "paused":
+                        logger.info(f"Campaign {campaign_id} is paused. Waiting...")
+                        await asyncio.sleep(5)
+                        continue
+                    else:
+                        break  # status is "sending" — proceed
+
                 async def send_to_one(contact):
                     opt_out_suffix = "\nSTOP *456*9*5#" if campaign.include_opt_out else ""
                     personalized_msg = compile_template(campaign.message_content, contact) + opt_out_suffix
+                    
+                    if getattr(contact, "is_blacklisted", False):
+                        return {
+                            "recipient": contact.phone,
+                            "status": "rejected",
+                            "message_id": None,
+                            "cost": 0.0,
+                            "error_message": "In Account Blacklist",
+                            "compiled_message": personalized_msg
+                        }
+
                     err_msg = None
                     try:
                         res_list = await gateway.send_messages(
@@ -212,12 +253,18 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
 
                 # Map response metrics back to models
                 for res in gateway_results:
-                    status_mapped = "delivered" if res["status"] == "success" else "failed"
-                    
-                    if status_mapped == "delivered":
-                        delivered_count += 1
-                    else:
+                    if res["status"] == "rejected":
+                        status_mapped = "rejected"
                         failed_count += 1
+                        # Refund the credit that was deducted upfront
+                        total_refund += sms_parts
+                    else:
+                        status_mapped = "delivered" if res["status"] == "success" else "failed"
+                        if status_mapped == "delivered":
+                            delivered_count += 1
+                        else:
+                            failed_count += 1
+                    
                     sent_count += 1
                     
                     msg = SmsMessage(
@@ -230,6 +277,7 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
                         cost=res["cost"],
                         gateway_message_id=res["message_id"],
                         error_message=res["error_message"],
+                        batch_number=campaign.batch_number,
                         sent_at=datetime.utcnow(),
                         delivered_at=datetime.utcnow() if status_mapped == "delivered" else None
                     )
@@ -267,13 +315,17 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
                 await asyncio.sleep(0.02)
 
             # 7. Complete Campaign
+            if total_refund > 0:
+                user.sms_balance += total_refund
+                logger.info(f"Refunded {total_refund} credits to user {user.id} for blacklisted contacts in campaign {campaign_id}")
+
             campaign.status = "completed"
             campaign.completed_at = datetime.utcnow()
             
             db.add(Notification(
                 user_id=user.id,
                 title=f"Campaign '{campaign.name}' Sent! 🚀",
-                message=f"Completed campaign. Delivered: {delivered_count}, Failed: {failed_count}.",
+                message=f"Completed campaign. Delivered: {delivered_count}, Failed: {failed_count}. " + (f"{int(total_refund)} blacklist credits refunded." if total_refund > 0 else ""),
                 type="success",
                 action_url="/dashboard/campaigns"
             ))

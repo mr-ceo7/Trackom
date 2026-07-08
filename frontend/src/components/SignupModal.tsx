@@ -106,7 +106,8 @@ export default function SignupModal({ isOpen, onClose }: SignupModalProps) {
 
       setIsSuccess(true);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Registration failed. Please verify your details.');
+      const { parseApiError } = await import('../utils');
+      setError(parseApiError(err, 'Registration failed. Please verify your details.'));
     } finally {
       setIsSubmitting(false);
     }

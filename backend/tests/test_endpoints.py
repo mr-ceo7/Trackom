@@ -68,7 +68,7 @@ class TestContactGroups:
 class TestSMS:
     async def test_send_sms(self, auth_client: AsyncClient):
         resp = await auth_client.post("/api/v1/messages/send", json={
-            "recipients": ["+254712345678"], "message": "Hello from test!"
+            "recipients": ["+254712345678"], "message": "Hello from test!", "sender_id": "TRACKOM"
         })
         assert resp.status_code == 200
         data = resp.json()
@@ -80,6 +80,7 @@ class TestSMS:
         resp = await auth_client.post("/api/v1/messages/send", json={
             "recipients": ["+254700000001", "+254700000002", "+254700000003"],
             "message": "Bulk test",
+            "sender_id": "TRACKOM"
         })
         assert resp.status_code == 200
         assert resp.json()["queued"] == 3
@@ -89,13 +90,13 @@ class TestSMS:
         # User has 10000 credits, send a huge batch
         phones = [f"+25470000{i:04d}" for i in range(10001)]
         resp = await auth_client.post("/api/v1/messages/send", json={
-            "recipients": phones, "message": "Over limit"
+            "recipients": phones, "message": "Over limit", "sender_id": "TRACKOM"
         })
         assert resp.status_code == 402
 
     async def test_sms_history(self, auth_client: AsyncClient):
         await auth_client.post("/api/v1/messages/send", json={
-            "recipients": ["+254712345678"], "message": "History test"
+            "recipients": ["+254712345678"], "message": "History test", "sender_id": "TRACKOM"
         })
         resp = await auth_client.get("/api/v1/messages/history")
         assert resp.status_code == 200
@@ -138,7 +139,7 @@ class TestCampaigns:
 
     async def test_create_campaign_fails_without_contacts(self, auth_client: AsyncClient):
         resp = await auth_client.post("/api/v1/campaigns", json={
-            "name": "Promo", "message_content": "Buy 1 get 1 free!"
+            "name": "Promo", "message_content": "Buy 1 get 1 free!", "sender_id": "TRACKOM"
         })
         assert resp.status_code == 400
         assert "contacts" in resp.json()["detail"]
@@ -147,7 +148,7 @@ class TestCampaigns:
         # Create a contact first
         await auth_client.post("/api/v1/contacts", json={"name": "John", "phone": "+254711223344"})
         resp = await auth_client.post("/api/v1/campaigns", json={
-            "name": "Promo 2", "message_content": "Special promo today!"
+            "name": "Promo 2", "message_content": "Special promo today!", "sender_id": "TRACKOM"
         })
         assert resp.status_code == 201
         data = resp.json()
@@ -159,14 +160,15 @@ class TestCampaigns:
         # Create a contact and campaign first
         await auth_client.post("/api/v1/contacts", json={"name": "John", "phone": "+254711223344"})
         resp = await auth_client.post("/api/v1/campaigns", json={
-            "name": "Promo 2", "message_content": "Special promo today!"
+            "name": "Promo 2", "message_content": "Special promo today!", "sender_id": "TRACKOM"
         })
         cid = resp.json()["id"]
 
         # Update it
         up_resp = await auth_client.put(f"/api/v1/campaigns/{cid}", json={
             "name": "Promo 2 Updated",
-            "message_content": "Super special promo today!"
+            "message_content": "Super special promo today!",
+            "sender_id": "TRACKOM"
         })
         assert up_resp.status_code == 200
         assert up_resp.json()["name"] == "Promo 2 Updated"
@@ -176,7 +178,7 @@ class TestCampaigns:
         # Create a contact and campaign first
         await auth_client.post("/api/v1/contacts", json={"name": "John", "phone": "+254711223344"})
         resp = await auth_client.post("/api/v1/campaigns", json={
-            "name": "Promo 2", "message_content": "Special promo today!"
+            "name": "Promo 2", "message_content": "Special promo today!", "sender_id": "TRACKOM"
         })
         cid = resp.json()["id"]
 
@@ -192,7 +194,7 @@ class TestCampaigns:
         # Create a contact and campaign first
         await auth_client.post("/api/v1/contacts", json={"name": "John", "phone": "+254711223344"})
         resp = await auth_client.post("/api/v1/campaigns", json={
-            "name": "Promo 2", "message_content": "Special promo today!"
+            "name": "Promo 2", "message_content": "Special promo today!", "sender_id": "TRACKOM"
         })
         cid = resp.json()["id"]
 

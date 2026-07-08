@@ -38,7 +38,8 @@ export default function RegisterPage() {
       await register({ full_name: fullName, email, password, phone: phone ? `+254${phone}` : undefined, company: company || undefined, account_type: accountType });
       navigate('/dashboard', { replace: true });
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Registration failed. Please try again.');
+      const { parseApiError } = await import('../../utils');
+      setError(parseApiError(err, 'Registration failed. Please try again.'));
     } finally {
       setIsSubmitting(false);
     }
