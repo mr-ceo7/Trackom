@@ -12,8 +12,23 @@ import GenieModal from '../../components/GenieModal';
 
 import { calculateSmsParts } from '../../utils';
 
+const formatErrorDetail = (detail: any): string => {
+  if (!detail) return '';
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail)) {
+    return detail.map(err => {
+      const loc = Array.isArray(err.loc) ? err.loc.join('.') : err.loc;
+      return `${loc}: ${err.msg}`;
+    }).join(', ');
+  }
+  if (typeof detail === 'object') {
+    return JSON.stringify(detail);
+  }
+  return String(detail);
+};
 
 export default function ComposeSMS() {
+
   const { user, refreshUser } = useAuth();
   const [searchParams] = useSearchParams();
   const [sendMode, setSendMode] = useState<'single' | 'bulk' | 'group'>('single');
@@ -552,7 +567,7 @@ export default function ComposeSMS() {
       } catch (err: any) {
         clearInterval(progressInterval);
         setShowRadar(false);
-        setResult({ type: 'error', text: err.response?.data?.detail || 'Failed to dispatch messages.' });
+        setResult({ type: 'error', text: formatErrorDetail(err.response?.data?.detail) || 'Failed to dispatch messages.' });
       } finally {
         setIsSending(false);
       }
@@ -701,7 +716,7 @@ export default function ComposeSMS() {
       setShowRadar(false);
       setResult({
         type: 'error',
-        text: `Failed to launch campaign: ${err.response?.data?.detail || err.message}`
+        text: `Failed to launch campaign: ${formatErrorDetail(err.response?.data?.detail) || err.message}`
       });
     } finally {
       setIsSending(false);

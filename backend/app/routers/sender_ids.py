@@ -37,6 +37,22 @@ async def list_approved_sender_ids(
     db: AsyncSession = Depends(get_db)
 ):
     """Retrieve only the approved Sender ID strings for use in Compose/Campaign dropdowns."""
+    # 1. Fetch the admin's configured default sender ID
+    from app.routers.admin import load_system_settings
+    sys_settings = load_system_settings()
+    default_sender = sys_settings.get("advantasmsDefaultShortcode", "ARVOCAP").upper().strip()
+
+    # 2. Check if the user has requested any custom sender IDs
+    # (requests where the requested sender_id is not the default_sender)
+    custom_q = select(SenderIdRequest).where(
+        SenderIdRequest.user_id == current_user.id,
+        SenderIdRequest.sender_id != default_sender,
+        SenderIdRequest.sandbox_mode == current_user.sandbox_mode
+    )
+    custom_res = await db.execute(custom_q)
+    has_custom = len(custom_res.scalars().all()) > 0
+
+    # 3. Retrieve user's own approved sender IDs
     result = await db.execute(
         select(SenderIdRequest.sender_id)
         .where(
@@ -45,7 +61,14 @@ async def list_approved_sender_ids(
             SenderIdRequest.sandbox_mode == current_user.sandbox_mode
         )
     )
-    return list(result.scalars().all())
+    user_approved = list(result.scalars().all())
+
+    # If the user has not requested any custom sender IDs yet, they get access to the default sender ID
+    if not has_custom:
+        if default_sender not in user_approved:
+            user_approved.append(default_sender)
+
+    return user_approved
 
 
 @router.post("", response_model=SenderIdRequestResponse, status_code=status.HTTP_201_CREATED)

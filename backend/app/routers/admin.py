@@ -3,6 +3,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
+from sqlalchemy.orm import joinedload
 from typing import List, Optional
 import uuid
 from pydantic import BaseModel
@@ -320,7 +321,7 @@ async def list_all_sender_ids(
     db: AsyncSession = Depends(get_db)
 ):
     """List all Sender ID registration requests across the system."""
-    q = select(SenderIdRequest).order_by(SenderIdRequest.created_at.desc())
+    q = select(SenderIdRequest).options(joinedload(SenderIdRequest.user)).order_by(SenderIdRequest.created_at.desc())
     if status_filter:
         q = q.where(SenderIdRequest.status == status_filter)
     res = await db.execute(q)
@@ -402,7 +403,7 @@ async def list_all_campaigns(
     db: AsyncSession = Depends(get_db)
 ):
     """List recent campaigns sent by any user for monitoring."""
-    q = select(Campaign).order_by(Campaign.created_at.desc()).limit(100)
+    q = select(Campaign).options(joinedload(Campaign.user)).order_by(Campaign.created_at.desc()).limit(100)
     res = await db.execute(q)
     campaigns = res.scalars().all()
     return [
@@ -429,7 +430,7 @@ async def list_all_transactions(
     db: AsyncSession = Depends(get_db)
 ):
     """List recent transactions across all tenants."""
-    q = select(Transaction).order_by(Transaction.created_at.desc()).limit(100)
+    q = select(Transaction).options(joinedload(Transaction.user)).order_by(Transaction.created_at.desc()).limit(100)
     res = await db.execute(q)
     txs = res.scalars().all()
     return [

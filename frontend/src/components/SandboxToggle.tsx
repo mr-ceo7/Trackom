@@ -25,6 +25,7 @@ export default function SandboxToggle() {
       setIsToggling(true);
       try {
         await toggleSandboxMode();
+        window.location.reload();
       } finally {
         setIsToggling(false);
       }
@@ -36,10 +37,12 @@ export default function SandboxToggle() {
     setIsToggling(true);
     try {
       await toggleSandboxMode();
+      window.location.reload();
     } finally {
       setIsToggling(false);
     }
   };
+
 
   return (
     <>

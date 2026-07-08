@@ -12,6 +12,7 @@ import { AnimatePresence } from 'motion/react';
 import api from '../../services/api';
 import Loader from '../../components/Loader';
 import GenieModal from '../../components/GenieModal';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface IncomingSms {
   id: string;
@@ -26,9 +27,12 @@ interface IncomingSms {
 }
 
 export default function InboxPage() {
+  const { user } = useAuth();
+  const isSandbox = user?.sandbox_mode !== false;
   const navigate = useNavigate();
   const [messages, setMessages] = useState<IncomingSms[]>([]);
   const [loading, setLoading] = useState(true);
+
   const [searchSender, setSearchSender] = useState('');
   const [searchRecipient, setSearchRecipient] = useState('');
   const [inputSender, setInputSender] = useState('');
@@ -260,81 +264,84 @@ export default function InboxPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Webhook Simulator */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="clay-card rounded-3xl p-5 space-y-4">
-            <div className="flex items-center gap-2 pb-2 border-b border-slate-200/20">
-              <Smartphone className="w-5 h-5 text-brand-primary" />
-              <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Gateway Webhook Simulator</h2>
+        {isSandbox && (
+          <div className="lg:col-span-1 space-y-6">
+            <div className="clay-card rounded-3xl p-5 space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b border-slate-200/20">
+                <Smartphone className="w-5 h-5 text-brand-primary" />
+                <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Gateway Webhook Simulator</h2>
+              </div>
+              
+              <p className="text-xs text-slate-500 dark:text-gray-400 leading-relaxed">
+                Use this tool to simulate an incoming SMS payload originating from Africa's Talking or other telecommunications gateway webhooks.
+              </p>
+
+              <form onSubmit={handleSimulate} className="space-y-3.5 pt-2">
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Sender Number (From)</label>
+                  <input 
+                    type="text"
+                    value={simSender}
+                    onChange={e => setSimSender(e.target.value)}
+                    placeholder="e.g. +254712345678"
+                    required
+                    className="clay-input w-full px-3.5 py-2.5 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none transition-all font-mono"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Recipient (Shortcode / To)</label>
+                  <input 
+                    type="text"
+                    value={simRecipient}
+                    onChange={e => setSimRecipient(e.target.value)}
+                    placeholder="e.g. 22045 or TRACKOM"
+                    required
+                    className="clay-input w-full px-3.5 py-2.5 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none transition-all font-mono"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Message Content</label>
+                  <textarea 
+                    value={simContent}
+                    onChange={e => setSimContent(e.target.value)}
+                    placeholder="Type simulated incoming message..."
+                    required
+                    rows={3}
+                    className="clay-input w-full px-3.5 py-2.5 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none transition-all resize-none font-sans"
+                  />
+                </div>
+
+                {simSuccess && (
+                  <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 rounded-xl text-xs flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>{simSuccess}</span>
+                  </div>
+                )}
+
+                {simError && (
+                  <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-xs flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>{simError}</span>
+                  </div>
+                )}
+
+                <button 
+                  type="submit" 
+                  disabled={simulating || !simSender || !simContent}
+                  className="clay-button-primary w-full py-2.5 rounded-2xl text-xs font-semibold text-white flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 transition-all"
+                >
+                  {simulating ? <Loader size="sm" /> : <><Play className="w-3.5 h-3.5" /> Simulate Inbound SMS</>}
+                </button>
+              </form>
             </div>
-            
-            <p className="text-xs text-slate-500 dark:text-gray-400 leading-relaxed">
-              Use this tool to simulate an incoming SMS payload originating from Africa's Talking or other telecommunications gateway webhooks.
-            </p>
-
-            <form onSubmit={handleSimulate} className="space-y-3.5 pt-2">
-              <div className="space-y-1">
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Sender Number (From)</label>
-                <input 
-                  type="text"
-                  value={simSender}
-                  onChange={e => setSimSender(e.target.value)}
-                  placeholder="e.g. +254712345678"
-                  required
-                  className="clay-input w-full px-3.5 py-2.5 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none transition-all font-mono"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Recipient (Shortcode / To)</label>
-                <input 
-                  type="text"
-                  value={simRecipient}
-                  onChange={e => setSimRecipient(e.target.value)}
-                  placeholder="e.g. 22045 or TRACKOM"
-                  required
-                  className="clay-input w-full px-3.5 py-2.5 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none transition-all font-mono"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Message Content</label>
-                <textarea 
-                  value={simContent}
-                  onChange={e => setSimContent(e.target.value)}
-                  placeholder="Type simulated incoming message..."
-                  required
-                  rows={3}
-                  className="clay-input w-full px-3.5 py-2.5 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none transition-all resize-none font-sans"
-                />
-              </div>
-
-              {simSuccess && (
-                <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 rounded-xl text-xs flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
-                  <span>{simSuccess}</span>
-                </div>
-              )}
-
-              {simError && (
-                <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-xs flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                  <span>{simError}</span>
-                </div>
-              )}
-
-              <button 
-                type="submit" 
-                disabled={simulating || !simSender || !simContent}
-                className="clay-button-primary w-full py-2.5 rounded-2xl text-xs font-semibold text-white flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 transition-all"
-              >
-                {simulating ? <Loader size="sm" /> : <><Play className="w-3.5 h-3.5" /> Simulate Inbound SMS</>}
-              </button>
-            </form>
           </div>
-        </div>
+        )}
 
         {/* Right Column: Inbound SMS List */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className={`${isSandbox ? 'lg:col-span-2' : 'lg:col-span-3'} space-y-4`}>
+
           {/* Filters Card */}
           <div className="clay-card rounded-3xl p-4 flex flex-col gap-3">
             <div className="flex flex-wrap items-center gap-3 justify-between">
