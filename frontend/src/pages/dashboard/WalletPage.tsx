@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { 
   Wallet, Plus, ArrowUpRight, ArrowDownRight, CreditCard, 
-  Smartphone, Receipt, X, CheckCircle2, ShieldAlert
+  Smartphone, Receipt, X, CheckCircle2, ShieldAlert, Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import api from '../../services/api';
@@ -69,15 +69,37 @@ export default function WalletPage() {
     fetchPublicSettings();
   }, [fetchTransactions, fetchPublicSettings]);
 
-  const handleOpenStk = () => {
+  const isSandbox = user?.sandbox_mode !== false;
+
+  const handleOpenStk = async () => {
     if (!topupAmount || !phone) return;
     setErrorMsg('');
     setSuccessMsg('');
-    setStkPin('');
-    setStkStep('prompt');
-    setStkError('');
-    setIsStkOpen(true);
+
+    if (isSandbox) {
+      setStkPin('');
+      setStkStep('prompt');
+      setStkError('');
+      setIsStkOpen(true);
+    } else {
+      setLoading(true);
+      try {
+        const resp = await api.post('/wallet/topup', {
+          amount: Number(topupAmount),
+          phone_number: phone,
+        });
+        setSuccessMsg(resp.data.response_description || 'STK Push request accepted successfully! Please check your mobile phone.');
+        setTopupAmount('');
+        setPhone('');
+        await fetchTransactions();
+      } catch (err: any) {
+        setErrorMsg(err.response?.data?.detail || 'Failed to initiate M-Pesa STK push payment.');
+      } finally {
+        setLoading(false);
+      }
+    }
   };
+
 
   const handleKeyPress = (num: string) => {
     if (stkPin.length < 4) {
@@ -164,9 +186,9 @@ export default function WalletPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <input type="number" value={topupAmount} onChange={e => setTopupAmount(e.target.value)} className="clay-input px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm font-mono transition-all" placeholder="Amount (KES)" />
             <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="clay-input px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm font-mono transition-all" placeholder="M-Pesa Number (e.g. 0712345678)" />
-            <button onClick={handleOpenStk} disabled={!topupAmount || !phone} className="clay-button-primary flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all">
-              <Smartphone className="w-4 h-4" />
-              <span>Simulate M-Pesa Pay</span>
+            <button onClick={handleOpenStk} disabled={!topupAmount || !phone || loading} className="clay-button-primary flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all disabled:opacity-50">
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Smartphone className="w-4 h-4" />}
+              <span>{loading ? 'Processing...' : (isSandbox ? 'Simulate M-Pesa Pay' : 'Pay via M-Pesa')}</span>
             </button>
           </div>
           {topupAmount && Number(topupAmount) > 0 && (() => {

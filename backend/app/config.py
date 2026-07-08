@@ -40,6 +40,18 @@ class Settings(BaseSettings):
     ADVANTA_BASE_URL: str = "https://quicksms.advantasms.com"
     ADVANTA_DEFAULT_SHORTCODE: str = "ARVOCAP"
 
+    # Google Auth
+    GOOGLE_CLIENT_ID: str = "924177133255-g3duhln1pfflnr50qqg3le5mh3jo59pa.apps.googleusercontent.com"
+
+    # M-Pesa Integration
+    MPESA_CONSUMER_KEY: str = "5KqSGxWCdvtyvG5NaDRWQcv45AzXllgX9EaG0nPK5GmOSoNJ"
+    MPESA_CONSUMER_SECRET: str = "MmMJD2thRvITFb39dr2WqXeJHMJETFIJp2DsZ5NXtfkpw2UDDIEpQf9i9crnaAMs"
+    MPESA_SHORTCODE: str = "174379"
+    MPESA_PASSKEY: str = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919"
+    MPESA_CALLBACK_URL: str = "https://unfenestral-scratchily-lester.ngrok-free.dev/api/v1/wallet/mpesa/callback"
+    MPESA_ENV: str = "sandbox"
+    MPESA_CALLBACK_SECRET: str = "11e8d7aa90384eab766cd7f624f3c10ae198c8de0abb46c5540978c7e1f6b14d"
+
     # Email / SMTP
     SMTP_HOST: str = "smtp.gmail.com"
     SMTP_PORT: int = 587
