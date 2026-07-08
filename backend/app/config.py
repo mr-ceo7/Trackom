@@ -34,6 +34,12 @@ class Settings(BaseSettings):
     SMS_GATEWAY_API_KEY: str = ""
     SMS_GATEWAY_URL: str = ""
 
+    # AdvantaSMS Gateway
+    ADVANTA_API_KEY: str = "REDACTED_ADVANTA_API_KEY"
+    ADVANTA_PARTNER_ID: str = "2872"
+    ADVANTA_BASE_URL: str = "https://quicksms.advantasms.com"
+    ADVANTA_DEFAULT_SHORTCODE: str = "ARVOCAP"
+
     # Email / SMTP
     SMTP_HOST: str = "smtp.gmail.com"
     SMTP_PORT: int = 587

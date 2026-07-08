@@ -7,6 +7,7 @@ from app.utils.limiter import limiter
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 import httpx
+from pydantic import BaseModel
 
 from app.database import get_db
 from app.models.user import User
@@ -477,4 +478,24 @@ async def disable_2fa(
     await db.commit()
 
     return {"message": "Two-factor authentication disabled successfully."}
+
+
+class SandboxModeRequest(BaseModel):
+    sandbox_mode: bool
+
+
+@router.put("/sandbox-mode")
+async def toggle_sandbox_mode(
+    data: SandboxModeRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Toggle the user's sandbox_mode setting for SMS gateway selection."""
+    result = await db.execute(select(User).where(User.id == current_user.id))
+    db_user = result.scalar_one()
+    db_user.sandbox_mode = data.sandbox_mode
+    await db.commit()
+    await db.refresh(db_user)
+
+    return UserResponse.model_validate(db_user)
 

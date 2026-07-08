@@ -24,7 +24,11 @@ async def list_templates(
     """List all SMS templates saved by the authenticated user."""
     q = (
         select(SmsTemplate)
-        .where(SmsTemplate.user_id == current_user.id, SmsTemplate.deleted_at.is_(None))
+        .where(
+            SmsTemplate.user_id == current_user.id,
+            SmsTemplate.deleted_at.is_(None),
+            SmsTemplate.sandbox_mode == current_user.sandbox_mode
+        )
         .order_by(SmsTemplate.created_at.desc())
     )
     result = await db.execute(q)
@@ -41,7 +45,8 @@ async def create_template(
     template = SmsTemplate(
         user_id=current_user.id,
         name=data.name,
-        content=data.content
+        content=data.content,
+        sandbox_mode=current_user.sandbox_mode
     )
     db.add(template)
     await db.flush()
@@ -59,7 +64,8 @@ async def update_template(
     q = select(SmsTemplate).where(
         SmsTemplate.id == template_id,
         SmsTemplate.user_id == current_user.id,
-        SmsTemplate.deleted_at.is_(None)
+        SmsTemplate.deleted_at.is_(None),
+        SmsTemplate.sandbox_mode == current_user.sandbox_mode
     )
     res = await db.execute(q)
     template = res.scalar_one_or_none()
@@ -88,7 +94,8 @@ async def delete_template(
     q = select(SmsTemplate).where(
         SmsTemplate.id == template_id,
         SmsTemplate.user_id == current_user.id,
-        SmsTemplate.deleted_at.is_(None)
+        SmsTemplate.deleted_at.is_(None),
+        SmsTemplate.sandbox_mode == current_user.sandbox_mode
     )
     res = await db.execute(q)
     template = res.scalar_one_or_none()
@@ -101,3 +108,4 @@ async def delete_template(
     template.deleted_at = datetime.utcnow()
     await db.flush()
     return {"message": "Template deleted successfully."}
+

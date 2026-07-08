@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import ThemeToggle from '../components/ThemeToggle';
+import SandboxToggle from '../components/SandboxToggle';
 import TrackomLogo from '../components/TrackomLogo';
 import api from '../services/api';
 
@@ -229,6 +230,7 @@ export default function DashboardLayout() {
           </div>
 
           <div className="flex items-center gap-3">
+            <SandboxToggle />
             <ThemeToggle className="clay-button-secondary text-slate-500 dark:text-gray-400" />
 
             {/* Notifications */}

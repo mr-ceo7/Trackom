@@ -22,7 +22,10 @@ async def list_sender_ids(
     """List all Sender ID registration requests for the current user."""
     result = await db.execute(
         select(SenderIdRequest)
-        .where(SenderIdRequest.user_id == current_user.id)
+        .where(
+            SenderIdRequest.user_id == current_user.id,
+            SenderIdRequest.sandbox_mode == current_user.sandbox_mode
+        )
         .order_by(SenderIdRequest.created_at.desc())
     )
     return result.scalars().all()
@@ -38,7 +41,8 @@ async def list_approved_sender_ids(
         select(SenderIdRequest.sender_id)
         .where(
             SenderIdRequest.user_id == current_user.id,
-            SenderIdRequest.status == "approved"
+            SenderIdRequest.status == "approved",
+            SenderIdRequest.sandbox_mode == current_user.sandbox_mode
         )
     )
     return list(result.scalars().all())
@@ -57,7 +61,8 @@ async def request_sender_id(
     existing = await db.execute(
         select(SenderIdRequest).where(
             SenderIdRequest.user_id == current_user.id,
-            SenderIdRequest.sender_id == sender_upper
+            SenderIdRequest.sender_id == sender_upper,
+            SenderIdRequest.sandbox_mode == current_user.sandbox_mode
         )
     )
     if existing.scalar_one_or_none():
@@ -75,8 +80,10 @@ async def request_sender_id(
         user_id=current_user.id,
         sender_id=sender_upper,
         purpose=data.purpose,
-        status=initial_status
+        status=initial_status,
+        sandbox_mode=current_user.sandbox_mode
     )
     db.add(req)
     await db.flush()
     return req
+

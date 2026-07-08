@@ -26,13 +26,15 @@ async def list_notifications(
     """List all notifications for the current user."""
     result = await db.execute(
         select(Notification)
-        .where(Notification.user_id == current_user.id)
+        .where(
+            Notification.user_id == current_user.id,
+            Notification.sandbox_mode == current_user.sandbox_mode
+        )
         .order_by(Notification.created_at.desc())
         .offset((page - 1) * limit)
         .limit(limit)
     )
     return result.scalars().all()
-
 
 
 @router.put("/{id}/read", response_model=NotificationResponse)
@@ -45,7 +47,8 @@ async def mark_as_read(
     result = await db.execute(
         select(Notification).where(
             Notification.id == id,
-            Notification.user_id == current_user.id
+            Notification.user_id == current_user.id,
+            Notification.sandbox_mode == current_user.sandbox_mode
         )
     )
     notification = result.scalar_one_or_none()
@@ -67,8 +70,12 @@ async def read_all_notifications(
     """Mark all notifications of the current user as read."""
     await db.execute(
         update(Notification)
-        .where(Notification.user_id == current_user.id)
+        .where(
+            Notification.user_id == current_user.id,
+            Notification.sandbox_mode == current_user.sandbox_mode
+        )
         .values(is_read=True)
     )
     await db.flush()
     return {"message": "All notifications marked as read"}
+

@@ -4,6 +4,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import String, Boolean, DateTime, ForeignKey, Text, Enum as SAEnum
+import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -24,8 +25,10 @@ class Notification(Base):
     )
     is_read: Mapped[bool] = mapped_column(Boolean, default=False)
     action_url: Mapped[str] = mapped_column(String(500), nullable=True)
+    sandbox_mode: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, server_default=sa.text('true'))
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
 
 
     # Relationships

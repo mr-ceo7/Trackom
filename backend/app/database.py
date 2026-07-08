@@ -46,6 +46,16 @@ async def init_db():
         await conn.execute(text("ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS include_opt_out BOOLEAN DEFAULT TRUE;"))
         await conn.execute(text("ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS batch_number VARCHAR(100) NULL;"))
         await conn.execute(text("ALTER TABLE contacts ADD COLUMN IF NOT EXISTS is_blacklisted BOOLEAN DEFAULT FALSE;"))
+        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS sandbox_mode BOOLEAN NOT NULL DEFAULT TRUE;"))
+        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS sandbox_sms_balance INTEGER NOT NULL DEFAULT 10000;"))
+        await conn.execute(text("ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS sandbox_mode BOOLEAN NOT NULL DEFAULT TRUE;"))
+        await conn.execute(text("ALTER TABLE sms_messages ADD COLUMN IF NOT EXISTS sandbox_mode BOOLEAN NOT NULL DEFAULT TRUE;"))
+        await conn.execute(text("ALTER TABLE transactions ADD COLUMN IF NOT EXISTS sandbox_mode BOOLEAN NOT NULL DEFAULT TRUE;"))
+        await conn.execute(text("ALTER TABLE sender_id_requests ADD COLUMN IF NOT EXISTS sandbox_mode BOOLEAN NOT NULL DEFAULT TRUE;"))
+        await conn.execute(text("ALTER TABLE sms_templates ADD COLUMN IF NOT EXISTS sandbox_mode BOOLEAN NOT NULL DEFAULT TRUE;"))
+        await conn.execute(text("ALTER TABLE incoming_sms ADD COLUMN IF NOT EXISTS sandbox_mode BOOLEAN NOT NULL DEFAULT TRUE;"))
+        await conn.execute(text("ALTER TABLE notifications ADD COLUMN IF NOT EXISTS sandbox_mode BOOLEAN NOT NULL DEFAULT TRUE;"))
+
 
 
 async def seed_demo_user():

@@ -20,7 +20,7 @@ from app.models.sender_id import SenderIdRequest
 from app.middleware.auth import get_current_user
 from app.schemas.sms import SmsSendRequest, SmsSendResponse, SmsMessageResponse, IncomingSmsResponse, BulkDeleteRequest
 from app.utils.sms_calc import calculate_sms_parts
-from app.services.sms_gateway import get_sms_gateway
+from app.services.sms_gateway import get_sms_gateway, AdvantaSMSGateway, SmsGatewayException
 
 router = APIRouter(prefix="/messages", tags=["SMS"])
 
@@ -40,10 +40,10 @@ async def send_sms(
     per_message_cost = float(sms_parts * current_user.credit_rate)
     total_cost = int(math.ceil(len(data.recipients) * per_message_cost))
 
-    if current_user.sms_balance < total_cost:
+    if current_user.active_balance < total_cost:
         raise HTTPException(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
-            detail=f"Insufficient balance. Need {total_cost} credits, have {current_user.sms_balance}."
+            detail=f"Insufficient balance. Need {total_cost} credits, have {current_user.active_balance}."
         )
 
     batch_id = str(uuid_mod.uuid4())
@@ -69,11 +69,12 @@ async def send_sms(
             batch_number=data.batch_number,
             scheduled_at=db_scheduled_at,
             sent_at=None if is_scheduled else now,
+            sandbox_mode=current_user.sandbox_mode,
         )
         db.add(msg)
         messages_to_send.append(msg)
 
-    current_user.sms_balance -= total_cost
+    current_user.active_balance -= total_cost
     await db.flush()
 
     # Dispatch immediately via load-balanced gateway if not scheduled
@@ -84,7 +85,8 @@ async def send_sms(
                 sender_id=data.sender_id,
                 recipients=[m.recipient for m in messages_to_send],
                 message=full_message,
-                db=db
+                db=db,
+                sandbox_mode=current_user.sandbox_mode
             )
             for msg, res in zip(messages_to_send, results):
                 msg.status = "delivered" if res["status"] == "success" else "failed"
@@ -96,6 +98,7 @@ async def send_sms(
                 msg.error_message = str(e)
         
         await db.flush()
+
 
     return SmsSendResponse(
         queued=len(data.recipients),
@@ -143,7 +146,11 @@ async def message_history(
     """Get SMS send history for the current user, optionally filtered by batch, campaign, status, and date range."""
     q = (
         select(SmsMessage)
-        .where(SmsMessage.user_id == current_user.id, SmsMessage.deleted_at.is_(None))
+        .where(
+            SmsMessage.user_id == current_user.id,
+            SmsMessage.deleted_at.is_(None),
+            SmsMessage.sandbox_mode == current_user.sandbox_mode
+        )
     )
     
     if batch_number:
@@ -172,12 +179,17 @@ async def sms_stats(
 ):
     """Get SMS stats for dashboard."""
     total = await db.execute(
-        select(func.count()).where(SmsMessage.user_id == current_user.id, SmsMessage.deleted_at.is_(None))
+        select(func.count()).where(
+            SmsMessage.user_id == current_user.id,
+            SmsMessage.deleted_at.is_(None),
+            SmsMessage.sandbox_mode == current_user.sandbox_mode
+        )
     )
     today = await db.execute(
         select(func.count()).where(
             SmsMessage.user_id == current_user.id,
             SmsMessage.deleted_at.is_(None),
+            SmsMessage.sandbox_mode == current_user.sandbox_mode,
             func.date(SmsMessage.created_at) == func.date(func.now())
         )
     )
@@ -185,8 +197,9 @@ async def sms_stats(
     return {
         "total_sent": total.scalar() or 0,
         "sent_today": today.scalar() or 0,
-        "balance": current_user.sms_balance,
+        "balance": current_user.active_balance,
     }
+
 
 
 @router.get("/export/csv")
@@ -198,7 +211,11 @@ async def export_csv(
     db: AsyncSession = Depends(get_db),
 ):
     """Export SMS history as CSV."""
-    q = select(SmsMessage).where(SmsMessage.user_id == current_user.id, SmsMessage.deleted_at.is_(None))
+    q = select(SmsMessage).where(
+        SmsMessage.user_id == current_user.id,
+        SmsMessage.deleted_at.is_(None),
+        SmsMessage.sandbox_mode == current_user.sandbox_mode,
+    )
     if batch_number:
         q = q.where(SmsMessage.batch_number.ilike(f"%{batch_number}%"))
     q = filter_by_date(q, start_date, end_date)
@@ -503,7 +520,8 @@ async def list_incoming_sms(
         .outerjoin(Contact, (Contact.phone == IncomingSms.sender) & (Contact.user_id == current_user.id) & (Contact.deleted_at.is_(None)))
         .where(
             IncomingSms.user_id == current_user.id,
-            IncomingSms.deleted_at.is_(None)
+            IncomingSms.deleted_at.is_(None),
+            IncomingSms.sandbox_mode == current_user.sandbox_mode,
         )
     )
     
@@ -534,7 +552,8 @@ async def list_incoming_sms(
             .where(
                 SmsMessage.batch_number == batch_number,
                 SmsMessage.user_id == current_user.id,
-                SmsMessage.deleted_at.is_(None)
+                SmsMessage.deleted_at.is_(None),
+                SmsMessage.sandbox_mode == current_user.sandbox_mode,
             )
         )
         q = q.where(IncomingSms.sender.in_(batch_subq))
@@ -576,7 +595,8 @@ async def delete_incoming_sms(
     q = select(IncomingSms).where(
         IncomingSms.id == msg_uuid,
         IncomingSms.user_id == current_user.id,
-        IncomingSms.deleted_at.is_(None)
+        IncomingSms.deleted_at.is_(None),
+        IncomingSms.sandbox_mode == current_user.sandbox_mode,
     )
     res = await db.execute(q)
     msg = res.scalar_one_or_none()
@@ -598,7 +618,8 @@ async def bulk_delete_incoming_sms(
     q = select(IncomingSms).where(
         IncomingSms.id.in_(data.ids),
         IncomingSms.user_id == current_user.id,
-        IncomingSms.deleted_at.is_(None)
+        IncomingSms.deleted_at.is_(None),
+        IncomingSms.sandbox_mode == current_user.sandbox_mode,
     )
     res = await db.execute(q)
     messages = res.scalars().all()
@@ -609,3 +630,32 @@ async def bulk_delete_incoming_sms(
         
     await db.commit()
     return None
+
+
+
+@router.get("/gateway/balance")
+async def gateway_balance(
+    current_user: User = Depends(get_current_user),
+):
+    """Returns the AdvantaSMS account balance (admin-level info)."""
+    gateway = AdvantaSMSGateway()
+    try:
+        data = await gateway.check_balance()
+        return data
+    except SmsGatewayException as e:
+        raise HTTPException(status_code=502, detail=str(e))
+
+
+@router.get("/{message_id}/delivery-report")
+async def get_delivery_report(
+    message_id: str,
+    current_user: User = Depends(get_current_user),
+):
+    """Fetches the delivery report from AdvantaSMS for a specific gateway message ID."""
+    gateway = AdvantaSMSGateway()
+    try:
+        data = await gateway.get_delivery_report(message_id)
+        return data
+    except SmsGatewayException as e:
+        raise HTTPException(status_code=502, detail=str(e))
+

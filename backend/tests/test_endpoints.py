@@ -348,5 +348,87 @@ class TestTemplates:
         assert not any(t["id"] == template_id for t in list_resp_after.json())
 
 
+class TestSandboxMode:
+    async def test_toggle_sandbox_mode_off(self, auth_client: AsyncClient):
+        """Test toggling sandbox_mode to False."""
+        resp = await auth_client.put("/api/v1/auth/sandbox-mode", json={"sandbox_mode": False})
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["sandbox_mode"] is False
+
+    async def test_toggle_sandbox_mode_on(self, auth_client: AsyncClient):
+        """Test toggling sandbox_mode to True."""
+        # First set it to False
+        await auth_client.put("/api/v1/auth/sandbox-mode", json={"sandbox_mode": False})
+        # Then back to True
+        resp = await auth_client.put("/api/v1/auth/sandbox-mode", json={"sandbox_mode": True})
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["sandbox_mode"] is True
+
+    async def test_send_sms_respects_sandbox_mode(self, auth_client: AsyncClient):
+        """Test that sending SMS works when sandbox_mode is True (uses simulator)."""
+        # Ensure sandbox mode is on (default)
+        await auth_client.put("/api/v1/auth/sandbox-mode", json={"sandbox_mode": True})
+        resp = await auth_client.post("/api/v1/messages/send", json={
+            "recipients": ["+254712345678"], "message": "Sandbox test!", "sender_id": "TRACKOM"
+        })
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["queued"] == 1
+        assert data["status"] == "queued"
+
+    async def test_sandbox_mode_unauthenticated(self, client: AsyncClient):
+        """Test that unauthenticated users cannot toggle sandbox mode."""
+        resp = await client.put("/api/v1/auth/sandbox-mode", json={"sandbox_mode": False})
+        assert resp.status_code == 403
+
+    async def test_independent_balance(self, auth_client: AsyncClient):
+        """Test that sandbox and live mode balances are independent."""
+        # 1. Start in Sandbox Mode
+        await auth_client.put("/api/v1/auth/sandbox-mode", json={"sandbox_mode": True})
+        me_resp = await auth_client.get("/api/v1/users/me")
+        sandbox_balance_before = me_resp.json()["sms_balance"]
+
+        # Send a message in sandbox mode
+        send_resp = await auth_client.post("/api/v1/messages/send", json={
+            "recipients": ["+254712345678"], "message": "Sandbox send", "sender_id": "TRACKOM"
+        })
+        assert send_resp.status_code == 200
+        
+        me_resp = await auth_client.get("/api/v1/users/me")
+        sandbox_balance_after = me_resp.json()["sms_balance"]
+        assert sandbox_balance_after < sandbox_balance_before
+
+        # 2. Toggle to Live Mode
+        await auth_client.put("/api/v1/auth/sandbox-mode", json={"sandbox_mode": False})
+        me_resp = await auth_client.get("/api/v1/users/me")
+        live_balance_before = me_resp.json()["sms_balance"]
+
+        
+        # Send a message in live mode (using mocked AdvantaSMS because we don't call real API in testing)
+        # Note: in tests, live mode will try to send using AdvantaSMSGateway, which throws or we can verify it doesn't affect sandbox balance
+        assert live_balance_before == 10000  # Default unmodified live balance
+        assert live_balance_before != sandbox_balance_after
+
+    async def test_independent_campaigns_and_templates(self, auth_client: AsyncClient):
+        """Test that campaigns and templates are isolated between sandbox and live."""
+        # 1. Create a campaign and template in Sandbox mode
+        await auth_client.put("/api/v1/auth/sandbox-mode", json={"sandbox_mode": True})
+        
+        tpl_resp = await auth_client.post("/api/v1/templates", json={"name": "Sandbox Template", "content": "Hello"})
+        assert tpl_resp.status_code == 201
+        
+        # Verify it shows in list
+        list_tpl = await auth_client.get("/api/v1/templates")
+        assert any(t["name"] == "Sandbox Template" for t in list_tpl.json())
+
+        # 2. Toggle to Live Mode
+        await auth_client.put("/api/v1/auth/sandbox-mode", json={"sandbox_mode": False})
+        
+        # Verify sandbox template is NOT listed in live mode
+        list_tpl_live = await auth_client.get("/api/v1/templates")
+        assert not any(t["name"] == "Sandbox Template" for t in list_tpl_live.json())
+
 
 

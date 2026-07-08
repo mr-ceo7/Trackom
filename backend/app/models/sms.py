@@ -3,7 +3,8 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import String, DateTime, ForeignKey, Text, Numeric, Enum as SAEnum
+from sqlalchemy import String, DateTime, ForeignKey, Text, Numeric, Enum as SAEnum, Boolean
+import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -29,6 +30,8 @@ class SmsMessage(Base):
     batch_number: Mapped[str] = mapped_column(String(100), nullable=True, index=True)
     gateway_message_id: Mapped[str] = mapped_column(String(100), nullable=True)
     error_message: Mapped[str] = mapped_column(Text, nullable=True)
+    sandbox_mode: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, server_default=sa.text('true'))
+
     sent_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     delivered_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     scheduled_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)

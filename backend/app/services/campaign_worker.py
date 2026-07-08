@@ -145,25 +145,31 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
             total_recipients = len(contacts)
             total_cost = total_recipients * sms_parts
 
-            if user.sms_balance < total_cost:
+            user_balance = user.sandbox_sms_balance if campaign.sandbox_mode else user.sms_balance
+            if user_balance < total_cost:
                 campaign.status = "failed"
                 campaign.completed_at = datetime.utcnow()
                 db.add(Notification(
                     user_id=user.id,
                     title=f"Campaign '{campaign.name}' Failed ❌",
-                    message=f"Insufficient balance. Required: {total_cost} credits, Current: {user.sms_balance} credits.",
+                    message=f"Insufficient balance. Required: {total_cost} credits, Current: {user_balance} credits.",
                     type="error",
-                    action_url="/dashboard/wallet"
+                    action_url="/dashboard/wallet",
+                    sandbox_mode=campaign.sandbox_mode,
                 ))
                 await db.commit()
-                logger.warning(f"Campaign {campaign_id} failed: Insufficient balance. Need {total_cost}, have {user.sms_balance}.")
+                logger.warning(f"Campaign {campaign_id} failed: Insufficient balance. Need {total_cost}, have {user_balance}.")
                 return
 
             # Deduct balance upfront (locking credits for this campaign)
-            user.sms_balance -= total_cost
+            if campaign.sandbox_mode:
+                user.sandbox_sms_balance -= total_cost
+            else:
+                user.sms_balance -= total_cost
             campaign.total_recipients = total_recipients
             campaign.total_cost = total_cost
             await db.commit()
+
 
             # 6. Send in batches to avoid locking gateway and DB
             batch_size = 200
@@ -187,16 +193,21 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
                         user_result_refund = await db.execute(select(User).where(User.id == campaign.user_id))
                         user_refund = user_result_refund.scalar_one_or_none()
                         if user_refund:
-                            user_refund.sms_balance += refund
+                            if campaign.sandbox_mode:
+                                user_refund.sandbox_sms_balance += refund
+                            else:
+                                user_refund.sms_balance += refund
                         campaign.completed_at = datetime.utcnow()
                         db.add(Notification(
                             user_id=user.id,
                             title=f"Campaign '{campaign.name}' Cancelled ⛔",
                             message=f"Campaign was cancelled. {sent_count} of {total_recipients} messages were sent. {refund} credits refunded.",
                             type="warning",
-                            action_url="/dashboard/campaigns"
+                            action_url="/dashboard/campaigns",
+                            sandbox_mode=campaign.sandbox_mode,
                         ))
                         await db.commit()
+
                         logger.info(f"Campaign {campaign_id} cancelled after {sent_count} sends. Refunded {refund} credits.")
                         return
                     elif campaign.status == "paused":
@@ -226,7 +237,8 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
                             sender_id=campaign.sender_id,
                             recipients=[contact.phone],
                             message=personalized_msg,
-                            db=db
+                            db=db,
+                            sandbox_mode=user.sandbox_mode
                         )
                         if res_list:
                             res = res_list[0]
@@ -279,8 +291,10 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
                         error_message=res["error_message"],
                         batch_number=campaign.batch_number,
                         sent_at=datetime.utcnow(),
-                        delivered_at=datetime.utcnow() if status_mapped == "delivered" else None
+                        delivered_at=datetime.utcnow() if status_mapped == "delivered" else None,
+                        sandbox_mode=campaign.sandbox_mode,
                     )
+
                     db.add(msg)
 
                 # Commit batch updates and increment stats
@@ -316,7 +330,10 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
 
             # 7. Complete Campaign
             if total_refund > 0:
-                user.sms_balance += total_refund
+                if campaign.sandbox_mode:
+                    user.sandbox_sms_balance += total_refund
+                else:
+                    user.sms_balance += total_refund
                 logger.info(f"Refunded {total_refund} credits to user {user.id} for blacklisted contacts in campaign {campaign_id}")
 
             campaign.status = "completed"
@@ -327,8 +344,10 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
                 title=f"Campaign '{campaign.name}' Sent! 🚀",
                 message=f"Completed campaign. Delivered: {delivered_count}, Failed: {failed_count}. " + (f"{int(total_refund)} blacklist credits refunded." if total_refund > 0 else ""),
                 type="success",
-                action_url="/dashboard/campaigns"
+                action_url="/dashboard/campaigns",
+                sandbox_mode=campaign.sandbox_mode,
             ))
+
             await db.commit()
             logger.info(f"Campaign {campaign_id} finished processing successfully.")
 
@@ -388,12 +407,16 @@ async def scheduled_campaign_monitor_loop():
                             # Update status to queued first to prevent race condition
                             m.status = "queued"
                             await db.commit()
+
+                            use_sandbox = m.sandbox_mode
+
                             
                             res_list = await gateway.send_messages(
                                 sender_id=m.sender_id,
                                 recipients=[m.recipient],
                                 message=m.content,
-                                db=db
+                                db=db,
+                                sandbox_mode=use_sandbox
                             )
                             if res_list:
                                 r = res_list[0]
