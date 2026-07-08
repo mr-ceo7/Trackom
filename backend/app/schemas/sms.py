@@ -21,11 +21,25 @@ class SmsSendRequest(BaseModel):
     @classmethod
     def validate_recipients(cls, v: List[str]) -> List[str]:
         pattern = re.compile(r"^\+[1-9]\d{1,14}$")
+        normalized = []
         for num in v:
-            cleaned = num.strip()
+            # Clean formatting characters
+            cleaned = num.strip().replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
+            
+            # Map 07... (Kenyan local format) to +2547...
+            if cleaned.startswith("0") and len(cleaned) == 10:
+                cleaned = "+254" + cleaned[1:]
+            # Map 254... to +254...
+            elif cleaned.startswith("254") and len(cleaned) == 12:
+                cleaned = "+" + cleaned
+            # Prepend '+' to digits-only E.164 strings
+            elif cleaned.isdigit():
+                cleaned = "+" + cleaned
+                
             if not pattern.match(cleaned):
                 raise ValueError(f"Phone number '{num}' must be in E.164 format (e.g. +254712345678)")
-        return [num.strip() for num in v]
+            normalized.append(cleaned)
+        return normalized
 
 
 

@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Optional
 
 import re
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
 def validate_password_complexity(value: str) -> str:
     if len(value) < 8:
@@ -95,12 +95,18 @@ class UserResponse(BaseModel):
 
     model_config = {"from_attributes": True}
 
+    @model_validator(mode='before')
     @classmethod
-    def model_validate(cls, obj, *args, **kwargs):
-        res = super().model_validate(obj, *args, **kwargs)
-        if hasattr(obj, 'sandbox_mode'):
-            res.sms_balance = obj.sandbox_sms_balance if obj.sandbox_mode else obj.sms_balance
-        return res
+    def resolve_sandbox_balance(cls, data):
+        if not isinstance(data, dict) and hasattr(data, 'sandbox_mode'):
+            d = {}
+            for field in cls.model_fields.keys():
+                if hasattr(data, field):
+                    d[field] = getattr(data, field)
+            d['sms_balance'] = data.sandbox_sms_balance if data.sandbox_mode else data.sms_balance
+            return d
+        return data
+
 
 
 
