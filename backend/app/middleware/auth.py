@@ -1,6 +1,7 @@
 """Auth middleware - FastAPI dependency for extracting current user from JWT."""
 
 import uuid
+from datetime import datetime
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -53,6 +54,8 @@ async def get_current_user(
             detail="User not found or inactive",
         )
 
+    # Update updated_at to track online/active status
+    user.updated_at = datetime.utcnow()
     return user
 
 
