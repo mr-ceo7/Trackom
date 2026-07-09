@@ -210,8 +210,8 @@ class TestWallet:
     async def test_list_transactions_init(self, auth_client: AsyncClient):
         resp = await auth_client.get("/api/v1/wallet/transactions")
         assert resp.status_code == 200
-        # May have welcome bonus
-        assert len(resp.json()) >= 1
+        # Starts with 0 transactions since welcome bonus is removed
+        assert len(resp.json()) == 0
 
     async def test_mpesa_topup_success(self, auth_client: AsyncClient):
         tx_init_resp = await auth_client.get("/api/v1/wallet/transactions")

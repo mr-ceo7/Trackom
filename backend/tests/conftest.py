@@ -70,6 +70,19 @@ async def auth_client(client: AsyncClient):
         "account_type": "business",
     })
     token = resp.json()["access_token"]
+    
+    # Update balance to 10000 for test execution, since welcome bonus is removed by default
+    from app.models.user import User
+    from sqlalchemy import update
+    async with TestSession() as session:
+        await session.execute(
+            update(User).where(User.email == "auth@test.com").values(
+                sms_balance=10000,
+                sandbox_sms_balance=10000
+            )
+        )
+        await session.commit()
+        
     client.headers["Authorization"] = f"Bearer {token}"
     yield client
 

@@ -485,7 +485,7 @@ export default function ComposeSMS() {
     : (sendMode === 'group')
       ? loadedContacts.length
       : recipients.split(/[\n,;]+/).filter((r) => r.trim()).length;
-  const estimatedCost = recipientCount * smsCount * (user?.credit_rate || 1.0);
+  const estimatedCost = recipientCount * smsCount;
 
   const handleSend = async (e?: React.FormEvent, isScheduledParam?: boolean, scheduledAtParam?: string) => {
     if (e) e.preventDefault();

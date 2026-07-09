@@ -36,8 +36,8 @@ async def send_sms(
     calc = calculate_sms_parts(full_message)
     sms_parts = calc["parts"]
     
-    # Calculate costs using custom user credit rates
-    per_message_cost = float(sms_parts * current_user.credit_rate)
+    # Deduct 1 credit per message part
+    per_message_cost = float(sms_parts)
     total_cost = int(math.ceil(len(data.recipients) * per_message_cost))
 
     if current_user.active_balance < total_cost:

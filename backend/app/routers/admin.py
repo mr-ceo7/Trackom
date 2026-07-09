@@ -240,12 +240,7 @@ async def admin_update_user(
         user.company = data.company
     if data.account_type is not None:
         user.account_type = data.account_type
-    if data.plan is not None:
-        user.plan = data.plan
-        settings = load_system_settings()
-        plan_key = f"{data.plan}Rate"
-        user.credit_rate = settings.get(plan_key, 1.0)
-        
+
     await db.flush()
     return {"message": "User profile updated successfully."}
 
