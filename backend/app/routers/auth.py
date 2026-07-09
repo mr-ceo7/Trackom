@@ -50,11 +50,11 @@ async def register(request: Request, data: RegisterRequest, db: AsyncSession = D
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
 
-    # Create user
     from app.routers.admin import load_system_settings
     settings = load_system_settings()
-    welcome_balance = settings.get("welcomeCredits", 10000)
+    default_rate = settings.get("baseSmsCost", 0.10)
 
+    # Create user with 0 initial balance
     user = User(
         email=data.email,
         full_name=data.full_name,
@@ -62,7 +62,9 @@ async def register(request: Request, data: RegisterRequest, db: AsyncSession = D
         company=data.company,
         hashed_password=hash_password(data.password),
         account_type=data.account_type,
-        sms_balance=welcome_balance,
+        sms_balance=0,
+        sandbox_sms_balance=0,
+        credit_rate=default_rate,
     )
     db.add(user)
     await db.flush()  # Get user.id
@@ -79,23 +81,11 @@ async def register(request: Request, data: RegisterRequest, db: AsyncSession = D
     notification = Notification(
         user_id=user.id,
         title="Welcome to Trackom! 🎉",
-        message=f"Your account has been created with {welcome_balance:,} free SMS credits. Start sending!",
+        message="Your account has been created successfully. Welcome to Trackom!",
         type="success",
         action_url="/dashboard",
     )
     db.add(notification)
-
-    # Create signup bonus transaction
-    transaction = Transaction(
-        user_id=user.id,
-        type="bonus",
-        amount=0,
-        sms_credits=welcome_balance,
-        balance_after=welcome_balance,
-        description=f"Welcome bonus - {welcome_balance:,} free SMS credits",
-        status="completed",
-    )
-    db.add(transaction)
 
     # Generate tokens
     access_token = create_access_token({"sub": str(user.id)})
@@ -183,6 +173,10 @@ async def google_auth(data: GoogleAuthRequest, db: AsyncSession = Depends(get_db
             if picture and not user.avatar_url:
                 user.avatar_url = picture
     else:
+        from app.routers.admin import load_system_settings
+        settings = load_system_settings()
+        default_rate = settings.get("baseSmsCost", 0.10)
+
         # Create new user
         user = User(
             email=email,
@@ -190,7 +184,9 @@ async def google_auth(data: GoogleAuthRequest, db: AsyncSession = Depends(get_db
             google_id=google_id,
             avatar_url=picture,
             is_verified=True,
-            sms_balance=10000,
+            sms_balance=0,
+            sandbox_sms_balance=0,
+            credit_rate=default_rate,
         )
         db.add(user)
         await db.flush()
@@ -203,17 +199,13 @@ async def google_auth(data: GoogleAuthRequest, db: AsyncSession = Depends(get_db
             status="approved"
         ))
 
-        # Welcome notification + bonus
+        # Welcome notification
         db.add(Notification(
             user_id=user.id,
             title="Welcome to Trackom! 🎉",
-            message="Your account has been created with 10,000 free SMS credits.",
+            message="Your account has been created successfully. Welcome to Trackom!",
             type="success",
             action_url="/dashboard",
-        ))
-        db.add(Transaction(
-            user_id=user.id, type="bonus", amount=0, sms_credits=10000,
-            balance_after=10000, description="Welcome bonus", status="completed",
         ))
 
     access_token = create_access_token({"sub": str(user.id)})

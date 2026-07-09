@@ -776,7 +776,7 @@ export default function AdminPanelPage() {
                   <thead>
                     <tr className="border-b border-slate-200/20 dark:border-white/6 clay-inset">
                       <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Tenant</th>
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Plan & Rate</th>
+                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">SMS Rate</th>
                       <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Wallet Balance</th>
                       <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Created At</th>
                       <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider text-right">Actions</th>
@@ -816,17 +816,8 @@ export default function AdminPanelPage() {
                         
                         <td className="px-5 py-3">
                           <div className="flex flex-wrap gap-1.5 items-center">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                              u.plan === 'enterprise' 
-                                ? 'bg-purple-500/10 text-purple-400' 
-                                : u.plan === 'growth' 
-                                ? 'bg-brand-accent/10 text-brand-accent' 
-                                : 'bg-slate-500/10 text-slate-400'
-                            }`}>
-                              {u.plan}
-                            </span>
                             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/10 font-mono">
-                              {u.credit_rate.toFixed(2)} cr/SMS
+                              KES {u.credit_rate.toFixed(2)}/SMS
                             </span>
                           </div>
                         </td>
@@ -1071,14 +1062,14 @@ export default function AdminPanelPage() {
             <div className="clay-inset rounded-2xl p-3 mb-4 text-xs space-y-1">
               <div>User: <span className="font-bold text-slate-900 dark:text-white">{selectedRateUser.full_name}</span></div>
               <div>Email: <span className="font-mono text-slate-500 dark:text-gray-400">{selectedRateUser.email}</span></div>
-              <div>Current Rate: <span className="font-bold text-amber-500 font-mono">{selectedRateUser.credit_rate.toFixed(2)} cr/SMS</span></div>
+              <div>Current Rate: <span className="font-bold text-amber-500 font-mono">KES {selectedRateUser.credit_rate.toFixed(2)}/SMS</span></div>
             </div>
 
             <form onSubmit={handleUpdateRate} className="space-y-4">
               <div className="space-y-1.5 text-left">
-                <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Rate Multiplier (credits per SMS)</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Custom SMS Rate (KES per SMS)</label>
                 <input type="number" step="0.01" min="0.01" value={customRate} onChange={e => setCustomRate(e.target.value)} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
-                <p className="text-[10px] text-slate-400">Default rate is 1.00 (1 SMS = 1 credit). Use smaller values for custom wholesale discounts (e.g. 0.70 cr/SMS).</p>
+                <p className="text-[10px] text-slate-400">Set the custom rate that this user pays in KES per SMS credit (e.g. 0.80 KES/SMS). Default rate is 1.00 KES/SMS.</p>
               </div>
               <button type="submit" disabled={submittingRate || !customRate} className="clay-button-primary w-full py-3 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2">
                 {submittingRate ? <Loader size="sm" /> : <span>Update Custom Rate</span>}
@@ -1158,18 +1149,6 @@ export default function AdminPanelPage() {
                   </select>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">SaaS Plan</label>
-                  <select 
-                    value={editPlan} 
-                    onChange={e => setEditPlan(e.target.value as any)} 
-                    className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none cursor-pointer"
-                  >
-                    <option value="starter">Starter</option>
-                    <option value="growth">Growth</option>
-                    <option value="enterprise">Enterprise</option>
-                  </select>
-                </div>
               </div>
 
               <button type="submit" disabled={submittingEditUser} className="clay-button-primary w-full py-3 mt-2 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2">
@@ -1549,10 +1528,6 @@ export default function AdminPanelPage() {
                 </h4>
                 <div className="space-y-3">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Welcome Signup Credits (Default allocation)</label>
-                    <input type="number" value={welcomeCredits} onChange={e => setWelcomeCredits(Number(e.target.value))} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
-                  </div>
-                  <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Base Cost per SMS Credit (KES)</label>
                     <input type="number" step="0.01" value={baseSmsCost} onChange={e => setBaseSmsCost(Number(e.target.value))} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
                   </div>
@@ -1563,28 +1538,6 @@ export default function AdminPanelPage() {
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">AdvantaSMS Default Sender ID / Shortcode</label>
                     <input type="text" value={advantasmsDefaultShortcode} onChange={e => setAdvantasmsDefaultShortcode(e.target.value)} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
-                  </div>
-                </div>
-              </div>
-
-
-              {/* CARD 3: DEFAULT TIER MULTIPLIERS */}
-              <div className="clay-card rounded-3xl p-5 space-y-4">
-                <h4 className="text-xs font-bold text-slate-800 dark:text-white border-b border-slate-200/20 dark:border-white/5 pb-2">
-                  Plan Rate Multipliers (Discount Factors)
-                </h4>
-                <div className="space-y-3">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Starter Plan Multiplier (Default: 1.00)</label>
-                    <input type="number" step="0.01" value={starterRate} onChange={e => setStarterRate(Number(e.target.value))} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Growth Plan Multiplier (Default: 0.85)</label>
-                    <input type="number" step="0.01" value={growthRate} onChange={e => setGrowthRate(Number(e.target.value))} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Enterprise Plan Multiplier (Default: 0.70)</label>
-                    <input type="number" step="0.01" value={enterpriseRate} onChange={e => setEnterpriseRate(Number(e.target.value))} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
                   </div>
                 </div>
               </div>

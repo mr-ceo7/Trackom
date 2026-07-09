@@ -141,30 +141,23 @@ export default function WalletPage() {
     <div className="max-w-5xl space-y-6">
       <h1 className="text-2xl font-display font-bold text-slate-900 dark:text-white">Wallet</h1>
 
-      {/* Balance cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="rounded-3xl p-6 col-span-1 sm:col-span-2 bg-gradient-to-br from-brand-primary to-brand-accent text-white relative overflow-hidden flex flex-col justify-between min-h-[140px] shadow-[6px_6px_18px_rgba(99,102,241,0.35),-4px_-4px_12px_rgba(255,255,255,0.25),inset_1px_1px_3px_rgba(255,255,255,0.20)]">
-          <div className="absolute top-0 right-0 w-40 h-40 rounded-full bg-white/10 blur-3xl" />
-          <div className="relative z-10 flex justify-between items-start w-full">
-            <div className="space-y-1">
-              <div className="text-white/80 text-xs font-semibold uppercase tracking-wider">SMS Balance</div>
-              <div className="text-4xl font-bold font-mono leading-none py-1">{user?.sms_balance?.toLocaleString() || '0'}</div>
-              <div className="text-white/65 text-xs">credits remaining</div>
-            </div>
-            <div className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center backdrop-blur-md border border-white/20 shadow-lg shrink-0">
-              <Wallet className="w-6 h-6 text-white" />
-            </div>
+      {/* Balance card */}
+      <div className="rounded-3xl p-6 bg-gradient-to-br from-brand-primary to-brand-accent text-white relative overflow-hidden flex flex-col justify-between min-h-[140px] shadow-[6px_6px_18px_rgba(99,102,241,0.35),-4px_-4px_12px_rgba(255,255,255,0.25),inset_1px_1px_3px_rgba(255,255,255,0.20)]">
+        <div className="absolute top-0 right-0 w-40 h-40 rounded-full bg-white/10 blur-3xl" />
+        <div className="relative z-10 flex justify-between items-start w-full">
+          <div className="space-y-1">
+            <div className="text-white/80 text-xs font-semibold uppercase tracking-wider">SMS Balance</div>
+            <div className="text-4xl font-bold font-mono leading-none py-1">{user?.sms_balance?.toLocaleString() || '0'}</div>
+            <div className="text-white/65 text-xs">credits remaining</div>
           </div>
-          <div className="relative z-10 mt-4">
-            <button onClick={() => { setErrorMsg(''); setSuccessMsg(''); setShowTopup(!showTopup); }} className="flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-semibold bg-white/25 hover:bg-white/35 backdrop-blur cursor-pointer transition-all border border-white/15">
-              <Plus className="w-4 h-4" />Top Up
-            </button>
+          <div className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center backdrop-blur-md border border-white/20 shadow-lg shrink-0">
+            <Wallet className="w-6 h-6 text-white" />
           </div>
         </div>
-        <div className="clay-stat rounded-3xl p-6 flex flex-col justify-between">
-          <div className="text-slate-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider">Plan</div>
-          <div className="text-2xl font-bold text-slate-900 dark:text-white capitalize">{user?.plan || 'starter'}</div>
-          <a href="/dashboard/settings" className="text-xs text-brand-primary font-semibold hover:underline mt-2">Upgrade →</a>
+        <div className="relative z-10 mt-4">
+          <button onClick={() => { setErrorMsg(''); setSuccessMsg(''); setShowTopup(!showTopup); }} className="flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-semibold bg-white/25 hover:bg-white/35 backdrop-blur cursor-pointer transition-all border border-white/15">
+            <Plus className="w-4 h-4" />Top Up
+          </button>
         </div>
       </div>
 
@@ -192,7 +185,7 @@ export default function WalletPage() {
             </button>
           </div>
           {topupAmount && Number(topupAmount) > 0 && (() => {
-            const costPerCredit = (publicSettings?.baseSmsCost || 1.0) * (user?.credit_rate || 1.0);
+            const costPerCredit = user?.credit_rate || 1.0;
             const creditsToReceive = costPerCredit > 0 ? Math.floor(Number(topupAmount) / costPerCredit) : 0;
             return (
               <p className="text-xs text-slate-500 dark:text-gray-400">You'll receive <span className="font-bold text-brand-primary">{creditsToReceive.toLocaleString()} SMS credits</span> (KES {costPerCredit.toFixed(2)}/SMS)</p>
