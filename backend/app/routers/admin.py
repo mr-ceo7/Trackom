@@ -29,12 +29,39 @@ async def get_current_admin(current_user: User = Depends(get_current_user)) -> U
         )
     return current_user
 
+class MonthlyBreakdownItem(BaseModel):
+    month: str
+    revenue: float
+
+class DailyVolumeItem(BaseModel):
+    label: str
+    volume: int
+
 class AdminStatsResponse(BaseModel):
     total_users: int
     active_users: int
-    total_campaigns: int
+    online_users: int
+    today_users: int
+    yesterday_users: int
+    last_7d_users: int
+    total_gateways: int
+    active_gateways: int
+    monthly_revenue: float
+    today_revenue: float
+    yesterday_revenue: float
+    all_time_revenue: float
+    monthly_breakdown: List[MonthlyBreakdownItem]
+    daily_volumes: List[DailyVolumeItem]
     total_sms_sent: int
+    total_campaigns: int
     success_rate: float
+    delivered_sms_count: int
+    failed_sms_count: int
+    pending_sms_count: int
+    total_client_credits: int
+    paying_clients: int
+    pending_sender_ids: int
+    active_campaigns: int
     system_balance: int
 
 class AdminUserResponse(BaseModel):
@@ -96,36 +123,260 @@ async def get_admin_stats(
     admin: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db)
 ):
-    # Total Users
+    from datetime import datetime, timedelta
+    now = datetime.utcnow()
+    start_of_today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    start_of_yesterday = start_of_today - timedelta(days=1)
+    start_of_7d = start_of_today - timedelta(days=7)
+    start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    # 1. Total Clients
     res_users = await db.execute(select(func.count(User.id)))
     total_users = res_users.scalar() or 0
 
     res_active = await db.execute(select(func.count(User.id)).where(User.is_active == True))
     active_users = res_active.scalar() or 0
 
-    # Total Campaigns
+    res_today_users = await db.execute(select(func.count(User.id)).where(User.created_at >= start_of_today))
+    today_users = res_today_users.scalar() or 0
+
+    res_yest_users = await db.execute(
+        select(func.count(User.id)).where((User.created_at >= start_of_yesterday) & (User.created_at < start_of_today))
+    )
+    yesterday_users = res_yest_users.scalar() or 0
+
+    res_7d_users = await db.execute(select(func.count(User.id)).where(User.created_at >= start_of_7d))
+    last_7d_users = res_7d_users.scalar() or 0
+
+    # 1.1 Clients online (any activity in the last 10 minutes)
+    ten_minutes_ago = now - timedelta(minutes=10)
+    res_online = await db.execute(
+        select(func.count(User.id))
+        .where((User.is_active == True) & (User.updated_at >= ten_minutes_ago))
+    )
+    online_users = res_online.scalar() or 0
+
+    # 1.2 Total client credits
+    res_client_credits = await db.execute(select(func.sum(User.sms_balance)))
+    total_client_credits = int(res_client_credits.scalar() or 0)
+
+    # 1.3 Total paying clients (unique clients with completed topups)
+    res_paying = await db.execute(
+        select(func.count(func.distinct(Transaction.user_id)))
+        .where((Transaction.type == "topup") & (Transaction.status == "completed"))
+    )
+    paying_clients = res_paying.scalar() or 0
+
+    # 1.4 Pending whitelist sender id requests
+    res_pending_sender_ids = await db.execute(
+        select(func.count(SenderIdRequest.id)).where(SenderIdRequest.status == "pending")
+    )
+    pending_sender_ids = res_pending_sender_ids.scalar() or 0
+
+    # 1.5 Active campaigns count
+    res_active_campaigns = await db.execute(
+        select(func.count(Campaign.id)).where(Campaign.status == "sending")
+    )
+    active_campaigns = res_active_campaigns.scalar() or 0
+
+    # 2. Gateways
+    res_gw = await db.execute(select(func.count(SmsGateway.id)))
+    total_gateways = res_gw.scalar() or 0
+    res_active_gw = await db.execute(select(func.count(SmsGateway.id)).where(SmsGateway.is_active == True))
+    active_gateways = res_active_gw.scalar() or 0
+
+    # 2.5 Campaigns
     res_campaigns = await db.execute(select(func.count(Campaign.id)))
     total_campaigns = res_campaigns.scalar() or 0
 
-    # Total SMS Sent
-    res_sms = await db.execute(select(func.count(SmsMessage.id)))
-    total_sms_sent = res_sms.scalar() or 0
-
-    # Success rate
-    res_delivered = await db.execute(
-        select(func.count(SmsMessage.id)).where(SmsMessage.status == "delivered")
+    # 3. Revenue
+    # Monthly topups
+    res_monthly_rev = await db.execute(
+        select(func.sum(Transaction.amount))
+        .where((Transaction.type == "topup") & (Transaction.status == "completed") & (Transaction.created_at >= start_of_month))
     )
-    delivered_count = res_delivered.scalar() or 0
-    success_rate = (delivered_count / total_sms_sent * 100) if total_sms_sent > 0 else 100.0
+    monthly_revenue = float(res_monthly_rev.scalar() or 0)
+
+    # Today topups
+    res_today_rev = await db.execute(
+        select(func.sum(Transaction.amount))
+        .where((Transaction.type == "topup") & (Transaction.status == "completed") & (Transaction.created_at >= start_of_today))
+    )
+    today_revenue = float(res_today_rev.scalar() or 0)
+
+    # Yesterday topups
+    res_yest_rev = await db.execute(
+        select(func.sum(Transaction.amount))
+        .where((Transaction.type == "topup") & (Transaction.status == "completed") & (Transaction.created_at >= start_of_yesterday) & (Transaction.created_at < start_of_today))
+    )
+    yesterday_revenue = float(res_yest_rev.scalar() or 0)
+
+    # All-time revenue
+    res_all_time_rev = await db.execute(
+        select(func.sum(Transaction.amount))
+        .where((Transaction.type == "topup") & (Transaction.status == "completed"))
+    )
+    all_time_revenue = float(res_all_time_rev.scalar() or 0)
+
+    # Monthly breakdown breakdown list
+    monthly_breakdown = []
+    for i in range(3):
+        m_start = (start_of_month - timedelta(days=i*30)).replace(day=1)
+        # Next month start
+        if m_start.month == 12:
+            m_end = m_start.replace(year=m_start.year + 1, month=1)
+        else:
+            m_end = m_start.replace(month=m_start.month + 1)
+        
+        res_m = await db.execute(
+            select(func.sum(Transaction.amount))
+            .where((Transaction.type == "topup") & (Transaction.status == "completed") & (Transaction.created_at >= m_start) & (Transaction.created_at < m_end))
+        )
+        amt = float(res_m.scalar() or 0)
+        monthly_breakdown.append(MonthlyBreakdownItem(
+            month=m_start.strftime("%B %Y"),
+            revenue=amt
+        ))
+
+    # Daily volumes for the past 7 days (including today)
+    daily_volumes = []
+    for i in range(6, -1, -1):
+        day_start = start_of_today - timedelta(days=i)
+        day_end = day_start + timedelta(days=1)
+        res_day = await db.execute(
+            select(func.count(SmsMessage.id))
+            .where((SmsMessage.created_at >= day_start) & (SmsMessage.created_at < day_end))
+        )
+        vol = res_day.scalar() or 0
+        daily_volumes.append(DailyVolumeItem(
+            label=day_start.strftime("%a"),
+            volume=vol
+        ))
+
+    # 4. SMS Delivery Rate
+    res_sms_sent = await db.execute(select(func.count(SmsMessage.id)))
+    total_sms_sent = res_sms_sent.scalar() or 0
+
+    res_delivered = await db.execute(select(func.count(SmsMessage.id)).where(SmsMessage.status == "delivered"))
+    delivered_sms_count = res_delivered.scalar() or 0
+
+    res_failed = await db.execute(select(func.count(SmsMessage.id)).where(SmsMessage.status == "failed"))
+    failed_sms_count = res_failed.scalar() or 0
+
+    res_pending = await db.execute(select(func.count(SmsMessage.id)).where(SmsMessage.status.in_(["queued", "scheduled"])))
+    pending_sms_count = res_pending.scalar() or 0
+
+    success_rate = (delivered_sms_count / total_sms_sent * 100) if total_sms_sent > 0 else 100.0
+
+    # System balance from gateway check
+    from app.services.sms_gateway import AdvantaSMSGateway
+    gateway = AdvantaSMSGateway()
+    system_balance = 10000000  # Default fallback
+    try:
+        balance_data = await gateway.check_balance()
+        if balance_data and "credit" in balance_data:
+            system_balance = int(float(balance_data["credit"]))
+    except Exception:
+        pass
 
     return AdminStatsResponse(
         total_users=total_users,
         active_users=active_users,
-        total_campaigns=total_campaigns,
+        online_users=online_users,
+        today_users=today_users,
+        yesterday_users=yesterday_users,
+        last_7d_users=last_7d_users,
+        total_gateways=total_gateways,
+        active_gateways=active_gateways,
+        monthly_revenue=monthly_revenue,
+        today_revenue=today_revenue,
+        yesterday_revenue=yesterday_revenue,
+        all_time_revenue=all_time_revenue,
+        monthly_breakdown=monthly_breakdown,
+        daily_volumes=daily_volumes,
         total_sms_sent=total_sms_sent,
+        total_campaigns=total_campaigns,
         success_rate=round(success_rate, 2),
-        system_balance=10000000
+        delivered_sms_count=delivered_sms_count,
+        failed_sms_count=failed_sms_count,
+        pending_sms_count=pending_sms_count,
+        total_client_credits=total_client_credits,
+        paying_clients=paying_clients,
+        pending_sender_ids=pending_sender_ids,
+        active_campaigns=active_campaigns,
+        system_balance=system_balance
     )
+
+
+class AdminEventItem(BaseModel):
+    id: str
+    type: str
+    title: str
+    description: str
+    created_at: datetime
+
+@router.get("/events", response_model=List[AdminEventItem])
+async def list_admin_events(
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    # Fetch last 5 signups
+    res_users = await db.execute(
+        select(User).order_by(User.created_at.desc()).limit(5)
+    )
+    users = res_users.scalars().all()
+    
+    # Fetch last 5 sender ID requests
+    res_senders = await db.execute(
+        select(SenderIdRequest).options(joinedload(SenderIdRequest.user)).order_by(SenderIdRequest.created_at.desc()).limit(5)
+    )
+    senders = res_senders.scalars().all()
+    
+    # Fetch last 5 campaigns
+    res_campaigns = await db.execute(
+        select(Campaign).options(joinedload(Campaign.user)).order_by(Campaign.created_at.desc()).limit(5)
+    )
+    campaigns = res_campaigns.scalars().all()
+    
+    events = []
+    
+    # Combine signups
+    for u in users:
+        events.append(AdminEventItem(
+            id=f"user-{u.id}",
+            type="signup",
+            title="New user signup",
+            description=f"Tenant {u.full_name} ({u.email}) registered successfully.",
+            created_at=u.created_at
+        ))
+        
+    # Combine sender ID requests
+    for s in senders:
+        user_name = s.user.full_name if s.user else "Unknown Tenant"
+        events.append(AdminEventItem(
+            id=f"sender-{s.id}",
+            type="sender_id",
+            title="Alphanumeric Whitelist Request",
+            description=f"Tenant '{user_name}' requested whitelisting of Sender ID: {s.sender_id}.",
+            created_at=s.created_at
+        ))
+        
+    # Combine campaigns
+    for c in campaigns:
+        user_name = c.user.full_name if c.user else "Unknown Tenant"
+        events.append(AdminEventItem(
+            id=f"campaign-{c.id}",
+            type="campaign",
+            title="Campaign Dispatch Started",
+            description=f"Tenant '{user_name}' initiated dispatch for campaign '{c.name}'.",
+            created_at=c.created_at
+        ))
+        
+    # Sort events by created_at descending
+    events.sort(key=lambda e: e.created_at, reverse=True)
+    
+    # Return top 10 events
+    return events[:10]
 
 
 @router.get("/users", response_model=List[AdminUserResponse])

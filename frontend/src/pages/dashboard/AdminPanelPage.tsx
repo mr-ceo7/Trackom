@@ -13,16 +13,50 @@ import GenieModal from '../../components/GenieModal';
 import TrackomLogo from '../../components/TrackomLogo';
 
 
+interface MonthlyBreakdownItem {
+  month: string;
+  revenue: number;
+}
+
+interface DailyVolumeItem {
+  label: string;
+  volume: number;
+}
+
 interface AdminStats {
   total_users: number;
   active_users: number;
-  total_campaigns: number;
+  online_users: number;
+  today_users: number;
+  yesterday_users: number;
+  last_7d_users: number;
+  total_gateways: number;
+  active_gateways: number;
+  monthly_revenue: number;
+  today_revenue: number;
+  yesterday_revenue: number;
+  all_time_revenue: number;
+  monthly_breakdown: MonthlyBreakdownItem[];
+  daily_volumes: DailyVolumeItem[];
   total_sms_sent: number;
+  total_campaigns: number;
   success_rate: number;
+  delivered_sms_count: number;
+  failed_sms_count: number;
+  pending_sms_count: number;
+  total_client_credits: number;
+  paying_clients: number;
+  pending_sender_ids: number;
+  active_campaigns: number;
   system_balance: number;
-  monthly_revenue?: number;
-  all_time_revenue?: number;
-  failed_sms_sent?: number;
+}
+
+interface AdminEvent {
+  id: string;
+  type: string;
+  title: string;
+  description: string;
+  created_at: string;
 }
 
 interface AdminUser {
@@ -55,7 +89,10 @@ export default function AdminPanelPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'gateways' | 'sender_ids' | 'campaigns' | 'transactions' | 'settings'>('dashboard');
+  const [clickedItem, setClickedItem] = useState<string | null>(null);
   const [stats, setStats] = useState<AdminStats | null>(null);
+  const [events, setEvents] = useState<AdminEvent[]>([]);
+  const [loadingEvents, setLoadingEvents] = useState(false);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [gateways, setGateways] = useState<SmsGatewayConfig[]>([]);
   const [senderIds, setSenderIds] = useState<any[]>([]);
@@ -181,14 +218,24 @@ export default function AdminPanelPage() {
   const [rejectingRequest, setRejectingRequest] = useState<any | null>(null);
   const [rejectReason, setRejectReason] = useState('');
 
+  const fetchEvents = useCallback(async () => {
+    setLoadingEvents(true);
+    try {
+      const resp = await api.get('/admin/events');
+      setEvents(resp.data);
+    } catch { /* noop */ }
+    finally { setLoadingEvents(false); }
+  }, []);
+
   // Fetch admin statistics
   const fetchStats = useCallback(async () => {
     try {
       const resp = await api.get('/admin/stats');
       setStats(resp.data);
+      fetchEvents();
     } catch { /* noop */ }
     finally { setLoading(false); }
-  }, []);
+  }, [fetchEvents]);
 
   // Fetch registered users list
   const fetchUsers = useCallback(async () => {
@@ -441,20 +488,29 @@ export default function AdminPanelPage() {
               return (
                 <button
                   key={item.id}
-                  onClick={() => { setActiveTab(item.id as any); setPage(1); }}
+                  onClick={() => { setActiveTab(item.id as any); setPage(1); setClickedItem(item.id); }}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-2xl text-sm font-medium transition-all duration-200 group cursor-pointer ${
                     isSelected 
                       ? 'clay-nav-active text-brand-primary dark:text-brand-primary-light font-semibold' 
                       : 'text-slate-600 dark:text-gray-400 hover:bg-slate-200/40 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
-                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all ${
-                    isSelected 
-                      ? 'bg-brand-primary/10 text-brand-primary dark:text-brand-primary-light' 
-                      : 'clay-icon-raised text-slate-500'
-                  }`}>
+                  <motion.div 
+                    className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all ${
+                      isSelected 
+                        ? 'bg-brand-primary/10 text-brand-primary dark:text-brand-primary-light' 
+                        : 'clay-icon-raised text-slate-500'
+                    }`}
+                    animate={clickedItem === item.id ? { rotate: 360 } : { rotate: 0 }}
+                    transition={{ duration: 0.6, ease: "backOut" }}
+                    onAnimationComplete={() => {
+                      if (clickedItem === item.id) {
+                        setClickedItem(null);
+                      }
+                    }}
+                  >
                     <Icon className="w-4 h-4" />
-                  </div>
+                  </motion.div>
                   <span>{item.label}</span>
                 </button>
               );
@@ -522,14 +578,20 @@ export default function AdminPanelPage() {
             {loading ? (
               <div className="flex justify-center py-12"><Loader size="md" /></div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 
                 {/* CARD 1: TOTAL CLIENTS */}
                 <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
-                  <div>
+                  <div className="flex items-center justify-between">
                     <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-brand-primary">
                       <Users className="w-5 h-5 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
                     </div>
+                    {stats && stats.online_users > 0 && (
+                      <span className="flex items-center gap-1 text-[9px] font-black text-brand-emerald bg-brand-emerald/10 px-2 py-0.5 rounded-full font-mono">
+                        <span className="w-1.5 h-1.5 rounded-full bg-brand-emerald animate-ping" />
+                        {stats.online_users} ONLINE
+                      </span>
+                    )}
                   </div>
                   <div className="space-y-1 mt-3">
                     <div className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Total Clients</div>
@@ -544,23 +606,92 @@ export default function AdminPanelPage() {
                     </span>
                   </div>
                   <div className="border-t border-slate-200/20 dark:border-white/5 pt-2.5 mt-2.5 flex justify-between text-[9px] text-slate-500 font-mono">
-                    <div>TODAY <span className="text-brand-primary font-bold">+2</span></div>
-                    <div>YEST <span className="text-brand-primary font-bold">+1</span></div>
-                    <div>7D <span className="text-brand-primary font-bold">+12</span></div>
+                    <div>TODAY <span className="text-brand-primary font-bold">+{stats?.today_users || 0}</span></div>
+                    <div>YEST <span className="text-brand-primary font-bold">+{stats?.yesterday_users || 0}</span></div>
+                    <div>7D <span className="text-brand-primary font-bold">+{stats?.last_7d_users || 0}</span></div>
                   </div>
                 </div>
 
-                {/* CARD 2: GATEWAYS ACTIVE */}
+                {/* CARD 2: MASTER GATEWAY POOL */}
                 <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
                   <div className="flex items-center justify-between">
                     <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-brand-accent">
-                      <Activity className="w-5 h-5 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]" />
+                      <Cpu className="w-5 h-5 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]" />
                     </div>
-                    <span className="text-[9px] font-black text-brand-emerald bg-brand-emerald/10 px-2 py-0.5 rounded-full uppercase tracking-wider font-mono">Live</span>
+                    <span className="text-[9px] font-black text-brand-emerald bg-brand-emerald/10 px-2 py-0.5 rounded-full uppercase tracking-wider font-mono">SaaS Owner</span>
                   </div>
                   <div className="space-y-1 mt-3">
-                    <div className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Gateways Active</div>
-                    <div className="text-3xl font-black text-slate-900 dark:text-white font-mono leading-none">{gateways.filter(g => g.is_active).length}</div>
+                    <div className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Master Gateway Pool</div>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white font-mono leading-none truncate">{stats?.system_balance?.toLocaleString() || 0}</div>
+                  </div>
+                  <div className="bg-slate-100 dark:bg-white/5 px-2.5 py-1 rounded-2xl text-[9px] text-slate-500 mt-2 font-mono">
+                    Remaining credits at AdvantaSMS
+                  </div>
+                  <div className="border-t border-slate-200/20 dark:border-white/5 pt-2.5 mt-2.5 flex justify-between text-[9px] text-slate-500 font-mono">
+                    <div>PROVIDER <span className="text-brand-accent font-bold">AdvantaSMS</span></div>
+                    <div>ENV <span className="text-brand-emerald font-bold">Live</span></div>
+                  </div>
+                </div>
+
+                {/* CARD 3: CLIENT CREDITS OUT */}
+                <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
+                  <div className="flex items-center justify-between">
+                    <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-amber-500">
+                      <Coins className="w-5 h-5 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                    </div>
+                    <span className="text-[9px] font-black text-brand-primary bg-brand-primary/10 px-2 py-0.5 rounded-full uppercase tracking-wider font-mono">Tenants</span>
+                  </div>
+                  <div className="space-y-1 mt-3">
+                    <div className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Outstanding Client Credits</div>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white font-mono leading-none truncate">{stats?.total_client_credits?.toLocaleString() || 0}</div>
+                  </div>
+                  <div className="bg-slate-100 dark:bg-white/5 px-2.5 py-1 rounded-2xl text-[9px] text-slate-500 mt-2 font-mono">
+                    Total live SMS credits sold to tenants
+                  </div>
+                  <div className="border-t border-slate-200/20 dark:border-white/5 pt-2.5 mt-2.5 flex justify-between text-[9px] text-slate-500 font-mono">
+                    <div>POOL LIQUIDITY <span className="text-amber-500 font-bold">{(stats && stats.system_balance > 0 ? (stats.system_balance / Math.max(stats.total_client_credits, 1) * 100).toFixed(1) : 0)}%</span></div>
+                  </div>
+                </div>
+
+                {/* CARD 4: ACTIVE CAMPAIGNS & TASKS */}
+                <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
+                  <div className="flex items-center justify-between">
+                    <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-indigo-500">
+                      <Megaphone className="w-5 h-5 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
+                    </div>
+                    {stats && stats.pending_sender_ids > 0 && (
+                      <span className="text-[9px] font-black text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full font-mono animate-pulse">
+                        {stats.pending_sender_ids} WHITELISTS PENDING
+                      </span>
+                    )}
+                  </div>
+                  <div className="space-y-1 mt-3">
+                    <div className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Total Campaigns</div>
+                    <div className="text-3xl font-black text-slate-900 dark:text-white font-mono leading-none">{stats?.total_campaigns || 0}</div>
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <span className="text-[9px] font-bold px-2 py-0.5 bg-brand-primary/10 text-brand-primary rounded-full">
+                      SENDING {stats?.active_campaigns || 0}
+                    </span>
+                    <span className="text-[9px] font-bold px-2 py-0.5 bg-slate-100 dark:bg-white/5 text-slate-500 rounded-full">
+                      WHITELIST REQS {stats?.pending_sender_ids || 0}
+                    </span>
+                  </div>
+                  <div className="border-t border-slate-200/20 dark:border-white/5 pt-2.5 mt-2.5 flex justify-between text-[9px] text-slate-500 font-mono">
+                    <div>DISPATCH WORKERS <span className="text-indigo-500 font-bold">OK</span></div>
+                  </div>
+                </div>
+
+                {/* CARD 5: GATEWAYS & ROUTING */}
+                <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
+                  <div className="flex items-center justify-between">
+                    <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-cyan-500">
+                      <Activity className="w-5 h-5 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]" />
+                    </div>
+                  </div>
+                  <div className="space-y-1 mt-3">
+                    <div className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">SMS Gateways Whitelisted</div>
+                    <div className="text-3xl font-black text-slate-900 dark:text-white font-mono leading-none">{gateways.length}</div>
                   </div>
                   <div className="flex gap-2 mt-2">
                     <span className="text-[9px] font-bold px-2 py-0.5 bg-brand-emerald/10 text-brand-emerald rounded-full">
@@ -576,68 +707,46 @@ export default function AdminPanelPage() {
                   </div>
                 </div>
 
-                {/* CARD 3: MONTHLY TOPUPS */}
+                {/* CARD 6: FINANCIAL OVERVIEW */}
                 <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
                   <div className="flex items-center justify-between">
-                    <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-amber-500">
-                      <Coins className="w-5 h-5 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                    <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-emerald-500">
+                      <Coins className="w-5 h-5 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
                     </div>
-                    <span className="text-[9px] text-brand-emerald font-bold">↑ 2.5K today</span>
+                    <span className="text-[9px] text-brand-emerald font-bold">↑ KES {(stats?.today_revenue || 0).toLocaleString()} today</span>
                   </div>
                   <div className="space-y-1 mt-3">
                     <div className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Monthly Topups</div>
-                    <div className="text-xl font-black text-slate-900 dark:text-white font-mono leading-none truncate">KES {(stats?.monthly_revenue || 5300).toLocaleString()}</div>
+                    <div className="text-xl font-black text-slate-900 dark:text-white font-mono leading-none truncate">KES {(stats?.monthly_revenue || 0).toLocaleString()}</div>
                   </div>
-                  <div className="bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded-full text-[9px] text-slate-600 dark:text-gray-400 mt-2 truncate font-mono">
-                    GATEWAY POOL: {stats?.system_balance?.toLocaleString() || 0}
-                  </div>
-                  <div className="border-t border-slate-200/20 dark:border-white/5 pt-2.5 mt-2.5 text-[9px] text-slate-500 space-y-1 max-h-[45px] overflow-y-auto custom-scrollbar">
-                    <div className="flex justify-between"><span>Today</span><span className="text-brand-emerald font-bold">KES 2.5K</span></div>
-                    <div className="flex justify-between"><span>Yesterday</span><span className="text-brand-emerald font-bold">KES 1.1K</span></div>
+                  <div className="border-t border-slate-200/20 dark:border-white/5 pt-2.5 mt-2.5 text-[9px] text-slate-500 space-y-1 max-h-[45px] overflow-y-auto custom-scrollbar font-mono">
+                    <div className="flex justify-between"><span>All-Time Deposits</span><span className="text-brand-emerald font-bold">KES {(stats?.all_time_revenue || 0).toLocaleString()}</span></div>
+                    <div className="flex justify-between"><span>Paying Clients</span><span className="text-indigo-500 font-bold">{stats?.paying_clients || 0}</span></div>
                   </div>
                 </div>
 
-                {/* CARD 4: ALL TIME REVENUE */}
+                {/* CARD 7: SMS DISPATCH ANALYTICS */}
                 <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
                   <div className="flex items-center justify-between">
-                    <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-purple-500">
-                      <TrendingUp className="w-5 h-5 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
+                    <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-teal-500">
+                      <Send className="w-5 h-5 drop-shadow-[0_0_8px_rgba(20,184,166,0.5)]" />
                     </div>
-                    <span className="text-[9px] text-brand-emerald font-bold">↑ 189K this yr</span>
-                  </div>
-                  <div className="space-y-1 mt-3">
-                    <div className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">All Time Revenue</div>
-                    <div className="text-xl font-black text-slate-900 dark:text-white font-mono leading-none truncate">KES {(stats?.all_time_revenue || 189100).toLocaleString()}</div>
-                  </div>
-                  <div className="border-t border-slate-200/20 dark:border-white/5 pt-2.5 mt-2.5 text-[9px] text-slate-500 space-y-1 max-h-[60px] overflow-y-auto custom-scrollbar">
-                    <div className="flex justify-between"><span>This Month</span><span className="text-amber-500 font-bold">KES 5.3K</span></div>
-                    <div className="flex justify-between"><span>June 2026</span><span className="text-slate-600 dark:text-gray-400 font-bold">KES 23.2K</span></div>
-                    <div className="flex justify-between"><span>May 2026</span><span className="text-slate-600 dark:text-gray-400 font-bold">KES 79.2K</span></div>
-                  </div>
-                </div>
-
-                {/* CARD 5: SMS DELIVERY RATE */}
-                <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
-                  <div className="flex items-center justify-between">
-                    <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-brand-emerald">
-                      <Send className="w-5 h-5 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                    </div>
-                    <span className="text-[9px] text-brand-emerald font-bold">↑ 1.9K total</span>
+                    <span className="text-[9px] text-brand-emerald font-bold">↑ {(stats?.total_sms_sent || 0).toLocaleString()} total</span>
                   </div>
                   <div className="space-y-1 mt-3">
                     <div className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Sms Delivery Rate</div>
-                    <div className="text-3xl font-black text-slate-900 dark:text-white font-mono leading-none">{stats?.success_rate || 90.3}%</div>
+                    <div className="text-3xl font-black text-slate-900 dark:text-white font-mono leading-none">{stats?.success_rate ?? 100.0}%</div>
                   </div>
                   <div className="grid grid-cols-2 gap-1 mt-2 text-[9px]">
-                    <div className="bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded text-slate-600 dark:text-gray-300">
-                      DELIVERED: <span className="font-bold text-brand-emerald">{(stats?.total_sms_sent || 1700).toLocaleString()}</span>
+                    <div className="bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded text-slate-600 dark:text-gray-300 truncate">
+                      DELIVERED: <span className="font-bold text-brand-emerald">{(stats?.delivered_sms_count || 0).toLocaleString()}</span>
                     </div>
-                    <div className="bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded text-slate-600 dark:text-gray-300">
-                      FAILED: <span className="font-bold text-rose-500">{(stats?.failed_sms_sent ?? Math.round((stats?.total_sms_sent || 0) * (1 - (stats?.success_rate || 100) / 100))).toLocaleString()}</span>
+                    <div className="bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded text-slate-600 dark:text-gray-300 truncate">
+                      FAILED: <span className="font-bold text-rose-500">{(stats?.failed_sms_count || 0).toLocaleString()}</span>
                     </div>
                   </div>
                   <div className="border-t border-slate-200/20 dark:border-white/5 pt-2.5 mt-2.5 flex justify-between text-[9px] text-slate-500">
-                    <div>PENDING <span className="text-amber-500 font-bold">4</span></div>
+                    <div>PENDING <span className="text-amber-500 font-bold">{stats?.pending_sms_count || 0}</span></div>
                     <div>VOID <span className="text-slate-400 font-bold">0</span></div>
                   </div>
                 </div>
@@ -656,37 +765,47 @@ export default function AdminPanelPage() {
                   <span className="text-[10px] text-brand-emerald font-bold bg-brand-emerald/10 px-2 py-0.5 rounded-full">+24% vs last week</span>
                 </div>
                 <div className="relative h-44 w-full">
-                  <svg viewBox="0 0 300 130" className="w-full h-full overflow-visible">
-                    <defs>
-                      <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="rgba(99,102,241,0.4)" />
-                        <stop offset="100%" stopColor="rgba(99,102,241,0.0)" />
-                      </linearGradient>
-                    </defs>
-                    <line x1="30" y1="20" x2="280" y2="20" stroke="rgba(148, 163, 184, 0.1)" strokeDasharray="3" />
-                    <line x1="30" y1="50" x2="280" y2="50" stroke="rgba(148, 163, 184, 0.1)" strokeDasharray="3" />
-                    <line x1="30" y1="80" x2="280" y2="80" stroke="rgba(148, 163, 184, 0.1)" strokeDasharray="3" />
-                    <line x1="30" y1="110" x2="280" y2="110" stroke="rgba(148, 163, 184, 0.1)" strokeDasharray="3" />
+                  {(() => {
+                    const volumes = stats?.daily_volumes || [];
+                    const maxVal = Math.max(...volumes.map(v => v.volume), 10);
+                    
+                    // Map to coordinates: x is 30 to 280, y is 110 to 30
+                    const points = volumes.map((v, i) => {
+                      const x = 30 + (i * (250 / 6));
+                      const y = 110 - (v.volume / maxVal * 80);
+                      return { x, y, label: v.label, volume: v.volume };
+                    });
+                    
+                    // Path d attributes
+                    const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+                    const areaD = pathD ? `${pathD} L 280 110 L 30 110 Z` : '';
+                    
+                    return (
+                      <svg viewBox="0 0 300 130" className="w-full h-full overflow-visible">
+                        <defs>
+                          <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="rgba(99,102,241,0.4)" />
+                            <stop offset="100%" stopColor="rgba(99,102,241,0.0)" />
+                          </linearGradient>
+                        </defs>
+                        <line x1="30" y1="20" x2="280" y2="20" stroke="rgba(148, 163, 184, 0.1)" strokeDasharray="3" />
+                        <line x1="30" y1="50" x2="280" y2="50" stroke="rgba(148, 163, 184, 0.1)" strokeDasharray="3" />
+                        <line x1="30" y1="80" x2="280" y2="80" stroke="rgba(148, 163, 184, 0.1)" strokeDasharray="3" />
+                        <line x1="30" y1="110" x2="280" y2="110" stroke="rgba(148, 163, 184, 0.1)" strokeDasharray="3" />
 
-                    <path d="M 30 110 L 30 90 L 70 65 L 110 75 L 150 45 L 190 55 L 230 100 L 280 60 L 280 110 Z" fill="url(#areaGrad)" />
-                    <path d="M 30 90 L 70 65 L 110 75 L 150 45 L 190 55 L 230 100 L 280 60" fill="none" stroke="rgb(99,102,241)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                        {areaD && <path d={areaD} fill="url(#areaGrad)" />}
+                        {pathD && <path d={pathD} fill="none" stroke="rgb(99,102,241)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />}
 
-                    <circle cx="30" cy="90" r="3.5" fill="rgb(99,102,241)" stroke="white" strokeWidth="1" />
-                    <circle cx="70" cy="65" r="3.5" fill="rgb(99,102,241)" stroke="white" strokeWidth="1" />
-                    <circle cx="110" cy="75" r="3.5" fill="rgb(99,102,241)" stroke="white" strokeWidth="1" />
-                    <circle cx="150" cy="45" r="3.5" fill="rgb(99,102,241)" stroke="white" strokeWidth="1" />
-                    <circle cx="190" cy="55" r="3.5" fill="rgb(99,102,241)" stroke="white" strokeWidth="1" />
-                    <circle cx="230" cy="100" r="3.5" fill="rgb(99,102,241)" stroke="white" strokeWidth="1" />
-                    <circle cx="280" cy="60" r="3.5" fill="rgb(99,102,241)" stroke="white" strokeWidth="1" />
-
-                    <text x="30" y="125" textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="bold">Mon</text>
-                    <text x="70" y="125" textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="bold">Tue</text>
-                    <text x="110" y="125" textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="bold">Wed</text>
-                    <text x="150" y="125" textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="bold">Thu</text>
-                    <text x="190" y="125" textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="bold">Fri</text>
-                    <text x="230" y="125" textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="bold">Sat</text>
-                    <text x="280" y="125" textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="bold">Sun</text>
-                  </svg>
+                        {points.map((p, i) => (
+                          <g key={i}>
+                            <circle cx={p.x} cy={p.y} r="3.5" fill="rgb(99,102,241)" stroke="white" strokeWidth="1" />
+                            <text x={p.x} y={p.y - 6} textAnchor="middle" fill="#6366f1" fontSize="7" fontWeight="bold">{p.volume}</text>
+                            <text x={p.x} y="125" textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="bold">{p.label}</text>
+                          </g>
+                        ))}
+                      </svg>
+                    );
+                  })()}
                 </div>
               </div>
 
@@ -731,21 +850,27 @@ export default function AdminPanelPage() {
                   <span className="w-2 h-2 rounded-full bg-brand-emerald animate-pulse" />
                 </div>
                 <div className="h-44 overflow-y-auto space-y-3 custom-scrollbar text-left pr-1">
-                  <div className="text-[11px] leading-tight text-slate-500 dark:text-gray-400 border-l-2 border-brand-primary pl-3 py-0.5">
-                    <div className="font-semibold text-slate-700 dark:text-white">New user signup</div>
-                    <div>Tenant <span className="font-mono text-brand-primary">john@business.co.ke</span> joined the starter plan.</div>
-                    <div className="text-[9px] text-slate-400 font-mono mt-0.5">Just now</div>
-                  </div>
-                  <div className="text-[11px] leading-tight text-slate-500 dark:text-gray-400 border-l-2 border-brand-emerald pl-3 py-0.5">
-                    <div className="font-semibold text-slate-700 dark:text-white">Alphanumeric Whitelist Request</div>
-                    <div>Tenant requested <span className="font-mono font-bold text-slate-800 dark:text-white">TRACKOM</span> whitelisting.</div>
-                    <div className="text-[9px] text-slate-400 font-mono mt-0.5">15m ago</div>
-                  </div>
-                  <div className="text-[11px] leading-tight text-slate-500 dark:text-gray-400 border-l-2 border-amber-500 pl-3 py-0.5">
-                    <div className="font-semibold text-slate-700 dark:text-white">Campaign Worker started</div>
-                    <div>Dispatch job for campaign ID <span className="font-mono text-slate-800 dark:text-white">c-38aef</span> initialized.</div>
-                    <div className="text-[9px] text-slate-400 font-mono mt-0.5">1h ago</div>
-                  </div>
+                  {events.length > 0 ? (
+                    events.map(ev => {
+                      const timeStr = new Date(ev.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' · ' + new Date(ev.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' });
+                      const borderCol = ev.type === 'signup' 
+                        ? 'border-brand-primary' 
+                        : ev.type === 'sender_id' 
+                        ? 'border-brand-emerald' 
+                        : 'border-amber-500';
+                      return (
+                        <div key={ev.id} className={`text-[11px] leading-tight text-slate-500 dark:text-gray-400 border-l-2 ${borderCol} pl-3 py-0.5`}>
+                          <div className="font-semibold text-slate-700 dark:text-white">{ev.title}</div>
+                          <div>{ev.description}</div>
+                          <div className="text-[9px] text-slate-400 font-mono mt-0.5">{timeStr}</div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="text-center text-xs text-slate-400 italic py-12">
+                      {loadingEvents ? <Loader size="sm" /> : 'No platform events logged.'}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

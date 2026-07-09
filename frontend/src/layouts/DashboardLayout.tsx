@@ -258,6 +258,11 @@ export default function DashboardLayout() {
                       <div className="text-xs text-slate-400 dark:text-gray-500 truncate">{user?.email}</div>
                     </div>
                     <div className="p-1">
+                      {user?.is_superuser && (
+                        <NavLink to="/admin" onClick={() => setProfileOpen(false)} className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors border-b border-slate-100 dark:border-white/5 mb-1 pb-1.5">
+                          <Shield className="w-4 h-4 text-brand-primary" /><span>Admin Panel</span>
+                        </NavLink>
+                      )}
                       <NavLink to="/dashboard/settings" onClick={() => setProfileOpen(false)} className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
                         <Settings className="w-4 h-4" /><span>Settings</span>
                       </NavLink>
