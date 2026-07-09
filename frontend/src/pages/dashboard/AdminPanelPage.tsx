@@ -23,6 +23,16 @@ interface DailyVolumeItem {
   volume: number;
 }
 
+interface DailyRevenueItem {
+  label: string;
+  revenue: number;
+}
+
+interface ClientDistributionItem {
+  client_name: string;
+  sms_balance: number;
+}
+
 interface AdminStats {
   total_users: number;
   active_users: number;
@@ -36,8 +46,11 @@ interface AdminStats {
   today_revenue: number;
   yesterday_revenue: number;
   all_time_revenue: number;
+  this_year_revenue: number;
   monthly_breakdown: MonthlyBreakdownItem[];
   daily_volumes: DailyVolumeItem[];
+  daily_revenue_breakdown: DailyRevenueItem[];
+  client_distributions: ClientDistributionItem[];
   total_sms_sent: number;
   total_campaigns: number;
   success_rate: number;
@@ -92,6 +105,7 @@ export default function AdminPanelPage() {
   const [clickedItem, setClickedItem] = useState<string | null>(null);
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [events, setEvents] = useState<AdminEvent[]>([]);
+  const [showAllEvents, setShowAllEvents] = useState(false);
   const [loadingEvents, setLoadingEvents] = useState(false);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [gateways, setGateways] = useState<SmsGatewayConfig[]>([]);
@@ -583,18 +597,14 @@ export default function AdminPanelPage() {
                 {/* CARD 1: TOTAL CLIENTS */}
                 <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
                   <div className="flex items-center justify-between">
-                    <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-brand-primary">
-                      <Users className="w-5 h-5 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-brand-primary">
+                        <Users className="w-5 h-5 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
+                      </div>
+                      <div className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider">Total Clients</div>
                     </div>
-                    {stats && stats.online_users > 0 && (
-                      <span className="flex items-center gap-1 text-[9px] font-black text-brand-emerald bg-brand-emerald/10 px-2 py-0.5 rounded-full font-mono">
-                        <span className="w-1.5 h-1.5 rounded-full bg-brand-emerald animate-ping" />
-                        {stats.online_users} ONLINE
-                      </span>
-                    )}
                   </div>
-                  <div className="space-y-1 mt-3">
-                    <div className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Total Clients</div>
+                  <div className="mt-2">
                     <div className="text-3xl font-black text-slate-900 dark:text-white font-mono leading-none">{stats?.total_users || 0}</div>
                   </div>
                   <div className="flex gap-2 mt-2">
@@ -615,13 +625,14 @@ export default function AdminPanelPage() {
                 {/* CARD 2: MASTER GATEWAY POOL */}
                 <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
                   <div className="flex items-center justify-between">
-                    <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-brand-accent">
-                      <Cpu className="w-5 h-5 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]" />
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-brand-accent">
+                        <Cpu className="w-5 h-5 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]" />
+                      </div>
+                      <div className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider">Master Gateway Pool</div>
                     </div>
-                    <span className="text-[9px] font-black text-brand-emerald bg-brand-emerald/10 px-2 py-0.5 rounded-full uppercase tracking-wider font-mono">SaaS Owner</span>
                   </div>
-                  <div className="space-y-1 mt-3">
-                    <div className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Master Gateway Pool</div>
+                  <div className="mt-2">
                     <div className="text-2xl font-black text-slate-900 dark:text-white font-mono leading-none truncate">{stats?.system_balance?.toLocaleString() || 0}</div>
                   </div>
                   <div className="bg-slate-100 dark:bg-white/5 px-2.5 py-1 rounded-2xl text-[9px] text-slate-500 mt-2 font-mono">
@@ -636,61 +647,82 @@ export default function AdminPanelPage() {
                 {/* CARD 3: CLIENT CREDITS OUT */}
                 <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
                   <div className="flex items-center justify-between">
-                    <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-amber-500">
-                      <Coins className="w-5 h-5 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-amber-500">
+                        <Coins className="w-5 h-5 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                      </div>
+                      <div className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider">Outstanding Client Credits</div>
                     </div>
-                    <span className="text-[9px] font-black text-brand-primary bg-brand-primary/10 px-2 py-0.5 rounded-full uppercase tracking-wider font-mono">Tenants</span>
                   </div>
-                  <div className="space-y-1 mt-3">
-                    <div className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Outstanding Client Credits</div>
+                  <div className="mt-2">
                     <div className="text-2xl font-black text-slate-900 dark:text-white font-mono leading-none truncate">{stats?.total_client_credits?.toLocaleString() || 0}</div>
-                  </div>
-                  <div className="bg-slate-100 dark:bg-white/5 px-2.5 py-1 rounded-2xl text-[9px] text-slate-500 mt-2 font-mono">
-                    Total live SMS credits sold to tenants
                   </div>
                   <div className="border-t border-slate-200/20 dark:border-white/5 pt-2.5 mt-2.5 flex justify-between text-[9px] text-slate-500 font-mono">
                     <div>POOL LIQUIDITY <span className="text-amber-500 font-bold">{(stats && stats.system_balance > 0 ? (stats.system_balance / Math.max(stats.total_client_credits, 1) * 100).toFixed(1) : 0)}%</span></div>
                   </div>
+                  <div className="border-t border-slate-200/20 dark:border-white/5 pt-2 mt-2 text-[9px] text-slate-500 space-y-1 max-h-[60px] overflow-y-auto custom-scrollbar font-mono">
+                    {stats?.client_distributions?.slice(0, 5).map((c, idx) => (
+                      <div key={idx} className="flex justify-between gap-2">
+                        <span className="truncate max-w-[120px]">{c.client_name}</span>
+                        <span className="font-bold text-slate-600 dark:text-gray-400">{c.sms_balance.toLocaleString()} credits</span>
+                      </div>
+                    ))}
+                  </div>
+                  {stats && stats.client_distributions && stats.client_distributions.length > 5 && (
+                    <button
+                      onClick={() => setActiveTab('users')}
+                      className="w-full text-center text-[8px] font-black uppercase tracking-wider text-brand-primary hover:text-brand-primary/80 transition-colors mt-1 pt-1 border-t border-slate-200/10 dark:border-white/5 bg-transparent border-0 cursor-pointer"
+                    >
+                      Show More Users →
+                    </button>
+                  )}
                 </div>
 
-                {/* CARD 4: ACTIVE CAMPAIGNS & TASKS */}
+                {/* CARD 4: ONLINE USERS */}
                 <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
                   <div className="flex items-center justify-between">
-                    <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-indigo-500">
-                      <Megaphone className="w-5 h-5 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-brand-emerald">
+                        <UserCheck className="w-5 h-5 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                      </div>
+                      <div className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider">Online Users</div>
                     </div>
-                    {stats && stats.pending_sender_ids > 0 && (
-                      <span className="text-[9px] font-black text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full font-mono animate-pulse">
-                        {stats.pending_sender_ids} WHITELISTS PENDING
+                    {stats && stats.online_users > 0 && (
+                      <span className="flex items-center gap-1 text-[9px] font-black text-brand-emerald bg-brand-emerald/10 px-2 py-0.5 rounded-full font-mono">
+                        <span className="w-1.5 h-1.5 rounded-full bg-brand-emerald animate-ping" />
+                        LIVE
                       </span>
                     )}
                   </div>
-                  <div className="space-y-1 mt-3">
-                    <div className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Total Campaigns</div>
-                    <div className="text-3xl font-black text-slate-900 dark:text-white font-mono leading-none">{stats?.total_campaigns || 0}</div>
+                  <div className="mt-2">
+                    <div className="text-3xl font-black text-slate-900 dark:text-white font-mono leading-none">{stats?.online_users || 0}</div>
                   </div>
                   <div className="flex gap-2 mt-2">
-                    <span className="text-[9px] font-bold px-2 py-0.5 bg-brand-primary/10 text-brand-primary rounded-full">
-                      SENDING {stats?.active_campaigns || 0}
+                    <span className="text-[9px] font-bold px-2 py-0.5 bg-brand-emerald/10 text-brand-emerald rounded-full">
+                      ACTIVE {stats?.active_users || 0}
                     </span>
                     <span className="text-[9px] font-bold px-2 py-0.5 bg-slate-100 dark:bg-white/5 text-slate-500 rounded-full">
-                      WHITELIST REQS {stats?.pending_sender_ids || 0}
+                      TOTAL {stats?.total_users || 0}
                     </span>
                   </div>
                   <div className="border-t border-slate-200/20 dark:border-white/5 pt-2.5 mt-2.5 flex justify-between text-[9px] text-slate-500 font-mono">
-                    <div>DISPATCH WORKERS <span className="text-indigo-500 font-bold">OK</span></div>
+                    <div>TODAY <span className="text-brand-primary font-bold">+{stats?.today_users || 0}</span></div>
+                    <div>YEST <span className="text-brand-primary font-bold">+{stats?.yesterday_users || 0}</span></div>
+                    <div>7D <span className="text-brand-primary font-bold">+{stats?.last_7d_users || 0}</span></div>
                   </div>
                 </div>
 
                 {/* CARD 5: GATEWAYS & ROUTING */}
                 <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
                   <div className="flex items-center justify-between">
-                    <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-cyan-500">
-                      <Activity className="w-5 h-5 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]" />
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-cyan-500">
+                        <Activity className="w-5 h-5 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]" />
+                      </div>
+                      <div className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider">SMS Gateways Whitelisted</div>
                     </div>
                   </div>
-                  <div className="space-y-1 mt-3">
-                    <div className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">SMS Gateways Whitelisted</div>
+                  <div className="mt-2">
                     <div className="text-3xl font-black text-slate-900 dark:text-white font-mono leading-none">{gateways.length}</div>
                   </div>
                   <div className="flex gap-2 mt-2">
@@ -707,34 +739,111 @@ export default function AdminPanelPage() {
                   </div>
                 </div>
 
-                {/* CARD 6: FINANCIAL OVERVIEW */}
+                {/* CARD 6: ALL TIME REVENUE */}
                 <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
                   <div className="flex items-center justify-between">
-                    <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-emerald-500">
-                      <Coins className="w-5 h-5 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-emerald-500">
+                        <TrendingUp className="w-5 h-5 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                      </div>
+                      <div className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider">All Time Revenue</div>
                     </div>
-                    <span className="text-[9px] text-brand-emerald font-bold">↑ KES {(stats?.today_revenue || 0).toLocaleString()} today</span>
+                    <span className="text-[9px] text-amber-400 font-bold font-mono">
+                      KES {(() => { const v = stats?.this_year_revenue || 0; return v >= 1000000 ? `${(v/1000000).toFixed(1)}M` : v >= 1000 ? `${(v/1000).toFixed(1)}K` : v.toLocaleString(); })()} this yr
+                    </span>
                   </div>
-                  <div className="space-y-1 mt-3">
-                    <div className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Monthly Topups</div>
-                    <div className="text-xl font-black text-slate-900 dark:text-white font-mono leading-none truncate">KES {(stats?.monthly_revenue || 0).toLocaleString()}</div>
+                  <div className="mt-2">
+                    <div className="text-2xl font-black text-slate-900 dark:text-white font-mono leading-none truncate">
+                      KES {(() => { const v = stats?.all_time_revenue || 0; return v >= 1000000 ? `${(v/1000000).toFixed(1)}M` : v >= 1000 ? `${(v/1000).toFixed(1)}K` : v.toLocaleString(); })()}
+                    </div>
                   </div>
-                  <div className="border-t border-slate-200/20 dark:border-white/5 pt-2.5 mt-2.5 text-[9px] text-slate-500 space-y-1 max-h-[45px] overflow-y-auto custom-scrollbar font-mono">
-                    <div className="flex justify-between"><span>All-Time Deposits</span><span className="text-brand-emerald font-bold">KES {(stats?.all_time_revenue || 0).toLocaleString()}</span></div>
-                    <div className="flex justify-between"><span>Paying Clients</span><span className="text-indigo-500 font-bold">{stats?.paying_clients || 0}</span></div>
+                  <div className="border-t border-slate-200/20 dark:border-white/5 pt-2 mt-3 text-[9px] text-slate-600 dark:text-slate-300 space-y-1.5 font-mono">
+                    <div className="text-[8px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider pb-0.5">Previous Months</div>
+                    {/* Current month first */}
+                    {stats?.monthly_revenue !== undefined && (
+                      <div className="flex justify-between items-center">
+                        <span>This Month</span>
+                        <span className="font-bold text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded text-[9px]">
+                          KES {(() => { const v = stats?.monthly_revenue || 0; return v >= 1000000 ? `${(v/1000000).toFixed(1)}M` : v >= 1000 ? `${(v/1000).toFixed(1)}K` : v.toLocaleString(); })()}
+                        </span>
+                      </div>
+                    )}
+                    {stats?.monthly_breakdown?.slice(0, 5).map((b, idx) => (
+                      <div key={idx} className="flex justify-between items-center">
+                        <span>{b.month}</span>
+                        <span className="font-bold text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded text-[9px]">
+                          KES {(() => { const v = b.revenue; return v >= 1000000 ? `${(v/1000000).toFixed(1)}M` : v >= 1000 ? `${(v/1000).toFixed(1)}K` : v.toLocaleString(); })()}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  {stats && stats.monthly_breakdown && stats.monthly_breakdown.length > 5 && (
+                    <button
+                      onClick={() => setActiveTab('transactions')}
+                      className="w-full text-center text-[8px] font-black uppercase tracking-wider text-brand-primary hover:text-brand-primary/80 transition-colors mt-1 py-1 bg-transparent border-0 cursor-pointer"
+                    >
+                      Show More →
+                    </button>
+                  )}
+                  <div className="border-t border-slate-200/20 dark:border-white/5 pt-2 mt-2 flex justify-between text-[9px] text-slate-600 dark:text-slate-300 font-mono">
+                    <span>Paying Clients</span>
+                    <span className="text-indigo-500 font-bold">{stats?.paying_clients || 0}</span>
                   </div>
                 </div>
 
-                {/* CARD 7: SMS DISPATCH ANALYTICS */}
+                {/* CARD 7: MONTHLY REVENUE */}
                 <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
                   <div className="flex items-center justify-between">
-                    <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-teal-500">
-                      <Send className="w-5 h-5 drop-shadow-[0_0_8px_rgba(20,184,166,0.5)]" />
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-emerald-500">
+                        <Coins className="w-5 h-5 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                      </div>
+                      <div className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider">Monthly Revenue</div>
+                    </div>
+                    <span className="text-[9px] text-brand-emerald font-bold font-mono">
+                      ↗ KES {(() => { const v = stats?.today_revenue || 0; return v >= 1000000 ? `${(v/1000000).toFixed(1)}M` : v >= 1000 ? `${(v/1000).toFixed(1)}K` : v.toLocaleString(); })()} today
+                    </span>
+                  </div>
+                  <div className="mt-2">
+                    <div className="text-2xl font-black text-slate-900 dark:text-white font-mono leading-none truncate">
+                      KES {(() => { const v = stats?.monthly_revenue || 0; return v >= 1000000 ? `${(v/1000000).toFixed(1)}M` : v >= 1000 ? `${(v/1000).toFixed(1)}K` : v.toLocaleString(); })()}
+                    </div>
+                  </div>
+
+                  {/* Daily revenue breakdown */}
+                  <div className="border-t border-slate-200/20 dark:border-white/5 pt-2 mt-3 text-[9px] text-slate-600 dark:text-slate-300 space-y-1.5 font-mono">
+                    <div className="text-[8px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider pb-0.5">Last 30 Days</div>
+                    {stats?.daily_revenue_breakdown?.slice().reverse().slice(0, 5).map((d, idx) => (
+                      <div key={idx} className="flex justify-between items-center">
+                        <span>{d.label}</span>
+                        <span className={`font-bold px-1.5 py-0.5 rounded text-[9px] ${d.revenue > 0 ? 'text-brand-emerald bg-brand-emerald/10' : 'text-slate-500 dark:text-slate-400'}`}>
+                          KES {(() => { const v = d.revenue; return v >= 1000000 ? `${(v/1000000).toFixed(1)}M` : v >= 1000 ? `${(v/1000).toFixed(1)}K` : v.toLocaleString(); })()}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  {stats && stats.daily_revenue_breakdown && stats.daily_revenue_breakdown.length > 5 && (
+                    <button
+                      onClick={() => setActiveTab('transactions')}
+                      className="w-full text-center text-[8px] font-black uppercase tracking-wider text-brand-primary hover:text-brand-primary/80 transition-colors mt-1 py-1 bg-transparent border-0 cursor-pointer"
+                    >
+                      Show More →
+                    </button>
+                  )}
+                </div>
+
+                {/* CARD 8: SMS DISPATCH ANALYTICS */}
+                <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-teal-500">
+                        <Send className="w-5 h-5 drop-shadow-[0_0_8px_rgba(20,184,166,0.5)]" />
+                      </div>
+                      <div className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider">Sms Delivery Rate</div>
                     </div>
                     <span className="text-[9px] text-brand-emerald font-bold">↑ {(stats?.total_sms_sent || 0).toLocaleString()} total</span>
                   </div>
-                  <div className="space-y-1 mt-3">
-                    <div className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Sms Delivery Rate</div>
+                  <div className="mt-2">
                     <div className="text-3xl font-black text-slate-900 dark:text-white font-mono leading-none">{stats?.success_rate ?? 100.0}%</div>
                   </div>
                   <div className="grid grid-cols-2 gap-1 mt-2 text-[9px]">
@@ -850,8 +959,8 @@ export default function AdminPanelPage() {
                   <span className="w-2 h-2 rounded-full bg-brand-emerald animate-pulse" />
                 </div>
                 <div className="h-44 overflow-y-auto space-y-3 custom-scrollbar text-left pr-1">
-                  {events.length > 0 ? (
-                    events.map(ev => {
+                  {(showAllEvents ? events : events.slice(0, 5)).length > 0 ? (
+                    (showAllEvents ? events : events.slice(0, 5)).map(ev => {
                       const timeStr = new Date(ev.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' · ' + new Date(ev.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' });
                       const borderCol = ev.type === 'signup' 
                         ? 'border-brand-primary' 
@@ -872,6 +981,14 @@ export default function AdminPanelPage() {
                     </div>
                   )}
                 </div>
+                {events.length > 5 && (
+                  <button
+                    onClick={() => setShowAllEvents(!showAllEvents)}
+                    className="w-full text-center text-[8px] font-black uppercase tracking-wider text-brand-accent hover:text-brand-accent/80 transition-colors mt-2 pt-2 border-t border-slate-200/10 dark:border-white/5 bg-transparent border-0 cursor-pointer"
+                  >
+                    {showAllEvents ? 'Show Less' : 'Show More Events →'}
+                  </button>
+                )}
               </div>
             </div>
           </>

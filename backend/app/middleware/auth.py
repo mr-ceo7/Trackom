@@ -56,6 +56,38 @@ async def get_current_user(
 
     # Update updated_at to track online/active status
     user.updated_at = datetime.utcnow()
+
+    # If the user is an admin, set their credits to the master gateway pool by default
+    if user.is_superuser:
+        import time
+        global _last_master_balance
+        if 'logging' not in globals():
+            import logging
+            logger = logging.getLogger("trackom.auth")
+        else:
+            logger = logging.getLogger("trackom.auth")
+            
+        now_time = time.time()
+        # Initialize global cache if not present
+        if not hasattr(get_current_user, "_last_master_balance"):
+            get_current_user._last_master_balance = {"value": 10000000, "updated_at": 0.0}
+            
+        cache = get_current_user._last_master_balance
+        if now_time - cache["updated_at"] >= 15:
+            from app.services.sms_gateway import AdvantaSMSGateway
+            gateway = AdvantaSMSGateway()
+            try:
+                balance_data = await gateway.check_balance(timeout=2.0)
+                if balance_data and "credit" in balance_data:
+                    val = int(float(balance_data["credit"]))
+                    cache["value"] = val
+                    cache["updated_at"] = now_time
+            except Exception as e:
+                logger.warning(f"Failed to fetch master balance for admin: {e}")
+                
+        user.sms_balance = cache["value"]
+        user.sandbox_sms_balance = cache["value"]
+
     return user
 
 

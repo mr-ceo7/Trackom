@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { 
   BarChart3, TrendingUp, MessageSquare, CheckCircle2, XCircle, 
-  Clock, Search, Download, Calendar, ShieldAlert, Coins
+  Clock, Search, Download, Calendar, ShieldAlert, Coins, RotateCcw
 } from 'lucide-react';
 import api from '../../services/api';
 import Loader from '../../components/Loader';
@@ -114,6 +114,20 @@ export default function ReportsPage() {
       }
     } catch (err: any) {
       alert(err.response?.data?.detail || 'Failed to cancel scheduled message.');
+    }
+  };
+
+  const handleRetryMessage = async (msgId: string) => {
+    try {
+      await api.post(`/messages/${msgId}/retry`);
+      alert('Message resent successfully!');
+      fetchHistory();
+      fetchStats();
+      if (refreshUser) {
+        await refreshUser();
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Failed to retry sending the message.');
     }
   };
 
@@ -321,11 +335,25 @@ export default function ReportsPage() {
                                 <div className="text-[10px] text-brand-primary font-mono mt-0.5">{m.batch_number}</div>
                               )}
                             </td>
-                            <td className="px-5 py-3">
-                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${getStatusBadge(m.status)}`}>
-                                {m.status}
-                              </span>
-                            </td>
+                             <td className="px-5 py-3">
+                               <div className="flex items-center gap-2">
+                                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${getStatusBadge(m.status)}`}>
+                                   {m.status}
+                                 </span>
+                                 {m.status === 'failed' && (
+                                   <button
+                                     onClick={(e) => {
+                                       e.stopPropagation();
+                                       handleRetryMessage(m.id);
+                                     }}
+                                     className="p-1 rounded bg-red-100 hover:bg-red-200 dark:bg-rose-500/20 dark:hover:bg-rose-500/30 text-rose-600 dark:text-rose-400 transition-colors border-0 cursor-pointer flex items-center justify-center shrink-0"
+                                     title="Retry sending this message"
+                                   >
+                                     <RotateCcw className="w-3.5 h-3.5" />
+                                   </button>
+                                 )}
+                               </div>
+                             </td>
                             <td className="px-5 py-3 text-xs font-mono text-slate-900 dark:text-white">
                               {m.cost.toFixed(2)} cr
                             </td>
