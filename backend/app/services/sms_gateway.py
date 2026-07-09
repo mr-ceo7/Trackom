@@ -178,16 +178,29 @@ class AdvantaSMSGateway(BaseSMSGateway):
 
         results = []
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                resp = await client.post(
-                    f"{self.base_url}/api/services/sendsms",
-                    json=payload,
-                )
-                logger.info(
-                    f"AdvantaSMS: HTTP {resp.status_code} response received"
-                )
-                resp_data = resp.json()
-                logger.debug(f"AdvantaSMS: Raw response: {resp_data}")
+            import asyncio
+            retries = 3
+            backoff = 1.0
+            resp_data = None
+            for attempt in range(retries):
+                try:
+                    async with httpx.AsyncClient(timeout=10.0) as client:
+                        resp = await client.post(
+                            f"{self.base_url}/api/services/sendsms",
+                            json=payload,
+                        )
+                        logger.info(
+                            f"AdvantaSMS: HTTP {resp.status_code} response received on attempt {attempt + 1}"
+                        )
+                        resp_data = resp.json()
+                        break
+                except (httpx.ConnectTimeout, httpx.ConnectError, httpx.ReadTimeout) as exc:
+                    if attempt == retries - 1:
+                        logger.error(f"AdvantaSMS: All retry attempts failed for send: {exc}")
+                        raise exc
+                    logger.warning(f"AdvantaSMS: Network error on attempt {attempt + 1}: {exc}. Retrying in {backoff}s...")
+                    await asyncio.sleep(backoff)
+                    backoff *= 2
 
             # Parse the response
             responses = resp_data.get("responses", [])
@@ -262,21 +275,33 @@ class AdvantaSMSGateway(BaseSMSGateway):
 
         return results
 
-    async def check_balance(self) -> dict:
+    async def check_balance(self, timeout: float = 5.0) -> dict:
         """Check AdvantaSMS account balance via /api/services/getbalance."""
         params = {
             "apikey": self.api_key,
             "partnerID": self.partner_id,
         }
         try:
-            async with httpx.AsyncClient(timeout=15.0) as client:
-                resp = await client.get(
-                    f"{self.base_url}/api/services/getbalance",
-                    params=params,
-                )
-                data = resp.json()
-                logger.info(f"AdvantaSMS: Balance check response: {data}")
-                return data
+            import asyncio
+            retries = 3
+            backoff = 0.5
+            for attempt in range(retries):
+                try:
+                    async with httpx.AsyncClient(timeout=timeout) as client:
+                        resp = await client.get(
+                            f"{self.base_url}/api/services/getbalance",
+                            params=params,
+                        )
+                        data = resp.json()
+                        logger.info(f"AdvantaSMS: Balance check response: {data}")
+                        return data
+                except (httpx.ConnectTimeout, httpx.ConnectError, httpx.ReadTimeout) as exc:
+                    if attempt == retries - 1:
+                        logger.error(f"AdvantaSMS: All balance check retries failed: {exc}")
+                        raise exc
+                    logger.warning(f"AdvantaSMS: Balance check network error on attempt {attempt + 1}: {exc}. Retrying in {backoff}s...")
+                    await asyncio.sleep(backoff)
+                    backoff *= 2
         except Exception as e:
             logger.error(f"AdvantaSMS: Balance check failed: {e}")
             raise SmsGatewayException(f"Failed to check balance: {str(e)}")

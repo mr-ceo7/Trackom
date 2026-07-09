@@ -46,6 +46,16 @@ async def send_sms(
             detail=f"Insufficient balance. Need {total_cost} credits, have {current_user.active_balance}."
         )
 
+    # Check for gateway pool underfunding on live mode
+    if not current_user.sandbox_mode:
+        from app.services.email import check_and_enforce_gateway_liquidity
+        is_held = await check_and_enforce_gateway_liquidity(db)
+        if is_held:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Live SMS dispatches are temporarily held by the platform administrator due to gateway pool underfunding. Please try again later."
+            )
+
     batch_id = str(uuid_mod.uuid4())
     now = datetime.utcnow()
     
@@ -658,4 +668,58 @@ async def get_delivery_report(
         return data
     except SmsGatewayException as e:
         raise HTTPException(status_code=502, detail=str(e))
+
+
+@router.post("/{message_id}/retry")
+async def retry_failed_message(
+    message_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Retries sending a previously failed SMS message."""
+    try:
+        msg_uuid = uuid_mod.UUID(message_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid message ID format.")
+        
+    result = await db.execute(select(SmsMessage).where(SmsMessage.id == msg_uuid))
+    message = result.scalar_one_or_none()
+    
+    if not message:
+        raise HTTPException(status_code=404, detail="Message not found.")
+        
+    # Check ownership
+    if message.user_id != current_user.id and not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Forbidden.")
+        
+    if message.status != "failed":
+        raise HTTPException(status_code=400, detail=f"Only failed messages can be retried. Message is currently: {message.status}")
+        
+    # Dispatch again using gateway
+    gateway = get_sms_gateway()
+    try:
+        results = await gateway.send_messages(
+            sender_id=message.sender_id,
+            recipients=[message.recipient],
+            message=message.content,
+            db=db,
+            sandbox_mode=message.sandbox_mode
+        )
+        if results:
+            res = results[0]
+            message.status = "delivered" if res["status"] == "success" else "failed"
+            message.gateway_message_id = res["message_id"]
+            message.error_message = res["error_message"]
+            message.sent_at = datetime.utcnow()
+            await db.commit()
+            
+            if message.status == "failed":
+                raise HTTPException(status_code=502, detail=f"Retry dispatch failed: {message.error_message}")
+                
+            return {"status": "success", "message_id": message.gateway_message_id}
+    except Exception as e:
+        message.status = "failed"
+        message.error_message = str(e)
+        await db.commit()
+        raise HTTPException(status_code=502, detail=f"Retry failed: {str(e)}")
 

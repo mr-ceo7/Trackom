@@ -37,6 +37,14 @@ class DailyVolumeItem(BaseModel):
     label: str
     volume: int
 
+class DailyRevenueItem(BaseModel):
+    label: str
+    revenue: float
+
+class ClientDistributionItem(BaseModel):
+    client_name: str
+    sms_balance: int
+
 class AdminStatsResponse(BaseModel):
     total_users: int
     active_users: int
@@ -50,8 +58,11 @@ class AdminStatsResponse(BaseModel):
     today_revenue: float
     yesterday_revenue: float
     all_time_revenue: float
+    this_year_revenue: float
     monthly_breakdown: List[MonthlyBreakdownItem]
     daily_volumes: List[DailyVolumeItem]
+    daily_revenue_breakdown: List[DailyRevenueItem]
+    client_distributions: List[ClientDistributionItem]
     total_sms_sent: int
     total_campaigns: int
     success_rate: float
@@ -160,6 +171,19 @@ async def get_admin_stats(
     res_client_credits = await db.execute(select(func.sum(User.sms_balance)))
     total_client_credits = int(res_client_credits.scalar() or 0)
 
+    # 1.25 Client credit distributions
+    res_dist = await db.execute(
+        select(User.full_name, User.sms_balance)
+        .where(User.is_superuser == False)
+        .order_by(User.sms_balance.desc())
+    )
+    client_distributions = []
+    for full_name, bal in res_dist.all():
+        client_distributions.append(ClientDistributionItem(
+            client_name=full_name,
+            sms_balance=bal
+        ))
+
     # 1.3 Total paying clients (unique clients with completed topups)
     res_paying = await db.execute(
         select(func.count(func.distinct(Transaction.user_id)))
@@ -218,6 +242,14 @@ async def get_admin_stats(
     )
     all_time_revenue = float(res_all_time_rev.scalar() or 0)
 
+    # This year revenue
+    start_of_year = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+    res_year_rev = await db.execute(
+        select(func.sum(Transaction.amount))
+        .where((Transaction.type == "topup") & (Transaction.status == "completed") & (Transaction.created_at >= start_of_year))
+    )
+    this_year_revenue = float(res_year_rev.scalar() or 0)
+
     # Monthly breakdown breakdown list
     monthly_breakdown = []
     for i in range(3):
@@ -253,6 +285,25 @@ async def get_admin_stats(
             volume=vol
         ))
 
+    # Daily revenue for last 7 days
+    daily_revenue_breakdown = []
+    for i in range(6, -1, -1):
+        day_start = start_of_today - timedelta(days=i)
+        day_end = day_start + timedelta(days=1)
+        res_day_rev = await db.execute(
+            select(func.sum(Transaction.amount))
+            .where((Transaction.type == "topup") & (Transaction.status == "completed") & (Transaction.created_at >= day_start) & (Transaction.created_at < day_end))
+        )
+        day_rev = float(res_day_rev.scalar() or 0)
+        # Format label: "Today", "Yesterday", or "Mon 05"
+        if i == 0:
+            day_label = "Today"
+        elif i == 1:
+            day_label = "Yesterday"
+        else:
+            day_label = day_start.strftime("%a %d")
+        daily_revenue_breakdown.append(DailyRevenueItem(label=day_label, revenue=day_rev))
+
     # 4. SMS Delivery Rate
     res_sms_sent = await db.execute(select(func.count(SmsMessage.id)))
     total_sms_sent = res_sms_sent.scalar() or 0
@@ -273,7 +324,7 @@ async def get_admin_stats(
     gateway = AdvantaSMSGateway()
     system_balance = 10000000  # Default fallback
     try:
-        balance_data = await gateway.check_balance()
+        balance_data = await gateway.check_balance(timeout=2.0)
         if balance_data and "credit" in balance_data:
             system_balance = int(float(balance_data["credit"]))
     except Exception:
@@ -292,8 +343,11 @@ async def get_admin_stats(
         today_revenue=today_revenue,
         yesterday_revenue=yesterday_revenue,
         all_time_revenue=all_time_revenue,
+        this_year_revenue=this_year_revenue,
         monthly_breakdown=monthly_breakdown,
         daily_volumes=daily_volumes,
+        daily_revenue_breakdown=daily_revenue_breakdown,
+        client_distributions=client_distributions,
         total_sms_sent=total_sms_sent,
         total_campaigns=total_campaigns,
         success_rate=round(success_rate, 2),

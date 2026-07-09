@@ -186,6 +186,25 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
                 # --- Check for pause/cancel between batches ---
                 while True:
                     await db.refresh(campaign)
+                    
+                    # Check for gateway pool underfunding on live campaigns
+                    if not campaign.sandbox_mode:
+                        from app.services.email import check_and_enforce_gateway_liquidity
+                        is_held = await check_and_enforce_gateway_liquidity(db)
+                        if is_held:
+                            campaign.status = "paused"
+                            db.add(Notification(
+                                user_id=campaign.user_id,
+                                title=f"Campaign '{campaign.name}' Held ⚠️",
+                                message="Live campaign dispatch was temporarily held due to underfunded gateway pool.",
+                                type="error",
+                                action_url="/dashboard/campaigns",
+                                sandbox_mode=campaign.sandbox_mode,
+                            ))
+                            await db.commit()
+                            logger.warning(f"Campaign {campaign_id} held/paused due to underfunded gateway pool.")
+                            return
+
                     if campaign.status == "cancelled":
                         # Refund credits for unsent contacts
                         unsent_count = total_recipients - sent_count
@@ -409,6 +428,16 @@ async def scheduled_campaign_monitor_loop():
                             await db.commit()
 
                             use_sandbox = m.sandbox_mode
+                            
+                            # Check for gateway pool underfunding on live scheduled messages
+                            if not use_sandbox:
+                                from app.services.email import check_and_enforce_gateway_liquidity
+                                is_held = await check_and_enforce_gateway_liquidity(db)
+                                if is_held:
+                                    m.status = "scheduled"  # Keep scheduled
+                                    m.error_message = "Live dispatch temporarily held due to gateway pool underfunding."
+                                    await db.commit()
+                                    continue
 
                             
                             res_list = await gateway.send_messages(
