@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   Users, Megaphone, Send, ShieldAlert, Search, Plus, Minus, 
   Check, X, Ban, UserCheck, Coins, Calendar, Sliders, 
-  Cpu, Key, Link as LinkIcon, Edit, Trash2, ToggleLeft, ToggleRight, Smartphone, Activity, TrendingUp, Settings, Save
+  Cpu, Key, Link as LinkIcon, Edit, Trash2, ToggleLeft, ToggleRight, Smartphone, Activity, TrendingUp, Settings, Save, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { useNavigate, NavLink } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -121,7 +121,23 @@ export default function AdminPanelPage() {
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [clientPage, setClientPage] = useState(1);
+  const [senderIdPage, setSenderIdPage] = useState(1);
   const [limit] = useState(25);
+
+  // Advanta Approved Sender IDs & Assignment
+  const [advantaSenderIds, setAdvantaSenderIds] = useState<any[]>([]);
+  const [loadingAdvanta, setLoadingAdvanta] = useState(false);
+  const [allUsersForSelect, setAllUsersForSelect] = useState<AdminUser[]>([]);
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [selectedAssignUserId, setSelectedAssignUserId] = useState('');
+  const [selectedAssignSenderId, setSelectedAssignSenderId] = useState('');
+  const [assignPurpose, setAssignPurpose] = useState('Assigned by Administrator');
+  const [submittingAssignment, setSubmittingAssignment] = useState(false);
+
+  // Pool management states
+  const [newPoolSenderId, setNewPoolSenderId] = useState('');
+  const [submittingNewPoolId, setSubmittingNewPoolId] = useState(false);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -286,6 +302,22 @@ export default function AdminPanelPage() {
     finally { setLoadingSenderIds(false); }
   }, []);
 
+  const fetchAdvantaSenderIds = useCallback(async () => {
+    setLoadingAdvanta(true);
+    try {
+      const resp_adv = await api.get('/admin/sender-ids/advanta');
+      setAdvantaSenderIds(resp_adv.data);
+    } catch { /* noop */ }
+    finally { setLoadingAdvanta(false); }
+  }, []);
+
+  const fetchAllUsersForSelect = useCallback(async () => {
+    try {
+      const resp = await api.get('/admin/users', { params: { limit: 100 } });
+      setAllUsersForSelect(resp.data);
+    } catch { /* noop */ }
+  }, []);
+
   const fetchCampaigns = useCallback(async () => {
     setLoadingCampaigns(true);
     try {
@@ -333,6 +365,15 @@ export default function AdminPanelPage() {
     fetchStats();
   }, [fetchStats]);
 
+  // Real-time automatic stats update polling (every 8 seconds when dashboard is active)
+  useEffect(() => {
+    if (activeTab !== 'dashboard') return;
+    const interval = setInterval(() => {
+      fetchStats();
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [activeTab, fetchStats]);
+
   useEffect(() => {
     if (activeTab === 'users') {
       fetchUsers();
@@ -340,12 +381,14 @@ export default function AdminPanelPage() {
       fetchGateways();
     } else if (activeTab === 'sender_ids') {
       fetchSenderIds();
+      fetchAdvantaSenderIds();
+      fetchAllUsersForSelect();
     } else if (activeTab === 'campaigns') {
       fetchCampaigns();
     } else if (activeTab === 'transactions') {
       fetchTransactions();
     }
-  }, [activeTab, fetchUsers, fetchGateways, fetchSenderIds, fetchCampaigns, fetchTransactions]);
+  }, [activeTab, fetchUsers, fetchGateways, fetchSenderIds, fetchCampaigns, fetchTransactions, fetchAdvantaSenderIds, fetchAllUsersForSelect]);
 
   // Adjust User Wallet Credits
   const handleAdjustCredits = async (e: React.FormEvent) => {
@@ -493,6 +536,78 @@ export default function AdminPanelPage() {
       await fetchGateways();
     }
   };
+
+  // Assign Approved Carrier Sender ID to Client
+  const handleAssignSenderId = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedAssignUserId || !selectedAssignSenderId) return;
+    setSubmittingAssignment(true);
+    try {
+      await api.post('/admin/sender-ids/assign', {
+        user_id: selectedAssignUserId,
+        sender_id: selectedAssignSenderId,
+        purpose: assignPurpose.trim() || undefined
+      });
+      setIsAssignModalOpen(false);
+      setSelectedAssignUserId('');
+      setSelectedAssignSenderId('');
+      setAssignPurpose('Assigned by Administrator');
+      alert('Sender ID assigned successfully!');
+      await fetchSenderIds();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Failed to assign Sender ID.');
+    } finally {
+      setSubmittingAssignment(false);
+    }
+  };
+
+  // Add Sender ID to carrier pool
+  const handleAddPoolSenderId = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPoolSenderId.trim()) return;
+    setSubmittingNewPoolId(true);
+    try {
+      await api.post('/admin/sender-ids/advanta', {
+        sender_id: newPoolSenderId.trim()
+      });
+      setNewPoolSenderId('');
+      alert('Sender ID added to Advanta pool successfully!');
+      await fetchAdvantaSenderIds();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Failed to add Sender ID.');
+    } finally {
+      setSubmittingNewPoolId(false);
+    }
+  };
+
+  // Toggle carrier Sender ID active status
+  const handleTogglePoolSenderId = async (id: string) => {
+    try {
+      await api.post(`/admin/sender-ids/advanta/${id}/toggle`);
+      await fetchAdvantaSenderIds();
+    } catch {
+      alert('Failed to toggle status.');
+    }
+  };
+
+  // Remove Sender ID from carrier pool
+  const handleDeletePoolSenderId = async (id: string, senderId: string) => {
+    if (!confirm(`Are you sure you want to remove '${senderId}' from the Advanta approved pool?`)) return;
+    try {
+      await api.delete(`/admin/sender-ids/advanta/${id}`);
+      await fetchAdvantaSenderIds();
+    } catch {
+      alert('Failed to remove Sender ID.');
+    }
+  };
+
+  // Pagination variables for Sender IDs
+  const senderIdsPerPage = 10;
+  const totalSenderIdPages = Math.ceil(senderIds.length / senderIdsPerPage);
+  const displayedSenderIds = senderIds.slice(
+    (senderIdPage - 1) * senderIdsPerPage,
+    senderIdPage * senderIdsPerPage
+  );
 
   return (
     <div className="min-h-screen flex overflow-hidden light-dashboard-bg dark:bg-surface-dark font-sans text-left w-full">
@@ -1035,35 +1150,78 @@ export default function AdminPanelPage() {
                 </div>
               </div>
 
-              {/* Gateway share Gauge */}
+              {/* Top Clients by Balance */}
               <div className="clay-card rounded-3xl p-5 space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-2">
                   <span className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
-                    <Cpu className="w-4 h-4 text-brand-primary" /> Active Gateway Load Balancing
+                    <Users className="w-4 h-4 text-brand-primary" /> Top Clients by Balance
                   </span>
-                  <span className="text-[10px] text-brand-primary font-bold bg-brand-primary/10 px-2 py-0.5 rounded-full">Real-time</span>
+                  <span className="text-[10px] text-brand-primary font-bold bg-brand-primary/10 px-2 py-0.5 rounded-full">
+                    Rate: {baseSmsCost.toFixed(2)}/SMS
+                  </span>
                 </div>
-                <div className="h-44 flex flex-col justify-center space-y-3">
-                  {gateways.length > 0 ? (
-                    gateways.map(gw => (
-                      <div key={gw.id} className="space-y-1 text-left">
-                        <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-gray-300">
-                          <span>{gw.name}</span>
-                          <span className="font-mono text-brand-primary font-black">{gw.weight}%</span>
-                        </div>
-                        <div className="h-2 w-full bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
-                          <div 
-                            className={`h-full rounded-full transition-all duration-500 ${gw.is_active ? 'bg-brand-primary' : 'bg-slate-400'}`} 
-                            style={{ width: `${gw.weight}%` }} 
-                          />
+                <div className="h-44 flex flex-col justify-between">
+                  <div className="flex-1 space-y-3 flex flex-col justify-start">
+                    {stats?.client_distributions && stats.client_distributions.length > 0 ? (
+                      (() => {
+                        const itemsPerPage = 3;
+                        const displayedClients = stats.client_distributions.slice((clientPage - 1) * itemsPerPage, clientPage * itemsPerPage);
+                        return displayedClients.map((client, idx) => {
+                          const totalCredits = stats.total_client_credits || 1;
+                          const sharePct = (client.sms_balance / totalCredits) * 100;
+                          return (
+                            <div key={idx} className="space-y-0.5 text-left">
+                              <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-gray-300">
+                                <span className="truncate max-w-[150px]">{client.client_name}</span>
+                                <span className="font-mono text-brand-primary font-bold">
+                                  {client.sms_balance.toLocaleString()} cr ({sharePct.toFixed(0)}%)
+                                </span>
+                              </div>
+                              <div className="h-1.5 w-full bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full rounded-full bg-brand-primary transition-all duration-500" 
+                                  style={{ width: `${sharePct}%` }} 
+                                />
+                              </div>
+                            </div>
+                          );
+                        });
+                      })()
+                    ) : (
+                      <div className="text-center text-xs text-slate-400 italic py-6 my-auto">
+                        No client accounts registered to show distributions.
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Pagination Footer */}
+                  {(() => {
+                    const totalClients = stats?.client_distributions?.length || 0;
+                    const itemsPerPage = 3;
+                    const totalPages = Math.ceil(totalClients / itemsPerPage);
+                    if (totalPages <= 1) return null;
+                    return (
+                      <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-gray-500 pt-2 border-t border-slate-200/20 dark:border-white/5 shrink-0">
+                        <span>Page {clientPage} of {totalPages}</span>
+                        <div className="flex gap-1">
+                          <button 
+                            disabled={clientPage === 1}
+                            onClick={() => setClientPage(p => Math.max(1, p - 1))}
+                            className="p-0.5 rounded hover:bg-slate-200 dark:hover:bg-white/10 disabled:opacity-30 cursor-pointer transition-colors"
+                          >
+                            <ChevronLeft className="w-3.5 h-3.5" />
+                          </button>
+                          <button 
+                            disabled={clientPage === totalPages}
+                            onClick={() => setClientPage(p => Math.min(totalPages, p + 1))}
+                            className="p-0.5 rounded hover:bg-slate-200 dark:hover:bg-white/10 disabled:opacity-30 cursor-pointer transition-colors"
+                          >
+                            <ChevronRight className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </div>
-                    ))
-                  ) : (
-                    <div className="text-center text-xs text-slate-400 italic py-6">
-                      No gateways whitelisted to show load splits.
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
               </div>
 
@@ -1153,7 +1311,7 @@ export default function AdminPanelPage() {
                           <div className="flex items-center gap-3">
                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
                               u.is_superuser 
-                                ? 'bg-red-500/20 text-red-500 border border-red-500/20' 
+                                ? 'bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30' 
                                 : 'bg-brand-primary/20 text-brand-primary'
                             }`}>
                               {u.is_superuser ? 'AD' : u.full_name.slice(0,2).toUpperCase()}
@@ -1162,7 +1320,7 @@ export default function AdminPanelPage() {
                               <div className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
                                 <span>{u.full_name}</span>
                                 {u.is_superuser && (
-                                  <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-red-500/10 text-red-400 border border-red-500/10 font-mono uppercase">Owner</span>
+                                  <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 font-mono uppercase">Admin</span>
                                 )}
                               </div>
                               <div className="text-[10px] text-slate-400 dark:text-gray-500 flex items-center gap-1 mt-0.5 font-mono">
@@ -1581,100 +1739,286 @@ export default function AdminPanelPage() {
         )}
       </AnimatePresence>
 
+      {/* Assign Sender ID Modal */}
+      <AnimatePresence>
+        {isAssignModalOpen && (
+          <GenieModal onClose={() => setIsAssignModalOpen(false)} className="p-6 max-w-md">
+            <div className="flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-4 mb-4">
+              <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                <Smartphone className="w-5 h-5 text-brand-primary" />
+                <span>Assign Sender ID to Client</span>
+              </h3>
+              <button onClick={() => setIsAssignModalOpen(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"><X className="w-4 h-4" /></button>
+            </div>
+
+            <form onSubmit={handleAssignSenderId} className="space-y-4 text-left">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Select Client / Tenant *</label>
+                <select 
+                  value={selectedAssignUserId}
+                  onChange={e => setSelectedAssignUserId(e.target.value)}
+                  className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none cursor-pointer"
+                  required
+                >
+                  <option value="">-- Choose a Client --</option>
+                  {allUsersForSelect.map(u => (
+                    <option key={u.id} value={u.id}>
+                      {u.full_name} ({u.email})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Select Approved Advanta Sender ID *</label>
+                <select 
+                  value={selectedAssignSenderId}
+                  onChange={e => setSelectedAssignSenderId(e.target.value)}
+                  className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none cursor-pointer"
+                  required
+                >
+                  <option value="">-- Choose a Sender ID --</option>
+                  {advantaSenderIds.map(item => (
+                    <option key={item.id} value={item.sender_id}>
+                      {item.sender_id} ({item.status})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Allocation Purpose / Notes</label>
+                <input 
+                  type="text" 
+                  value={assignPurpose} 
+                  onChange={e => setAssignPurpose(e.target.value)} 
+                  className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none"
+                  placeholder="e.g. Assigned by Administrator"
+                />
+              </div>
+
+              <button 
+                type="submit" 
+                disabled={submittingAssignment || !selectedAssignUserId || !selectedAssignSenderId} 
+                className="clay-button-primary w-full py-3 mt-2 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2"
+              >
+                {submittingAssignment ? <Loader size="sm" /> : <span>Assign Sender ID</span>}
+              </button>
+            </form>
+          </GenieModal>
+        )}
+      </AnimatePresence>
+
       {activeTab === 'sender_ids' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
               <Smartphone className="w-4 h-4 text-brand-primary" />
-              <span>Sender ID Registry Audit</span>
+              <span>Sender ID Manager & Whitelist</span>
             </h3>
+            <button
+              onClick={() => {
+                setIsAssignModalOpen(true);
+                if (allUsersForSelect.length > 0) setSelectedAssignUserId(allUsersForSelect[0].id);
+                if (advantaSenderIds.length > 0) setSelectedAssignSenderId(advantaSenderIds[0].sender_id);
+              }}
+              className="clay-button-primary flex items-center gap-1.5 px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Assign Sender ID to Client</span>
+            </button>
           </div>
 
-          {loadingSenderIds ? (
-            <div className="text-center py-12"><Loader size="md" /></div>
-          ) : (
-            <div className="clay-card rounded-3xl overflow-hidden">
-              <div className="overflow-x-auto font-sans">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="border-b border-slate-200/20 dark:border-white/6 clay-inset">
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Client</th>
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Requested ID</th>
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Purpose</th>
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Status</th>
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Requested Date</th>
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {senderIds.map((r) => (
-                      <tr key={r.id} className="border-b border-slate-100 dark:border-white/[0.03] last:border-0 hover:bg-slate-50 dark:hover:bg-white/[0.01] transition-colors">
-                        <td className="px-5 py-3 text-sm text-slate-900 dark:text-white">
-                          <div className="font-semibold">{r.user_name}</div>
-                          <div className="text-[10px] text-slate-400 dark:text-gray-500 font-mono mt-0.5">{r.user_email}</div>
-                        </td>
-                        <td className="px-5 py-3">
-                          <span className="px-2.5 py-1 rounded bg-slate-100 dark:bg-white/5 text-slate-800 dark:text-white font-mono font-bold text-xs uppercase">
-                            {r.sender_id}
-                          </span>
-                        </td>
-                        <td className="px-5 py-3 text-xs text-slate-600 dark:text-gray-300 max-w-xs truncate" title={r.purpose}>
-                          {r.purpose}
-                        </td>
-                        <td className="px-5 py-3">
-                          <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                            r.status === 'approved' 
-                              ? 'bg-brand-emerald/10 text-brand-emerald' 
-                              : r.status === 'rejected' 
-                              ? 'bg-red-500/10 text-red-500' 
-                              : 'bg-amber-500/10 text-amber-500'
-                          }`}>
-                            {r.status === 'approved' ? 'Approved' : r.status === 'rejected' ? 'Rejected' : 'Pending Review'}
-                          </span>
-                          {r.status === 'rejected' && r.rejection_reason && (
-                            <div className="text-[9px] text-red-500 mt-1 max-w-xs truncate">Reason: {r.rejection_reason}</div>
-                          )}
-                        </td>
-                        <td className="px-5 py-3 text-xs text-slate-500 dark:text-gray-400 font-mono">
-                          {new Date(r.created_at).toLocaleDateString()}
-                        </td>
-                        <td className="px-5 py-3 text-right">
-                          {r.status === 'pending' ? (
-                            <div className="inline-flex gap-1">
-                              <button
-                                onClick={() => handleApproveSenderId(r.id)}
-                                className="p-1 text-white bg-brand-emerald hover:bg-brand-emerald-dark rounded-lg cursor-pointer transition-all flex items-center justify-center"
-                                title="Approve Request"
-                              >
-                                <Check className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                onClick={() => { setRejectingRequest(r); setRejectReason(''); }}
-                                className="p-1 text-white bg-rose-500 hover:bg-rose-600 rounded-lg cursor-pointer transition-all flex items-center justify-center"
-                                title="Reject Request"
-                              >
-                                <X className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          ) : (
-                            <span className="text-[10px] text-slate-400 italic">Audited</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                    {senderIds.length === 0 && (
-                      <tr>
-                        <td colSpan={6} className="text-center py-16">
-                          <Smartphone className="w-10 h-10 text-slate-300 dark:text-gray-600 mx-auto mb-3" />
-                          <p className="text-sm text-slate-500 dark:text-gray-400">No Sender ID whitelisting requests submitted yet.</p>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            {/* Column 1 & 2: Client whitelisting requests */}
+            <div className="lg:col-span-2 space-y-3">
+              <h4 className="text-xs font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider pl-1 text-left">Client Requests Registry</h4>
+              {loadingSenderIds ? (
+                <div className="text-center py-12 clay-card rounded-3xl"><Loader size="md" /></div>
+              ) : (
+                <div className="clay-card rounded-3xl overflow-hidden">
+                  <div className="overflow-x-auto font-sans">
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="border-b border-slate-200/20 dark:border-white/6 clay-inset">
+                          <th className="px-2 py-3 text-[10px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Client</th>
+                          <th className="px-2 py-3 text-[10px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Requested ID</th>
+                          <th className="px-2 py-3 text-[10px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Purpose</th>
+                          <th className="px-2 py-3 text-[10px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Status</th>
+                          <th className="px-2 py-3 text-[10px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Date</th>
+                          <th className="px-2 py-3 text-[10px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {displayedSenderIds.map((r) => (
+                          <tr key={r.id} className="border-b border-slate-100 dark:border-white/[0.03] last:border-0 hover:bg-slate-50 dark:hover:bg-white/[0.01] transition-colors">
+                            <td className="px-2 py-2 text-xs text-slate-900 dark:text-white max-w-[120px] truncate">
+                              <div className="font-semibold truncate">{r.user_name}</div>
+                              <div className="text-[9px] text-slate-400 dark:text-gray-500 font-mono mt-0.5 truncate">{r.user_email}</div>
+                            </td>
+                            <td className="px-2 py-2">
+                              <span className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/5 text-slate-800 dark:text-white font-mono font-bold text-[10px] uppercase">
+                                {r.sender_id}
+                              </span>
+                            </td>
+                            <td className="px-2 py-2 text-[11px] text-slate-600 dark:text-gray-300 max-w-[100px] truncate" title={r.purpose}>
+                              {r.purpose}
+                            </td>
+                            <td className="px-2 py-2">
+                              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
+                                r.status === 'approved' 
+                                  ? 'bg-brand-emerald/10 text-brand-emerald' 
+                                  : r.status === 'rejected' 
+                                  ? 'bg-red-500/10 text-red-500' 
+                                  : 'bg-amber-500/10 text-amber-500'
+                              }`}>
+                                {r.status === 'approved' ? 'Approved' : r.status === 'rejected' ? 'Rejected' : 'Pending'}
+                              </span>
+                              {r.status === 'rejected' && r.rejection_reason && (
+                                <div className="text-[9px] text-red-500 mt-0.5 max-w-[100px] truncate">Reason: {r.rejection_reason}</div>
+                              )}
+                            </td>
+                            <td className="px-2 py-2 text-[10px] text-slate-500 dark:text-gray-400 font-mono">
+                              {new Date(r.created_at).toLocaleDateString()}
+                            </td>
+                            <td className="px-2 py-2 text-right">
+                              {r.status === 'pending' ? (
+                                <div className="inline-flex gap-1">
+                                  <button
+                                    onClick={() => handleApproveSenderId(r.id)}
+                                    className="p-1 text-white bg-brand-emerald hover:bg-brand-emerald-dark rounded-lg cursor-pointer transition-all flex items-center justify-center"
+                                    title="Approve Request"
+                                  >
+                                    <Check className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    onClick={() => { setRejectingRequest(r); setRejectReason(''); }}
+                                    className="p-1 text-white bg-rose-500 hover:bg-rose-600 rounded-lg cursor-pointer transition-all flex items-center justify-center"
+                                    title="Reject Request"
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <span className="text-[10px] text-slate-400 italic">Audited</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                        {senderIds.length === 0 && (
+                          <tr>
+                            <td colSpan={6} className="text-center py-16">
+                              <Smartphone className="w-10 h-10 text-slate-300 dark:text-gray-600 mx-auto mb-3" />
+                              <p className="text-sm text-slate-500 dark:text-gray-400">No Sender ID whitelisting requests submitted yet.</p>
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Pagination Footer */}
+                  {totalSenderIdPages > 1 && (
+                    <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 dark:border-white/[0.03]">
+                      <span className="text-[10px] text-slate-400 dark:text-gray-500">
+                        Showing {(senderIdPage - 1) * senderIdsPerPage + 1} to {Math.min(senderIdPage * senderIdsPerPage, senderIds.length)} of {senderIds.length} requests
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setSenderIdPage(prev => Math.max(prev - 1, 1))}
+                          disabled={senderIdPage === 1}
+                          className="p-1 rounded bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-gray-400 hover:bg-slate-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        >
+                          <ChevronLeft className="w-3.5 h-3.5" />
+                        </button>
+                        <span className="text-[10px] font-mono text-slate-500 dark:text-gray-400">
+                          Page {senderIdPage} of {totalSenderIdPages}
+                        </span>
+                        <button
+                          onClick={() => setSenderIdPage(prev => Math.min(prev + 1, totalSenderIdPages))}
+                          disabled={senderIdPage === totalSenderIdPages}
+                          className="p-1 rounded bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-gray-400 hover:bg-slate-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        >
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-          )}
+
+            {/* Column 3: Advanta Approved Sender IDs Pool */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider pl-1 text-left">Advanta Approved Pool</h4>
+              {loadingAdvanta ? (
+                <div className="text-center py-12 clay-card rounded-3xl"><Loader size="sm" /></div>
+              ) : (
+                <div className="clay-card rounded-3xl p-5 space-y-4">
+                  <p className="text-[11px] text-slate-500 dark:text-gray-400 leading-relaxed text-left">
+                    Manage carrier-approved Sender IDs. Click a status badge to toggle active status or delete/add entries.
+                  </p>
+                  
+                  {/* Inline Form to Add Approved ID */}
+                  <form onSubmit={handleAddPoolSenderId} className="flex gap-2">
+                    <input 
+                      type="text" 
+                      placeholder="NEW SENDER ID" 
+                      value={newPoolSenderId}
+                      onChange={e => setNewPoolSenderId(e.target.value.toUpperCase())}
+                      className="clay-input flex-1 px-3 py-2 rounded-2xl text-xs font-mono font-bold uppercase focus:outline-none"
+                      required
+                    />
+                    <button 
+                      type="submit" 
+                      disabled={submittingNewPoolId || !newPoolSenderId.trim()}
+                      className="p-2 bg-brand-primary text-white hover:bg-brand-primary/95 rounded-2xl cursor-pointer transition-all flex items-center justify-center disabled:opacity-50"
+                      title="Add to Pool"
+                    >
+                      {submittingNewPoolId ? <Loader size="xs" /> : <Plus className="w-3.5 h-3.5" />}
+                    </button>
+                  </form>
+                  
+                  <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1 custom-scrollbar text-left font-sans">
+                    {advantaSenderIds.map((item) => (
+                      <div 
+                        key={item.id} 
+                        className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200/10 dark:border-white/[0.03]"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full ${item.status === 'active' ? 'bg-brand-emerald animate-pulse' : 'bg-red-500'}`} />
+                          <span className="font-mono font-bold text-sm text-slate-800 dark:text-white uppercase">{item.sender_id}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleTogglePoolSenderId(item.id)}
+                            className={`text-[9px] font-black uppercase font-mono px-2 py-0.5 rounded-full cursor-pointer hover:opacity-80 transition-all ${
+                              item.status === 'active' ? 'bg-brand-emerald/10 text-brand-emerald' : 'bg-red-500/10 text-red-500'
+                            }`}
+                            title="Click to toggle status"
+                          >
+                            {item.status}
+                          </button>
+                          
+                          <button
+                            onClick={() => handleDeletePoolSenderId(item.id, item.sender_id)}
+                            className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg cursor-pointer transition-all flex items-center justify-center"
+                            title="Remove from pool"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {advantaSenderIds.length === 0 && (
+                      <div className="text-center py-8 text-xs text-slate-400 italic">No approved Advanta IDs loaded.</div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
