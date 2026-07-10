@@ -19,11 +19,7 @@ import {
 import ThemeToggle from './ThemeToggle';
 import TrackomLogo from './TrackomLogo';
 
-interface HeaderProps {
-  onOpenSignup: () => void;
-}
-
-export default function Header({ onOpenSignup }: HeaderProps) {
+export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<'solutions' | 'developers' | null>(null);
@@ -64,13 +60,6 @@ export default function Header({ onOpenSignup }: HeaderProps) {
     };
   }, [isHome]);
 
-  const handleGetStarted = () => {
-    if (isHome) {
-      onOpenSignup();
-    } else {
-      navigate('/register');
-    }
-  };
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -407,22 +396,11 @@ export default function Header({ onOpenSignup }: HeaderProps) {
 
           <Link
             to="/login"
-            className={`hidden sm:inline-flex items-center text-sm font-semibold transition-colors duration-300 cursor-pointer ${
-              scrolled
-                ? 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
-                : 'text-gray-300 hover:text-white'
-            }`}
-          >
-            Sign In
-          </Link>
-
-          <button
-            onClick={handleGetStarted}
             className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-brand-primary hover:bg-brand-primary-hover text-white cursor-pointer shadow-lg shadow-brand-primary/20 hover:shadow-brand-primary/30 hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none"
           >
-            <span>Get Started</span>
+            <span>Sign In</span>
             <Rocket className="w-4 h-4" />
-          </button>
+          </Link>
 
           {/* HAMBURGER */}
           <button
@@ -535,21 +513,11 @@ export default function Header({ onOpenSignup }: HeaderProps) {
               <Link
                 to="/login"
                 onClick={() => setIsOpen(false)}
-                className="w-full flex items-center justify-center gap-2.5 py-3 rounded-lg text-slate-700 dark:text-gray-300 font-semibold border border-slate-200 dark:border-white/8 hover:bg-slate-100 dark:hover:bg-white/5 active:scale-98 transition-all duration-200 cursor-pointer text-sm"
+                className="w-full flex items-center justify-center gap-2.5 py-3 rounded-lg text-white font-semibold bg-brand-primary hover:bg-brand-primary-hover active:scale-98 transition-all duration-200 shadow-md cursor-pointer text-sm"
               >
-                Sign In
-              </Link>
-
-              <button
-                onClick={() => {
-                  setIsOpen(false);
-                  handleGetStarted();
-                }}
-                className="w-full flex items-center justify-center gap-2.5 py-3 rounded-lg text-white font-semibold bg-brand-primary hover:bg-brand-primary-hover active:scale-98 transition-all duration-200 shadow-md cursor-pointer"
-              >
-                <span>Get Started</span>
+                <span>Sign In</span>
                 <Rocket className="w-4 h-4" />
-              </button>
+              </Link>
             </div>
           </motion.div>
         )}

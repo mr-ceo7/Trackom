@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Copy, Check, Terminal } from 'lucide-react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
@@ -129,14 +130,13 @@ echo "Campaign {$campaign->id}: {$campaign->status}";`,
           </ul>
 
           <div className="pt-2">
-            <a
-              href="#"
-              onClick={(e) => e.preventDefault()}
+            <Link
+              to="/docs"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-brand-primary-light border border-brand-primary/20 bg-brand-primary/5 hover:bg-brand-primary hover:text-white transition-all group active:scale-95 duration-300"
             >
               <span>Explore API Documentation</span>
               <Terminal className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </a>
+            </Link>
           </div>
         </div>
 

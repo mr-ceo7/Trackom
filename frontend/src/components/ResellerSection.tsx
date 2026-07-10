@@ -1,13 +1,14 @@
 import { CheckCircle2, UserPlus, DollarSign, Briefcase } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
-export default function ResellerSection({ onOpenSignup }: { onOpenSignup: () => void }) {
+export default function ResellerSection() {
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
   const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({ threshold: 0.1 });
   const { ref: ctaRef, isVisible: ctaVisible } = useScrollAnimation();
 
   return (
-    <section className="relative bg-[#F3F4FD] dark:bg-[#07070C] py-10 md:py-14 transition-colors duration-300 border-t border-slate-200/50 dark:border-white/5 overflow-hidden">
+    <section id="resellers" className="relative bg-[#F3F4FD] dark:bg-[#07070C] py-10 md:py-14 transition-colors duration-300 border-t border-slate-200/50 dark:border-white/5 overflow-hidden scroll-mt-24">
       {/* Background ambient glow orbs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden hidden dark:block">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full bg-emerald-500/[0.015] blur-[150px]" />
@@ -128,9 +129,6 @@ export default function ResellerSection({ onOpenSignup }: { onOpenSignup: () => 
                 <p className="text-xs leading-relaxed text-slate-800 dark:text-gray-200 font-medium">
                   Control reseller margin rates, customize user invoice headers, and toggle features dynamically from your central administrator panel.
                 </p>
-                <button onClick={onOpenSignup} className="h-8 px-4 rounded-full text-xs font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer hover:scale-[1.02] active:scale-95 transition-all duration-300 flex items-center justify-center border border-transparent">
-                  Launch Demo Portal
-                </button>
               </div>
             </div>
           </div>
@@ -159,9 +157,9 @@ export default function ResellerSection({ onOpenSignup }: { onOpenSignup: () => 
                 <p className="text-xs leading-relaxed text-slate-800 dark:text-gray-200 font-medium">
                   Fund credit wallets instantly using Lipa Na M-Pesa Till or Paybill with real-time balance calculations.
                 </p>
-                <button onClick={onOpenSignup} className="h-8 px-4 rounded-full text-xs font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer hover:scale-[1.02] active:scale-95 transition-all duration-300 flex items-center justify-center border border-transparent">
+                <Link to="/login" className="h-8 px-4 rounded-full text-xs font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer hover:scale-[1.02] active:scale-95 transition-all duration-300 flex items-center justify-center border border-transparent">
                   Get Reseller Rates
-                </button>
+                </Link>
               </div>
             </div>
 
@@ -206,18 +204,18 @@ export default function ResellerSection({ onOpenSignup }: { onOpenSignup: () => 
           </h3>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full sm:w-auto">
-            <button
-              onClick={onOpenSignup}
+            <Link
+              to="/login"
               className="w-full sm:w-auto h-12 px-8 rounded-full text-sm font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none flex items-center justify-center border border-transparent"
             >
-              Start Free Trial
-            </button>
-            <button
-              onClick={onOpenSignup}
+              Get Started Now
+            </Link>
+            <Link
+              to="/contact"
               className="w-full sm:w-auto h-12 px-8 rounded-full text-sm font-semibold text-slate-800 dark:text-white border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 cursor-pointer hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none flex items-center justify-center"
             >
               Talk to Our Kenya Team
-            </button>
+            </Link>
           </div>
         </div>
       </div>

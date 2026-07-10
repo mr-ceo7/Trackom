@@ -1,12 +1,9 @@
 import { useEffect, useState, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, useInView, useScroll, useMotionValueEvent } from 'motion/react';
 import { Rocket, CheckCircle, Send, Cpu, Users } from 'lucide-react';
 
-interface HeroProps {
-  onOpenSignup: () => void;
-}
-
-export default function Hero({ onOpenSignup }: HeroProps) {
+export default function Hero() {
   const containerRef = useRef(null);
   const isInView = useInView(containerRef, { once: true, amount: 0.1 });
   const heroSectionRef = useRef<HTMLDivElement>(null);
@@ -167,20 +164,13 @@ export default function Hero({ onOpenSignup }: HeroProps) {
 
                 {/* CTA BUTTONS SCREEN 1 */}
                 <div className="flex flex-col sm:flex-row items-center gap-4 mt-8 w-full sm:w-auto font-sans">
-                  <button
-                    onClick={onOpenSignup}
+                  <Link
+                    to="/login"
                     className="w-full sm:w-auto h-12 px-8 rounded-full text-sm font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none flex items-center justify-center gap-2 border border-transparent"
                   >
                     <span>Get Started Free</span>
                     <Rocket className="w-4 h-4" />
-                  </button>
-
-                  <button
-                    onClick={onOpenSignup}
-                    className="w-full sm:w-auto h-12 px-8 rounded-full text-sm font-semibold text-gray-300 hover:text-white bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 hover:scale-[1.01] active:scale-98 transition-all duration-300 flex items-center justify-center gap-2 focus:outline-none backdrop-blur-sm shadow-sm"
-                  >
-                    <span>Book a Demo</span>
-                  </button>
+                  </Link>
                 </div>
               </motion.div>
 
@@ -208,13 +198,13 @@ export default function Hero({ onOpenSignup }: HeroProps) {
 
                 {/* CTA BUTTONS SCREEN 2 */}
                 <div className="flex flex-col sm:flex-row items-center gap-4 mt-8 w-full sm:w-auto font-sans">
-                  <button
-                    onClick={onOpenSignup}
+                  <Link
+                    to="/login"
                     className="w-full sm:w-auto h-12 px-8 rounded-full text-sm font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none flex items-center justify-center gap-2 border border-transparent"
                   >
                     <span>Start Sending - It's Free</span>
                     <Rocket className="w-4 h-4" />
-                  </button>
+                  </Link>
 
                   <a
                     href="#api-docs"

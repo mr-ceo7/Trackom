@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, useScroll } from 'motion/react';
 import { CheckCircle2 } from 'lucide-react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
@@ -45,9 +46,7 @@ const capabilityCards = [
   }
 ];
 
-interface PlatformCapabilitiesProps {
-  onOpenSignup: () => void;
-}
+
 
 /* ──────────────────────────────────
    MOBILE DECK OF CARDS
@@ -179,7 +178,7 @@ function DesktopBentoGrid() {
 /* ──────────────────────────────────
    MAIN COMPONENT
    ────────────────────────────────── */
-export default function PlatformCapabilities({ onOpenSignup }: PlatformCapabilitiesProps) {
+export default function PlatformCapabilities() {
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
   const { ref: ctaRef, isVisible: ctaVisible } = useScrollAnimation();
 
@@ -208,12 +207,12 @@ export default function PlatformCapabilities({ onOpenSignup }: PlatformCapabilit
             Ready to Reach Every Customer in Kenya?
           </h3>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full sm:w-auto">
-            <button onClick={onOpenSignup} className="w-full sm:w-auto h-12 px-8 rounded-full text-sm font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none flex items-center justify-center border border-transparent">
+            <Link to="/login" className="w-full sm:w-auto h-12 px-8 rounded-full text-sm font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none flex items-center justify-center border border-transparent">
               Start Free - No Card Needed
-            </button>
-            <button onClick={onOpenSignup} className="w-full sm:w-auto h-12 px-8 rounded-full text-sm font-semibold text-slate-800 dark:text-white border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 cursor-pointer hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none flex items-center justify-center">
+            </Link>
+            <Link to="/contact" className="w-full sm:w-auto h-12 px-8 rounded-full text-sm font-semibold text-slate-800 dark:text-white border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 cursor-pointer hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none flex items-center justify-center">
               Talk to Our Kenya Team
-            </button>
+            </Link>
           </div>
         </div>
       </div>

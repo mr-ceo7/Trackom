@@ -44,7 +44,7 @@ export default function BlogPage() {
 
   return (
     <div className="min-h-screen bg-[#F3F4FD] dark:bg-surface-dark">
-      <Header onOpenSignup={() => {}} />
+      <Header />
 
       <section className="pt-32 pb-16 px-4 md:px-8 max-w-6xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">

@@ -1,11 +1,8 @@
+import { Link } from 'react-router-dom';
 import { Rocket } from 'lucide-react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
-interface CTABannerProps {
-  onOpenSignup: () => void;
-}
-
-export default function CTABanner({ onOpenSignup }: CTABannerProps) {
+export default function CTABanner() {
   const { ref, isVisible } = useScrollAnimation();
 
   return (
@@ -38,13 +35,13 @@ export default function CTABanner({ onOpenSignup }: CTABannerProps) {
             <p className="text-white/80 text-lg mb-8 max-w-lg">
               Join 5,000+ businesses already sending millions of messages monthly. Start free with 10,000 SMS credits - no card required.
             </p>
-            <button
-              onClick={onOpenSignup}
+            <Link
+              to="/login"
               className="px-10 py-4 rounded-xl text-base font-semibold text-brand-primary bg-white hover:bg-gray-100 cursor-pointer shadow-2xl hover:scale-[1.03] active:scale-95 transition-all duration-300 flex items-center gap-2.5"
             >
               <span>Start Sending Free</span>
               <Rocket className="w-5 h-5" />
-            </button>
+            </Link>
           </div>
         </div>
       </div>

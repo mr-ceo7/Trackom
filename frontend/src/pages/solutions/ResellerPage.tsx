@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import Header from '../../components/Header';
 import TrackomLogo from '../../components/TrackomLogo';
-import SignupModal from '../../components/SignupModal';
 import ParticleCanvas from '../../components/ParticleCanvas';
 import { Briefcase, ArrowRight, ShieldCheck, CheckCircle2, TrendingUp, Key } from 'lucide-react';
 
 export default function ResellerPage() {
-  const [isSignupOpen, setIsSignupOpen] = useState(false);
   const [monthlyVolume, setMonthlyVolume] = useState(50000);
   const [markupPrice, setMarkupPrice] = useState(0.2); // KES markup per SMS
 
@@ -19,7 +18,7 @@ export default function ResellerPage() {
   return (
     <div className="min-h-screen text-slate-800 bg-[#F3F4FD] dark:text-gray-200 dark:bg-surface-dark selection:bg-brand-primary/30 transition-colors duration-300 relative flex flex-col justify-between font-sans">
       <ParticleCanvas />
-      <Header onOpenSignup={() => setIsSignupOpen(true)} />
+      <Header />
 
       <main className="flex-grow pt-24 pb-16 px-4 md:px-8 max-w-6xl mx-auto relative z-10 space-y-16">
         {/* Hero */}
@@ -35,12 +34,12 @@ export default function ResellerPage() {
             Get your own fully branded, white-labeled bulk SMS dashboard. Purchase credits at wholesale prices and set your own profit margins.
           </p>
           <div className="pt-2">
-            <button 
-              onClick={() => setIsSignupOpen(true)}
+            <Link 
+              to="/login"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white bg-brand-primary hover:bg-brand-primary-hover shadow-lg shadow-brand-primary/20 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
             >
               Start Reselling Today <ArrowRight className="w-4 h-4" />
-            </button>
+            </Link>
           </div>
         </section>
 
@@ -131,7 +130,6 @@ export default function ResellerPage() {
         </div>
       </footer>
 
-      <SignupModal isOpen={isSignupOpen} onClose={() => setIsSignupOpen(false)} />
     </div>
   );
 }
