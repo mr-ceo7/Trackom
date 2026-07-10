@@ -10,12 +10,29 @@ export default function Hero() {
 
   const { scrollY } = useScroll();
 
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const [showFirst, setShowFirst] = useState(true);
 
   // snappier scroll threshold (100px) triggers the transition instantly
   useMotionValueEvent(scrollY, "change", (latest) => {
-    setShowFirst(latest < 500);
+    if (isMobile) {
+      setShowFirst(false);
+    } else {
+      setShowFirst(latest < 500);
+    }
   });
+
+  const activeShowFirst = isMobile ? false : showFirst;
 
   const [deliverability, setDeliverability] = useState(0);
   const [messages, setMessages] = useState(0);
@@ -134,8 +151,8 @@ export default function Hero() {
   );
 
   return (
-    <div ref={heroSectionRef} id="top-page" className="relative h-[240vh] bg-[#0A0A0F] transition-colors duration-300">
-      <div className="sticky top-0 h-screen w-full flex flex-col justify-between overflow-hidden">
+    <div ref={heroSectionRef} id="top-page" className="relative lg:h-[240vh] bg-[#0A0A0F] transition-colors duration-300">
+      <div className="relative lg:sticky lg:top-0 min-h-screen lg:h-screen w-full flex flex-col justify-between lg:overflow-hidden">
         {renderVideoAndOverlay()}
 
         {/* MAIN CONTENT ROW */}
@@ -143,47 +160,50 @@ export default function Hero() {
           <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center relative z-10">
 
             {/* LEFT COLUMN: TRANSITIONS CONTENT IN-PLACE */}
-            <div className="lg:col-span-7 relative h-[280px] sm:h-[320px] lg:h-[380px] w-full">
+            <div className="lg:col-span-7 relative lg:h-[380px] w-full">
 
               {/* SCREEN 1: BRAND LOGO INITIAL VIEW */}
-              <motion.div
-                initial={{ opacity: 1, y: 0 }}
-                animate={{
-                  opacity: showFirst ? 1 : 0,
-                  y: showFirst ? 0 : -30,
-                }}
-                transition={{ duration: 0.45, ease: 'easeOut' }}
-                className={`absolute inset-0 flex flex-col text-left items-start justify-center ${showFirst ? 'pointer-events-auto' : 'pointer-events-none'
-                  }`}
-              >
-                <img
-                  src="/Gemini_Generated_Image_8ab5bh8ab5bh8ab5.png"
-                  alt="Trackom - The Ultimate Bulk SMS Platform"
-                  className="max-w-full h-auto max-h-[180px] lg:max-h-[240px] object-contain ml-0"
-                />
+              {!isMobile && (
+                <motion.div
+                  initial={{ opacity: 1, y: 0 }}
+                  animate={{
+                    opacity: activeShowFirst ? 1 : 0,
+                    y: activeShowFirst ? 0 : -30,
+                  }}
+                  transition={{ duration: 0.45, ease: 'easeOut' }}
+                  className={`absolute inset-0 flex flex-col text-left items-start justify-center ${activeShowFirst ? 'pointer-events-auto' : 'pointer-events-none'
+                    }`}
+                >
+                  <img
+                    src="/Gemini_Generated_Image_8ab5bh8ab5bh8ab5.png"
+                    alt="Trackom - The Ultimate Bulk SMS Platform"
+                    className="max-w-full h-auto max-h-[180px] lg:max-h-[240px] object-contain ml-0"
+                  />
 
-                {/* CTA BUTTONS SCREEN 1 */}
-                <div className="flex flex-col sm:flex-row items-center gap-4 mt-8 w-full sm:w-auto font-sans">
-                  <Link
-                    to="/login"
-                    className="w-full sm:w-auto h-12 px-8 rounded-full text-sm font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none flex items-center justify-center gap-2 border border-transparent"
-                  >
-                    <span>Get Started Free</span>
-                    <Rocket className="w-4 h-4" />
-                  </Link>
-                </div>
-              </motion.div>
+                  {/* CTA BUTTONS SCREEN 1 */}
+                  <div className="flex flex-col sm:flex-row items-center gap-4 mt-8 w-full sm:w-auto font-sans">
+                    <Link
+                      to="/login"
+                      className="w-full sm:w-auto h-12 px-8 rounded-full text-sm font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none flex items-center justify-center gap-2 border border-transparent"
+                    >
+                      <span>Get Started Free</span>
+                      <Rocket className="w-4 h-4" />
+                    </Link>
+                  </div>
+                </motion.div>
+              )}
 
               {/* SCREEN 2: CURRENT HERO WITH DETAILED LIVE TEXT */}
               <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{
-                  opacity: !showFirst ? 1 : 0,
-                  y: !showFirst ? 0 : 30,
+                initial={isMobile ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+                animate={isMobile ? { opacity: 1, y: 0 } : {
+                  opacity: !activeShowFirst ? 1 : 0,
+                  y: !activeShowFirst ? 0 : 30,
                 }}
                 transition={{ duration: 0.45, ease: 'easeOut' }}
-                className={`absolute inset-0 flex flex-col text-left items-start justify-center ${!showFirst ? 'pointer-events-auto' : 'pointer-events-none'
-                  }`}
+                className={`${isMobile ? 'relative w-full h-auto' : 'absolute inset-0'} flex flex-col text-left items-start justify-center ${
+                  isMobile || !activeShowFirst ? 'pointer-events-auto' : 'pointer-events-none'
+                }`}
               >
                 {/* HEADLINE */}
                 <h1 className="font-display font-extrabold text-white text-4xl sm:text-5xl lg:text-6xl xl:text-7xl leading-[1.05] tracking-tighter text-balance">
@@ -222,7 +242,7 @@ export default function Hero() {
             </div>
 
             {/* Right Column: Spacer */}
-            <div className="lg:col-span-5 h-[280px] sm:h-[350px] lg:h-full pointer-events-none" />
+            <div className="lg:col-span-5 hidden lg:block h-full pointer-events-none" />
           </div>
         </div>
 

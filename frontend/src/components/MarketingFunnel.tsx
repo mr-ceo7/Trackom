@@ -51,116 +51,89 @@ const funnelCards = [
 /* ──────────────────────────────────
    MOBILE DECK OF CARDS FOR FUNNEL
    ────────────────────────────────── */
-function MobileDeck() {
-  const deckRef = useRef<HTMLDivElement>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  const { scrollYProgress } = useScroll({
-    target: deckRef,
-    offset: ['start start', 'end end'],
-  });
-
-  useEffect(() => {
-    const unsubscribe = scrollYProgress.on('change', (latest) => {
-      if (latest < 0.46) {
-        setActiveIndex(0);
-      } else if (latest < 0.96) {
-        setActiveIndex(1);
-      } else {
-        setActiveIndex(2);
-      }
-    });
-    return () => unsubscribe();
-  }, [scrollYProgress]);
-
+/* ──────────────────────────────────
+   MOBILE BENTO LIST FOR FUNNEL
+   ────────────────────────────────── */
+function MobileBentoList() {
   return (
-    <div ref={deckRef} className="md:hidden" style={{ height: '150vh' }}>
-      <div className="sticky top-0 h-screen overflow-hidden flex flex-col items-center justify-center pt-10 pb-8 px-4">
-        {/* Header */}
-        <div className="text-center px-2 mb-6">
-          <h2 className="font-display font-bold text-slate-900 dark:text-white text-2xl leading-[1.15] tracking-tight text-balance mb-2">
-            Your Complete Customer Journey - Automated
-          </h2>
-          <p className="text-slate-600 dark:text-gray-400 text-xs leading-relaxed max-w-[280px] mx-auto">
-            From first contact to repeat purchase - orchestrate SMS, WhatsApp, USSD, and voice campaigns that drive results.
-          </p>
+    <div className="md:hidden py-12 px-4 flex flex-col gap-6 bg-[#E8ECF9] dark:bg-[#0A0A0F] transition-colors duration-300">
+      <div className="text-center max-w-sm mx-auto mb-2">
+        <h2 className="font-display font-bold text-slate-900 dark:text-white text-2xl leading-[1.15] tracking-tight text-balance mb-2">
+          Your Complete Customer Journey - Automated
+        </h2>
+        <p className="text-slate-600 dark:text-gray-400 text-xs leading-relaxed">
+          From first contact to repeat purchase - orchestrate SMS, WhatsApp, USSD, and voice campaigns that drive results.
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-5 w-full max-w-md mx-auto">
+        {/* Feature 1: Unified Platform (Horizontal Bento Card) */}
+        <div className="relative w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-white/5 shadow-md flex flex-row items-center justify-between p-4.5 gap-4.5 bg-white dark:bg-[#0f1523] transition-colors duration-300">
+          <div className="flex-1 flex flex-col gap-1.5 text-left">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[9px] font-mono font-bold text-blue-500 dark:text-blue-400 uppercase tracking-wider">Channel Synergy</span>
+              <span className="text-[8px] px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 font-semibold font-mono">Omnichannel Dashboard</span>
+            </div>
+            <h3 className="font-display font-bold text-slate-900 dark:text-white text-sm sm:text-base leading-tight">
+              {funnelCards[0].title}
+            </h3>
+            <p className="text-slate-500 dark:text-gray-400 text-[11px] leading-relaxed line-clamp-3">
+              {funnelCards[0].description}
+            </p>
+          </div>
+
+          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden bg-black/5 dark:bg-black/20 flex items-center justify-center border border-slate-100 dark:border-white/5 shrink-0">
+            <img src={funnelCards[0].src} alt={funnelCards[0].title} className="w-full h-full object-cover select-none pointer-events-none" />
+          </div>
         </div>
 
-        {/* Card stack area */}
-        <div className="relative w-[85vw] max-w-[340px] aspect-[4/5] mb-6">
-          {funnelCards.map((card, index) => (
-            <DeckCard
-              key={card.title}
-              card={card}
-              index={index}
-              total={funnelCards.length}
-              activeIndex={activeIndex}
-            />
-          ))}
+        {/* Feature 2: Real-time Personalization (Horizontal Bento Card) */}
+        <div className="relative w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-white/5 shadow-md flex flex-row items-center justify-between p-4.5 gap-4.5 bg-white dark:bg-[#181f2e] transition-colors duration-300">
+          <div className="flex-1 flex flex-col gap-1.5 text-left">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[9px] font-mono font-bold text-emerald-500 dark:text-emerald-400 uppercase tracking-wider">Behavioral</span>
+              <span className="text-[8px] px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-semibold font-mono">Live Triggers</span>
+            </div>
+            <h3 className="font-display font-bold text-slate-900 dark:text-white text-sm sm:text-base leading-tight">
+              {funnelCards[1].title}
+            </h3>
+            <p className="text-slate-500 dark:text-gray-400 text-[11px] leading-relaxed line-clamp-3">
+              {funnelCards[1].description}
+            </p>
+          </div>
+
+          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden bg-black/5 dark:bg-black/20 flex items-center justify-center border border-slate-100 dark:border-white/5 shrink-0">
+            <img src={funnelCards[1].src} alt={funnelCards[1].title} className="w-full h-full object-cover select-none pointer-events-none" />
+          </div>
+        </div>
+
+        {/* Feature 3: Unmatched Scalability (Vertical Bento Card) */}
+        <div className="relative w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-white/5 shadow-md flex flex-col p-5 gap-4 bg-white dark:bg-[#0f1525] transition-colors duration-300">
+          <div className="flex flex-col gap-2 text-left">
+            <span className="text-[10px] font-mono font-bold text-purple-500 dark:text-purple-400 uppercase tracking-wider">Enterprise Infrastructure</span>
+            <h3 className="font-display font-bold text-slate-900 dark:text-white text-lg leading-tight">
+              {funnelCards[2].title}
+            </h3>
+            <p className="text-slate-600 dark:text-gray-400 text-xs leading-relaxed">
+              {funnelCards[2].description}
+            </p>
+          </div>
+
+          <ul className="flex flex-col gap-2 pt-3 border-t border-slate-100 dark:border-white/5 text-xs text-slate-600 dark:text-gray-300 text-left">
+            {funnelCards[2].bullets.map((bullet) => (
+              <li key={bullet} className="flex items-center gap-2">
+                <CheckCircle className="w-4.5 h-4.5 shrink-0 text-emerald-500" />
+                <span>{bullet}</span>
+              </li>
+            ))}
+          </ul>
+
+          <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black/10 flex items-center justify-center border border-slate-100 dark:border-white/5">
+            <img src={funnelCards[2].src} alt={funnelCards[2].title} className="w-full h-full object-cover select-none pointer-events-none" />
+          </div>
         </div>
       </div>
     </div>
-  );
-}
-
-function DeckCard({
-  card,
-  index,
-  total,
-  activeIndex,
-}: {
-  key?: string | number;
-  card: (typeof funnelCards)[number];
-  index: number;
-  total: number;
-  activeIndex: number;
-}) {
-  const isDealt = index < activeIndex;
-  const isActive = index === activeIndex;
-  const positionInStack = index - activeIndex;
-
-  const animateState = isDealt
-    ? { x: -350, rotate: -10, opacity: 0, y: 0, scale: 1 }
-    : isActive
-      ? { x: 0, rotate: 0, opacity: 1, y: 0, scale: 1 }
-      : {
-          x: 0,
-          rotate: 0,
-          opacity: 1,
-          y: positionInStack * 6,
-          scale: 1 - positionInStack * 0.03,
-        };
-
-  const zIndex = total - index;
-
-  return (
-    <motion.div
-      className={`absolute inset-0 rounded-2xl overflow-hidden shadow-xl shadow-slate-200/50 dark:shadow-black/35 flex flex-col justify-between p-3.5 border ${card.bgClass} ${card.borderClass}`}
-      style={{
-        zIndex,
-      }}
-      animate={animateState}
-      transition={{ duration: 0.45, ease: 'easeOut' }}
-    >
-      {/* Visual Asset Container */}
-      <div className="relative flex-1 w-full overflow-hidden rounded-xl bg-black/10 flex items-center justify-center">
-        <img
-          src={card.src}
-          alt={card.title}
-          className="w-full h-full object-contain select-none pointer-events-none"
-        />
-      </div>
-
-      {/* Card Info */}
-      <div className="pt-3 pb-1 text-center">
-        <h3 className="font-display font-bold text-slate-900 dark:text-white text-base mb-0.5 leading-tight">
-          {card.title}
-        </h3>
-        <p className="text-slate-600 dark:text-gray-400 text-xs leading-relaxed px-1">
-          {card.description}
-        </p>
-      </div>
-    </motion.div>
   );
 }
 
@@ -264,8 +237,8 @@ export default function MarketingFunnel() {
         {/* 1. Desktop Funnel Alternating Rows */}
         <DesktopAlternatingRows />
 
-        {/* 2. Mobile Funnel Deck */}
-        <MobileDeck />
+        {/* 2. Mobile Funnel Bento List */}
+        <MobileBentoList />
 
         {/* 3. Tech Stack Integration & Case Studies */}
         <div

@@ -28,29 +28,12 @@ const features = [
 
 
 /* ──────────────────────────────────
-   MOBILE DECK OF CARDS
+   MOBILE BENTO LIST
    ────────────────────────────────── */
-function MobileDeck() {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-
-  const handleNext = () => {
-    setActiveIndex((prev) => (prev + 1) % features.length);
-  };
-
-  const handlePrev = () => {
-    setActiveIndex((prev) => (prev - 1 + features.length) % features.length);
-  };
-
-  useEffect(() => {
-    if (isPaused) return;
-    const timer = setInterval(() => { handleNext(); }, 3500);
-    return () => clearInterval(timer);
-  }, [isPaused]);
-
+function MobileBentoList() {
   return (
-    <div className="md:hidden py-16 px-4 flex flex-col items-center gap-8 bg-[#E8ECF9] dark:bg-[#0A0A0F] transition-colors duration-300">
-      <div className="text-center max-w-sm">
+    <div className="md:hidden py-12 px-4 flex flex-col gap-6 bg-[#E8ECF9] dark:bg-[#0A0A0F] transition-colors duration-300">
+      <div className="text-center max-w-sm mx-auto mb-2">
         <h2 className="font-display font-bold text-slate-900 dark:text-white text-2xl leading-[1.15] tracking-tight text-balance mb-2">
           Automate Campaigns. Personalize Every Message.
         </h2>
@@ -59,53 +42,90 @@ function MobileDeck() {
         </p>
       </div>
 
-      <div className="relative w-[85vw] max-w-[340px] aspect-[4/5] my-2">
-        {features.map((feature, index) => (
-          <DeckCard key={feature.title} feature={feature} index={index} total={features.length} activeIndex={activeIndex} onNext={handleNext} onPrev={handlePrev} setIsPaused={setIsPaused} />
-        ))}
+      <div className="flex flex-col gap-5 w-full max-w-md mx-auto">
+        {/* Feature 1: Dynamic Automated Journeys (Vertical Bento Card) */}
+        <div className="relative w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-white/5 shadow-md flex flex-col p-5 gap-4 bg-white dark:bg-[#0e1422] transition-colors duration-300">
+          <div className="flex flex-col gap-2 text-left">
+            <span className="text-[10px] font-mono font-bold text-blue-500 dark:text-blue-400 uppercase tracking-wider">Automated Workflows</span>
+            <h3 className="font-display font-bold text-slate-900 dark:text-white text-lg leading-tight">
+              {features[0].title}
+            </h3>
+            <p className="text-slate-600 dark:text-gray-400 text-xs leading-relaxed">
+              {features[0].description}
+            </p>
+          </div>
+
+          <ul className="flex flex-col gap-2 pt-3 border-t border-slate-100 dark:border-white/5 text-xs text-slate-600 dark:text-gray-300 text-left">
+            <li className="flex items-center gap-2">
+              <CheckCircle2 className="w-4.5 h-4.5 shrink-0 text-emerald-500" />
+              <span>Instant triggers on Lipa Na M-Pesa</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <CheckCircle2 className="w-4.5 h-4.5 shrink-0 text-emerald-500" />
+              <span>Custom delays & schedules</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <CheckCircle2 className="w-4.5 h-4.5 shrink-0 text-emerald-500" />
+              <span>Drag-and-drop designer</span>
+            </li>
+          </ul>
+
+          <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black/10 flex items-center justify-center border border-slate-100 dark:border-white/5">
+            <video autoPlay muted loop playsInline className="w-full h-full object-cover select-none pointer-events-none">
+              <source src={features[0].src} type="video/mp4" />
+            </video>
+          </div>
+        </div>
+
+        {/* Feature 2: Advanced Audience Segmentation (Horizontal Bento Card) */}
+        <div className="relative w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-white/5 shadow-md flex flex-row items-center justify-between p-4.5 gap-4.5 bg-white dark:bg-[#0e1422] transition-colors duration-300">
+          <div className="flex-1 flex flex-col gap-1.5 text-left">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[9px] font-mono font-bold text-emerald-500 dark:text-emerald-400 uppercase tracking-wider">Targeted Delivery</span>
+              <span className="text-[8px] px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-semibold font-mono">Safaricom & Airtel</span>
+            </div>
+            <h3 className="font-display font-bold text-slate-900 dark:text-white text-sm sm:text-base leading-tight">
+              {features[1].title}
+            </h3>
+            <p className="text-slate-500 dark:text-gray-400 text-[11px] leading-relaxed line-clamp-3">
+              {features[1].description}
+            </p>
+          </div>
+
+          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden bg-black/5 dark:bg-black/20 flex items-center justify-center border border-slate-100 dark:border-white/5 shrink-0">
+            <img src={features[1].src} alt={features[1].title} className="w-full h-full object-cover select-none pointer-events-none" />
+          </div>
+        </div>
+
+        {/* Feature 3: Multi-Channel Synergy (Horizontal Bento Card) */}
+        <div className="relative w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-white/5 shadow-md flex flex-row items-center justify-between p-4.5 gap-4.5 bg-white dark:bg-[#0e1422] transition-colors duration-300">
+          <div className="flex-1 flex flex-col gap-1.5 text-left">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[9px] font-mono font-bold text-purple-500 dark:text-purple-400 uppercase tracking-wider">Omnichannel</span>
+              <span className="text-[8px] px-1.5 py-0.5 rounded bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 font-semibold font-mono">SMS • WhatsApp • USSD</span>
+            </div>
+            <h3 className="font-display font-bold text-slate-900 dark:text-white text-sm sm:text-base leading-tight">
+              {features[2].title}
+            </h3>
+            <p className="text-slate-500 dark:text-gray-400 text-[11px] leading-relaxed line-clamp-3">
+              {features[2].description}
+            </p>
+          </div>
+
+          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden bg-black/5 dark:bg-black/20 flex items-center justify-center border border-slate-100 dark:border-white/5 shrink-0">
+            <video autoPlay muted loop playsInline className="w-full h-full object-cover select-none pointer-events-none">
+              <source src={features[2].src} type="video/mp4" />
+            </video>
+          </div>
+        </div>
       </div>
 
-      <Link to="/login" className="px-8 py-3 rounded-full text-sm font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer shadow-lg shadow-blue-500/25 active:scale-95 transition-all duration-300 z-10 text-center">
-        Get Started Now
-      </Link>
+      <div className="flex justify-center mt-4">
+        <Link to="/login" className="w-full max-w-md px-8 py-3.5 rounded-full text-sm font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer shadow-lg shadow-blue-500/25 active:scale-95 transition-all duration-300 text-center">
+          Get Started Now
+        </Link>
+      </div>
     </div>
-  );
-}
-
-function DeckCard({ feature, index, total, activeIndex, onNext, onPrev, setIsPaused }: {
-  key?: string | number; feature: (typeof features)[number]; index: number; total: number; activeIndex: number; onNext: () => void; onPrev: () => void; setIsPaused: (p: boolean) => void;
-}) {
-  const isDealt = index < activeIndex;
-  const isActive = index === activeIndex;
-  const positionInStack = index - activeIndex;
-
-  const animateState = isDealt
-    ? { x: -350, rotate: -10, opacity: 0, y: 0, scale: 1 }
-    : isActive ? { x: 0, rotate: 0, opacity: 1, y: 0, scale: 1 }
-    : { x: 0, rotate: 0, opacity: 1, y: positionInStack * 6, scale: 1 - positionInStack * 0.03 };
-
-  return (
-    <motion.div
-      className={`absolute inset-0 rounded-2xl overflow-hidden bg-white dark:bg-[#0e1422] shadow-xl shadow-slate-200/50 dark:shadow-black/30 flex flex-col justify-between p-3.5 border border-slate-200 dark:border-white/5 ${isActive ? 'cursor-grab active:cursor-grabbing' : ''}`}
-      animate={animateState} transition={{ duration: 0.45, ease: 'easeOut' }} style={{ zIndex: total - index }}
-      drag={isActive ? 'x' : false} dragConstraints={{ left: 0, right: 0 }} dragElastic={0.6}
-      onDragStart={() => setIsPaused(true)}
-      onDragEnd={(event, info) => { setIsPaused(false); if (info.offset.x < -55) onNext(); else if (info.offset.x > 55) onPrev(); }}
-      onTouchStart={() => setIsPaused(true)} onTouchEnd={() => setIsPaused(false)}
-      onMouseDown={() => setIsPaused(true)} onMouseUp={() => setIsPaused(false)} onMouseLeave={() => setIsPaused(false)}
-    >
-      <div className="relative flex-1 w-full overflow-hidden rounded-xl bg-black/10 flex items-center justify-center">
-        {feature.type === 'video' ? (
-          <video autoPlay muted loop playsInline className="w-full h-full object-contain select-none pointer-events-none"><source src={feature.src} type="video/mp4" /></video>
-        ) : (
-          <img src={feature.src} alt={feature.title} className="w-full h-full object-contain select-none pointer-events-none" />
-        )}
-      </div>
-      <div className="pt-3 pb-1 text-center">
-        <h3 className="font-display font-bold text-slate-900 dark:text-white text-base mb-0.5 leading-tight">{feature.title}</h3>
-        <p className="text-slate-600 dark:text-gray-400 text-xs leading-relaxed px-1">{feature.description}</p>
-      </div>
-    </motion.div>
   );
 }
 
@@ -311,7 +331,7 @@ export default function FeatureShowcase() {
         </div>
       </div>
 
-      <MobileDeck />
+      <MobileBentoList />
     </section>
   );
 }
