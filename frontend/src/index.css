@@ -281,7 +281,8 @@ body {
   animation: marquee 35s linear infinite;
 }
 
-.animate-marquee-hover-pause:hover .animate-marquee {
+.animate-marquee-hover-pause:hover .animate-marquee,
+.animate-marquee-hover-pause:active .animate-marquee {
   animation-play-state: paused;
 }
 

@@ -3,18 +3,37 @@ import { Sun, Moon } from 'lucide-react';
 
 interface ThemeToggleProps {
   className?: string;
+  storageKey?: string;
 }
 
-export default function ThemeToggle({ className = '' }: ThemeToggleProps) {
+export default function ThemeToggle({ className = '', storageKey = 'trackom-theme' }: ThemeToggleProps) {
   const [isDark, setIsDark] = useState(() => {
     // Check system preference on first load
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('trackom-theme');
+      const stored = localStorage.getItem(storageKey);
       if (stored) return stored === 'dark';
+      
+      // Default to dark mode for dashboard
+      if (storageKey === 'trackom-dashboard-theme') {
+        return true;
+      }
+      
       return window.matchMedia('(prefers-color-scheme: dark)').matches;
     }
     return true;
   });
+
+  // Sync state if storageKey changes
+  useEffect(() => {
+    const stored = localStorage.getItem(storageKey);
+    if (stored) {
+      setIsDark(stored === 'dark');
+    } else if (storageKey === 'trackom-dashboard-theme') {
+      setIsDark(true);
+    } else {
+      setIsDark(window.matchMedia('(prefers-color-scheme: dark)').matches);
+    }
+  }, [storageKey]);
 
   useEffect(() => {
     const html = document.documentElement;
@@ -27,8 +46,8 @@ export default function ThemeToggle({ className = '' }: ThemeToggleProps) {
       html.classList.add('light');
       html.style.colorScheme = 'light';
     }
-    localStorage.setItem('trackom-theme', isDark ? 'dark' : 'light');
-  }, [isDark]);
+    localStorage.setItem(storageKey, isDark ? 'dark' : 'light');
+  }, [isDark, storageKey]);
 
   return (
     <button

@@ -117,7 +117,13 @@ export default function PartnerLogos() {
 
   const handleClick = (partner: Partner) => {
     setClickedPartner(partner.name);
-    setTimeout(() => setClickedPartner(null), 3000);
+    // On mobile/touch, make it the active partner too so the details display!
+    setActivePartner(partner);
+    setTimeout(() => {
+      setClickedPartner(null);
+      // Auto-clear active partner on mobile after some time if no new interaction
+      setActivePartner(prev => prev?.id === partner.id ? null : prev);
+    }, 3000);
   };
 
   const renderPartnerButton = (partner: Partner, keyPrefix: string) => (
@@ -139,7 +145,7 @@ export default function PartnerLogos() {
   );
 
   return (
-    <section id="partners" className="relative w-full border-y border-slate-200/60 dark:border-white/5 bg-slate-100/50 dark:bg-[#07070C] py-10 overflow-hidden z-20 transition-colors duration-300">
+    <section id="partners" className="relative w-full border-y border-slate-200/60 dark:border-white/5 bg-slate-100/50 dark:bg-[#07070C] py-6 md:py-10 overflow-hidden z-20 transition-colors duration-300">
       {/* Title */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-2.5">
         <div className="flex items-center gap-2">
@@ -151,10 +157,10 @@ export default function PartnerLogos() {
       </div>
 
       {/* MARQUEE */}
-      <div className="relative w-full overflow-hidden py-3">
+      <div className="relative w-full overflow-hidden py-3 animate-marquee-hover-pause">
         {/* Soft edge masking */}
-        <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-slate-100 dark:from-[#07070C] to-transparent z-10 pointer-events-none" />
-        <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-slate-100 dark:from-[#07070C] to-transparent z-10 pointer-events-none" />
+        <div className="absolute inset-y-0 left-0 w-16 sm:w-24 bg-gradient-to-r from-slate-100 dark:from-[#07070C] to-transparent z-10 pointer-events-none" />
+        <div className="absolute inset-y-0 right-0 w-16 sm:w-24 bg-gradient-to-l from-slate-100 dark:from-[#07070C] to-transparent z-10 pointer-events-none" />
 
         <div className="flex w-full">
           <div className="animate-marquee flex gap-6 items-center whitespace-nowrap">
@@ -165,8 +171,8 @@ export default function PartnerLogos() {
       </div>
 
       {/* Status bar */}
-      <div className="max-w-7xl mx-auto px-4 md:px-8 mt-5 min-h-8 flex items-center justify-between">
-        <div className="text-xs font-mono text-slate-500 dark:text-gray-400 font-medium">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 mt-3 md:mt-5 min-h-[36px] flex items-center justify-between gap-4">
+        <div className="text-xs font-mono text-slate-500 dark:text-gray-400 font-medium min-w-0">
           <AnimatePresence mode="wait">
             {activePartner ? (
               <motion.div
@@ -174,34 +180,35 @@ export default function PartnerLogos() {
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
-                className="flex items-center gap-3 text-blue-600 dark:text-blue-400 font-bold"
+                className="flex items-center gap-2 sm:gap-3 text-blue-600 dark:text-blue-400 font-bold truncate"
               >
-                <span>{activePartner.name}</span>
-                <span className="w-px h-3 bg-slate-300 dark:bg-white/10" />
-                <span className="flex items-center gap-1 font-semibold text-slate-600 dark:text-gray-400">
-                  <Wifi className="w-3.5 h-3.5" />
-                  Sector: {activePartner.sector}
+                <span className="truncate">{activePartner.name}</span>
+                <span className="w-px h-3 bg-slate-300 dark:bg-white/10 shrink-0" />
+                <span className="flex items-center gap-1 font-semibold text-slate-600 dark:text-gray-400 truncate">
+                  <Wifi className="w-3.5 h-3.5 shrink-0" />
+                  <span className="hidden sm:inline">Sector: </span>{activePartner.sector}
                 </span>
               </motion.div>
             ) : (
-              <motion.span initial={{ opacity: 0 }} animate={{ opacity: 0.5 }} className="text-[11px]">
-                Hover a client to see details
+              <motion.span initial={{ opacity: 0 }} animate={{ opacity: 0.5 }} className="text-[11px] block">
+                <span className="hidden md:inline">Hover a client to see details</span>
+                <span className="inline md:hidden">Tap a client to see details</span>
               </motion.span>
             )}
           </AnimatePresence>
         </div>
 
-        <div className="text-xs font-mono font-semibold text-brand-emerald">
+        <div className="text-xs font-mono font-semibold text-brand-emerald shrink-0">
           <AnimatePresence>
             {clickedPartner && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="flex items-center gap-1.5 bg-brand-emerald/10 border border-brand-emerald/20 px-3 py-1 rounded-lg"
+                className="flex items-center gap-1.5 bg-brand-emerald/10 border border-brand-emerald/20 px-2.5 py-1 rounded-lg text-[10px] sm:text-xs"
               >
                 <CheckCircle className="w-3.5 h-3.5" />
-                <span>Connected: {clickedPartner}</span>
+                <span className="max-w-[100px] sm:max-w-none truncate">Connected: {clickedPartner}</span>
               </motion.div>
             )}
           </AnimatePresence>

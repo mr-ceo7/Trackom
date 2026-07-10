@@ -100,6 +100,7 @@ export default function DashboardLayout() {
     return () => clearInterval(interval);
   }, [fetchNotifications, fetchPublicSettings]);
 
+
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -231,7 +232,7 @@ export default function DashboardLayout() {
 
           <div className="flex items-center gap-3">
             <SandboxToggle />
-            <ThemeToggle className="clay-button-secondary text-slate-500 dark:text-gray-400" />
+            <ThemeToggle className="clay-button-secondary text-slate-500 dark:text-gray-400" storageKey="trackom-dashboard-theme" />
 
             {/* Notifications */}
             <button onClick={() => setNotiOpen(true)} className="relative p-2 rounded-2xl text-slate-500 hover:text-slate-700 dark:text-gray-400 dark:hover:text-white clay-button-secondary cursor-pointer transition-all">

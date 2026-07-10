@@ -32,7 +32,7 @@ const features = [
    ────────────────────────────────── */
 function MobileBentoList() {
   return (
-    <div className="md:hidden py-12 px-4 flex flex-col gap-6 bg-[#E8ECF9] dark:bg-[#0A0A0F] transition-colors duration-300">
+    <div className="md:hidden pt-8 pb-12 px-4 flex flex-col gap-6 bg-[#E8ECF9] dark:bg-[#0A0A0F] transition-colors duration-300">
       <div className="text-center max-w-sm mx-auto mb-2">
         <h2 className="font-display font-bold text-slate-900 dark:text-white text-2xl leading-[1.15] tracking-tight text-balance mb-2">
           Automate Campaigns. Personalize Every Message.

@@ -37,7 +37,7 @@ const controlFeatures = [
    ────────────────────────────────── */
 function MobileBentoList() {
   return (
-    <div className="md:hidden py-12 px-4 flex flex-col gap-6 bg-[#E8ECF9] dark:bg-[#0A0A0F] transition-colors duration-300">
+    <div className="md:hidden pt-8 pb-12 px-4 flex flex-col gap-6 bg-[#E8ECF9] dark:bg-[#0A0A0F] transition-colors duration-300">
       <div className="text-center max-w-sm mx-auto mb-2">
         <h2 className="font-display font-bold text-slate-900 dark:text-white text-2xl leading-[1.15] tracking-tight text-balance mb-2">
           Command Your Bulk SMS Campaigns
@@ -169,7 +169,7 @@ function DesktopBentoGrid() {
               <div className="grid grid-cols-2 gap-x-6 gap-y-2.5 pt-4 border-t border-slate-200 dark:border-white/5 mb-2">
                 <div className="flex items-center gap-2 text-xs md:text-sm text-slate-600 dark:text-gray-300">
                   <span className="text-brand-primary">📈</span>
-                  <span>AI campaign CTR optimizations</span>
+                  <span>Smart campaign CTR optimizations</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs md:text-sm text-slate-600 dark:text-gray-300">
                   <span className="text-brand-accent">💰</span>
@@ -229,7 +229,7 @@ export default function BulkSMSControl() {
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
 
   return (
-    <section className="relative bg-[#E8ECF9] dark:bg-[#0A0A0F] py-10 md:py-14 transition-colors duration-300 border-t border-slate-200/50 dark:border-white/5">
+    <section className="relative bg-[#E8ECF9] dark:bg-[#0A0A0F] py-0 md:py-14 transition-colors duration-300 border-t border-slate-200/50 dark:border-white/5">
       <div className="absolute inset-0 pointer-events-none overflow-hidden hidden dark:block">
         <div className="absolute top-1/4 right-1/4 w-[450px] h-[450px] rounded-full bg-brand-primary/[0.03] blur-[110px]" />
         <div className="absolute bottom-1/3 left-1/3 w-[450px] h-[450px] rounded-full bg-brand-accent/[0.03] blur-[110px]" />

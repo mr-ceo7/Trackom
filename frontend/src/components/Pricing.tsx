@@ -10,7 +10,7 @@ const tiers = [
     volume: 'Up to 50K SMS/month',
     features: [
       'Bulk SMS campaigns',
-      'Basic AI Copywriter',
+      'Basic Message Templates',
       'REST API access',
       'Contact management',
       'Delivery reports',
@@ -27,7 +27,7 @@ const tiers = [
     volume: 'Up to 500K SMS/month',
     features: [
       'Everything in Starter',
-      'Advanced AI Copywriter',
+      'Advanced Custom Fields',
       'REST API + SDK access',
       'WhatsApp Business API',
       'USSD services',
@@ -46,7 +46,7 @@ const tiers = [
     volume: 'Unlimited volume',
     features: [
       'Everything in Growth',
-      'Full AI suite',
+      'Enterprise Custom Templates',
       'Custom API + Webhooks',
       'Dedicated carrier routes',
       'OTP verification',
@@ -66,7 +66,7 @@ export default function Pricing() {
   const { ref, isVisible } = useScrollAnimation();
 
   return (
-    <section id="pricing" className="py-10 md:py-14 px-4 md:px-8 max-w-7xl mx-auto scroll-mt-24">
+    <section id="pricing" className="py-6 md:py-14 px-4 md:px-8 max-w-7xl mx-auto scroll-mt-24">
       {/* HEADER */}
       <div
         ref={ref}

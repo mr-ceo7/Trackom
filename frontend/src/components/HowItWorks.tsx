@@ -20,7 +20,7 @@ const steps = [
     number: '03',
     icon: <Rocket className="w-7 h-7" />,
     title: 'Start Sending',
-    description: 'Use our dashboard tools with AI copywriter, or integrate via our developer API.',
+    description: 'Use our dashboard tools with message templates, or integrate via our developer API.',
     color: 'brand-emerald',
   },
 ];
@@ -29,7 +29,7 @@ export default function HowItWorks() {
   const { ref, isVisible } = useScrollAnimation();
 
   return (
-    <section id="how-it-works" className="py-10 md:py-14 px-4 md:px-8 max-w-7xl mx-auto scroll-mt-24">
+    <section id="how-it-works" className="py-6 md:py-14 px-4 md:px-8 max-w-7xl mx-auto scroll-mt-24">
       {/* HEADER */}
       <div
         ref={ref}

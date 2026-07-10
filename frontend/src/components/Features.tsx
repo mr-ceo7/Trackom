@@ -3,9 +3,9 @@ import { Cpu, Shuffle, BarChart2, Users, Star } from 'lucide-react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
 export default function Features() {
-  // AI Typewriter
-  const [aiText, setAiText] = useState('');
-  const [aiTypingIndex, setAiTypingIndex] = useState(0);
+  // Typewriter
+  const [typedText, setTypedText] = useState('');
+  const [typingIndex, setTypingIndex] = useState(0);
   const [copyVariant, setCopyVariant] = useState(0);
 
   const copywritingDemos = [
@@ -18,21 +18,21 @@ export default function Features() {
     let timer: ReturnType<typeof setTimeout>;
     const currentDemo = copywritingDemos[copyVariant];
 
-    if (aiTypingIndex < currentDemo.text.length) {
+    if (typingIndex < currentDemo.text.length) {
       timer = setTimeout(() => {
-        setAiText((prev) => prev + currentDemo.text.charAt(aiTypingIndex));
-        setAiTypingIndex((prev) => prev + 1);
+        setTypedText((prev) => prev + currentDemo.text.charAt(typingIndex));
+        setTypingIndex((prev) => prev + 1);
       }, 30);
     } else {
       timer = setTimeout(() => {
-        setAiText('');
-        setAiTypingIndex(0);
+        setTypedText('');
+        setTypingIndex(0);
         setCopyVariant((prev) => (prev + 1) % copywritingDemos.length);
       }, 4000);
     }
 
     return () => clearTimeout(timer);
-  }, [aiTypingIndex, copyVariant]);
+  }, [typingIndex, copyVariant]);
 
   // Canvas particle visualizer
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -147,7 +147,7 @@ export default function Features() {
           <span className="gradient-text">the edge.</span>
         </h2>
         <p className="text-slate-600 dark:text-gray-400 text-base md:text-lg">
-          AI-powered SMS copywriting, smart carrier routing across Safaricom, Airtel & Telkom, real-time campaign analytics, and seamless M-Pesa payment tracking.
+          Personalized SMS templates, smart carrier routing across Safaricom, Airtel & Telkom, real-time campaign analytics, and seamless M-Pesa payment tracking.
         </p>
       </div>
 
@@ -180,13 +180,13 @@ export default function Features() {
 
         {/* RIGHT STACK */}
         <div className="flex flex-col gap-6">
-          {/* CARD 2: AI COPYWRITER */}
+          {/* CARD 2: SMART TEMPLATES */}
           <div className="clay-card clay-card-hover group rounded-3xl p-8 flex flex-col justify-between relative">
             <div>
               <div className="p-3 rounded-xl bg-brand-accent/10 text-brand-accent w-fit mb-6 transition-transform group-hover:scale-110">
                 <Cpu className="w-6 h-6 stroke-[2]" />
               </div>
-              <h3 className="font-display font-semibold text-slate-900 dark:text-white text-xl mb-2">AI SMS Copywriter</h3>
+              <h3 className="font-display font-semibold text-slate-900 dark:text-white text-xl mb-2">Smart SMS Templates</h3>
               <p className="text-slate-600 dark:text-gray-400 text-sm leading-relaxed mb-6">
                 Generate high-converting SMS copy tailored to your brand. Avoid spam filters, boost CTR by up to 34%.
               </p>
@@ -209,7 +209,7 @@ export default function Features() {
               <div className="font-mono text-xs md:text-sm text-slate-700 dark:text-gray-300 min-h-14 flex items-start leading-relaxed">
                 <span className="text-brand-accent mr-2 shrink-0 select-none">&gt;</span>
                 <div>
-                  <span>{aiText}</span>
+                  <span>{typedText}</span>
                   <span className="inline-block w-1.5 h-4 ml-0.5 bg-brand-accent cursor-blink" />
                 </div>
               </div>

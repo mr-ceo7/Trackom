@@ -30,12 +30,7 @@ const faqs: FAQItem[] = [
     answer: 'Trackom has direct carrier integrations with Safaricom, Airtel Kenya, and Telkom Kenya. Our Smart Route Shuffler automatically selects the optimal delivery path. We also support international SMS to 200+ countries for cross-border campaigns.',
     icon: <span className="p-1 rounded-lg bg-brand-accent/10 text-brand-accent"><MessageSquare className="w-4 h-4" /></span>,
   },
-  {
-    category: 'AI Features',
-    question: 'How does the AI SMS Copywriter work?',
-    answer: 'Our AI Copywriter analyzes your campaign goals, brand voice, and target audience to generate high-converting SMS text. It optimizes for character count (keeping within 160 chars for single SMS), avoids spam trigger words, and includes personalization tokens. Users report up to 34% higher click-through rates with AI-optimized copy.',
-    icon: <span className="p-1 rounded-lg bg-brand-primary/10 text-brand-primary"><Cpu className="w-4 h-4" /></span>,
-  },
+
   {
     category: 'API',
     question: 'What are the API rate limits?',
@@ -58,7 +53,7 @@ export default function FAQSection() {
   const filteredFaqs = filterFAQByQuery(faqs, searchQuery);
 
   return (
-    <section id="faq" className="py-10 md:py-14 px-4 md:px-8 max-w-4xl mx-auto scroll-mt-24">
+    <section id="faq" className="py-6 md:py-14 px-4 md:px-8 max-w-4xl mx-auto scroll-mt-24">
       {/* HEADER */}
       <div
         ref={ref}

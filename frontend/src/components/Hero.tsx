@@ -213,7 +213,7 @@ export default function Hero() {
 
                 {/* SUBTITLE */}
                 <p className="text-gray-300 text-base sm:text-lg md:text-xl font-medium max-w-xl mt-6 leading-relaxed text-balance">
-                  Reach millions across Safaricom, Airtel & Telkom with AI-optimized campaigns, instant M-Pesa payments, and 99.99% delivery rates.
+                  Reach millions across Safaricom, Airtel & Telkom with optimized campaigns, instant M-Pesa payments, and 99.99% delivery rates.
                 </p>
 
                 {/* CTA BUTTONS SCREEN 2 */}

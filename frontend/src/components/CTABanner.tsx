@@ -6,7 +6,7 @@ export default function CTABanner() {
   const { ref, isVisible } = useScrollAnimation();
 
   return (
-    <section className="py-10 md:py-14 px-4 md:px-8 max-w-7xl mx-auto">
+    <section className="py-6 md:py-14 px-4 md:px-8 max-w-7xl mx-auto">
       <div
         ref={ref}
         className={`scroll-animate-scale ${isVisible ? 'is-visible' : ''}`}

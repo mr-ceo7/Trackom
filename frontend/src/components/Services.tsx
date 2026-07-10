@@ -16,7 +16,7 @@ const categories = [
       {
         icon: <MessageSquare className="w-5 h-5" />,
         title: 'Bulk SMS',
-        description: 'Broadcast campaigns to millions with AI-optimized copy and concurrent carrier routing.',
+        description: 'Broadcast campaigns to millions with personalized copy and concurrent carrier routing.',
       },
       {
         icon: <Send className="w-5 h-5" />,
@@ -312,7 +312,7 @@ export default function Services() {
   const activeCategory = categories[activeIndex];
 
   return (
-    <section id="services" className="py-10 md:py-14 px-4 md:px-8 max-w-7xl mx-auto scroll-mt-24">
+    <section id="services" className="py-6 md:py-14 px-4 md:px-8 max-w-7xl mx-auto scroll-mt-24">
       {/* SECTION HEADER */}
       <div
         ref={headerRef}

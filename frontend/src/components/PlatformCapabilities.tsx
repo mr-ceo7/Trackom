@@ -56,7 +56,7 @@ const capabilityCards = [
    ────────────────────────────────── */
 function MobileBentoList() {
   return (
-    <div className="md:hidden py-12 px-4 flex flex-col gap-6 bg-[#E8ECF9] dark:bg-[#0A0A0F] transition-colors duration-300">
+    <div className="md:hidden pt-8 pb-12 px-4 flex flex-col gap-6 bg-[#E8ECF9] dark:bg-[#0A0A0F] transition-colors duration-300">
       <div className="text-center max-w-sm mx-auto mb-2">
         <h2 className="font-display font-bold text-slate-900 dark:text-white text-2xl tracking-wide uppercase mb-2">
           Built for Scale. Designed for Kenya.
@@ -202,7 +202,7 @@ export default function PlatformCapabilities() {
   const { ref: ctaRef, isVisible: ctaVisible } = useScrollAnimation();
 
   return (
-    <section className="relative bg-[#E8ECF9] dark:bg-[#0A0A0F] py-10 md:py-14 transition-colors duration-300 border-t border-slate-200/50 dark:border-white/5">
+    <section className="relative bg-[#E8ECF9] dark:bg-[#0A0A0F] py-0 md:py-14 transition-colors duration-300 border-t border-slate-200/50 dark:border-white/5">
       <div className="absolute inset-0 pointer-events-none overflow-hidden hidden dark:block">
         <div className="absolute top-1/4 left-1/3 w-[450px] h-[450px] rounded-full bg-blue-500/[0.02] blur-[110px]" />
         <div className="absolute bottom-1/4 right-1/3 w-[450px] h-[450px] rounded-full bg-violet-500/[0.02] blur-[110px]" />

@@ -14,7 +14,7 @@ const testimonials = [
     name: 'Sarah Atieno',
     role: 'Head of Marketing',
     company: 'Jumia Kenya',
-    quote: 'The AI Copywriter alone increased our SMS campaign click-through rates by 34%. We send over 500K messages monthly through Trackom.',
+    quote: 'The personalization tools alone increased our SMS campaign click-through rates by 34%. We send over 500K messages monthly through Trackom.',
     rating: 5,
     initials: 'SA',
   },
@@ -56,7 +56,7 @@ export default function Testimonials() {
   const { ref, isVisible } = useScrollAnimation();
 
   return (
-    <section id="testimonials" className="py-10 md:py-14 px-4 md:px-8 overflow-hidden scroll-mt-24">
+    <section id="testimonials" className="py-6 md:py-14 px-4 md:px-8 overflow-hidden scroll-mt-24">
       {/* HEADER */}
       <div
         ref={ref}
