@@ -264,7 +264,7 @@ export default function WalletPage() {
                 <div className="bg-[#1C2035] rounded-2xl p-4 border border-white/5 space-y-3">
                   <div className="text-[10px] text-brand-emerald font-bold tracking-widest uppercase">M-PESA SIM TOOLKIT</div>
                   <div className="text-sm font-semibold text-gray-200">
-                    Do you want to pay <span className="text-brand-emerald font-bold font-mono">KES {Number(topupAmount).toLocaleString()}</span> to <span className="font-bold text-white">TRACKOM B2B</span> (Paybill: <span className="font-mono text-brand-accent">{publicSettings?.mpesaPaybill || '400200'}</span>)?
+                    Do you want to pay <span className="text-brand-emerald font-bold font-mono">KES {Number(topupAmount).toLocaleString()}</span> to <span className="font-bold text-white">TRACKOM B2B</span>?
                   </div>
                   
                   {/* Simulated PIN Boxes */}

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Users, Megaphone, Send, ShieldAlert, Search, Plus, Minus, 
-  Check, X, Ban, UserCheck, Coins, Calendar, Sliders, 
+  Check, X, Ban, UserCheck, Coins, Calendar, Sliders, DollarSign,
   Cpu, Key, Link as LinkIcon, Edit, Trash2, ToggleLeft, ToggleRight, Smartphone, Activity, TrendingUp, Settings, Save, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { useNavigate, NavLink } from 'react-router-dom';
@@ -101,7 +101,7 @@ interface SmsGatewayConfig {
 export default function AdminPanelPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'gateways' | 'sender_ids' | 'campaigns' | 'transactions' | 'settings'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'gateways' | 'sender_ids' | 'campaigns' | 'revenue' | 'settings'>('dashboard');
   const [clickedItem, setClickedItem] = useState<string | null>(null);
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [events, setEvents] = useState<AdminEvent[]>([]);
@@ -123,6 +123,7 @@ export default function AdminPanelPage() {
   const [page, setPage] = useState(1);
   const [clientPage, setClientPage] = useState(1);
   const [senderIdPage, setSenderIdPage] = useState(1);
+  const [campaignPage, setCampaignPage] = useState(1);
   const [limit] = useState(25);
 
   // Advanta Approved Sender IDs & Assignment
@@ -138,6 +139,19 @@ export default function AdminPanelPage() {
   // Pool management states
   const [newPoolSenderId, setNewPoolSenderId] = useState('');
   const [submittingNewPoolId, setSubmittingNewPoolId] = useState(false);
+
+  // Revenue & Transaction Stats
+  const [revenueStats, setRevenueStats] = useState<any>(null);
+  const [loadingRevenue, setLoadingRevenue] = useState(false);
+  const [hoveredTrendPoint, setHoveredTrendPoint] = useState<any | null>(null);
+
+  // Transaction Filters
+  const [txSearch, setTxSearch] = useState('');
+  const [txStatus, setTxStatus] = useState('all');
+  const [txMethod, setTxMethod] = useState('all');
+  const [txType, setTxType] = useState('all');
+  const [txDateFrom, setTxDateFrom] = useState('');
+  const [txDateTo, setTxDateTo] = useState('');
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -330,10 +344,28 @@ export default function AdminPanelPage() {
   const fetchTransactions = useCallback(async () => {
     setLoadingTransactions(true);
     try {
-      const resp = await api.get('/admin/transactions');
+      const resp = await api.get('/admin/transactions', {
+        params: {
+          search: txSearch || undefined,
+          status: txStatus !== 'all' ? txStatus : undefined,
+          method: txMethod !== 'all' ? txMethod : undefined,
+          type: txType !== 'all' ? txType : undefined,
+          date_from: txDateFrom || undefined,
+          date_to: txDateTo || undefined
+        }
+      });
       setTransactions(resp.data);
     } catch { /* noop */ }
     finally { setLoadingTransactions(false); }
+  }, [txSearch, txStatus, txMethod, txType, txDateFrom, txDateTo]);
+
+  const fetchRevenueStats = useCallback(async () => {
+    setLoadingRevenue(true);
+    try {
+      const resp = await api.get('/admin/revenue/stats');
+      setRevenueStats(resp.data);
+    } catch { /* noop */ }
+    finally { setLoadingRevenue(false); }
   }, []);
 
   const handleApproveSenderId = async (id: string) => {
@@ -385,10 +417,18 @@ export default function AdminPanelPage() {
       fetchAllUsersForSelect();
     } else if (activeTab === 'campaigns') {
       fetchCampaigns();
-    } else if (activeTab === 'transactions') {
+    } else if (activeTab === 'revenue') {
+      fetchTransactions();
+      fetchRevenueStats();
+    }
+  }, [activeTab, fetchUsers, fetchGateways, fetchSenderIds, fetchCampaigns, fetchTransactions, fetchAdvantaSenderIds, fetchAllUsersForSelect, fetchRevenueStats]);
+
+  // Re-trigger transactions fetch when filters change in active revenue tab
+  useEffect(() => {
+    if (activeTab === 'revenue') {
       fetchTransactions();
     }
-  }, [activeTab, fetchUsers, fetchGateways, fetchSenderIds, fetchCampaigns, fetchTransactions, fetchAdvantaSenderIds, fetchAllUsersForSelect]);
+  }, [activeTab, fetchTransactions]);
 
   // Adjust User Wallet Credits
   const handleAdjustCredits = async (e: React.FormEvent) => {
@@ -601,12 +641,51 @@ export default function AdminPanelPage() {
     }
   };
 
+  // Export Transactions List to CSV file
+  const handleExportCSV = () => {
+    if (transactions.length === 0) {
+      alert("No transaction records to export.");
+      return;
+    }
+    const headers = ["Date", "User", "Email", "Amount (KES)", "Payment Method", "Type", "Status", "Reference"];
+    const rows = transactions.map(t => [
+      new Date(t.created_at).toLocaleString(),
+      t.user_name,
+      t.user_email,
+      t.amount,
+      t.payment_method,
+      t.type,
+      t.status.toUpperCase(),
+      t.reference || ""
+    ]);
+    
+    // Create CSV formatting
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + [headers.join(","), ...rows.map(e => e.map(val => `"${String(val).replace(/"/g, '""')}"`).join(","))].join("\n");
+      
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `trackom_transactions_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // Pagination variables for Sender IDs
   const senderIdsPerPage = 10;
   const totalSenderIdPages = Math.ceil(senderIds.length / senderIdsPerPage);
   const displayedSenderIds = senderIds.slice(
     (senderIdPage - 1) * senderIdsPerPage,
     senderIdPage * senderIdsPerPage
+  );
+
+  // Pagination variables for Campaigns
+  const campaignsPerPage = 10;
+  const totalCampaignPages = Math.ceil(campaigns.length / campaignsPerPage);
+  const displayedCampaigns = campaigns.slice(
+    (campaignPage - 1) * campaignsPerPage,
+    campaignPage * campaignsPerPage
   );
 
   return (
@@ -629,7 +708,7 @@ export default function AdminPanelPage() {
               { id: 'gateways', label: 'SMS Gateways', icon: Cpu },
               { id: 'sender_ids', label: 'Sender IDs', icon: Smartphone },
               { id: 'campaigns', label: 'All Campaigns', icon: Megaphone },
-              { id: 'transactions', label: 'Transactions', icon: Coins },
+              { id: 'revenue', label: 'Revenue', icon: DollarSign },
               { id: 'settings', label: 'System Settings', icon: Settings },
             ].map(item => {
               const Icon = item.icon;
@@ -2049,7 +2128,7 @@ export default function AdminPanelPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {campaigns.map((c) => {
+                    {displayedCampaigns.map((c) => {
                       const successRate = c.total_recipients > 0 ? Math.round((c.sent_count / c.total_recipients) * 100) : 0;
                       return (
                         <tr key={c.id} className="border-b border-slate-100 dark:border-white/[0.03] last:border-0 hover:bg-slate-50 dark:hover:bg-white/[0.01] transition-colors">
@@ -2102,85 +2181,394 @@ export default function AdminPanelPage() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Campaigns Table Pagination Footer */}
+              {totalCampaignPages > 1 && (
+                <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 dark:border-white/[0.03] bg-slate-50/50 dark:bg-white/[0.01]">
+                  <span className="text-[10px] text-slate-400 dark:text-gray-500">
+                    Showing {(campaignPage - 1) * campaignsPerPage + 1} to {Math.min(campaignPage * campaignsPerPage, campaigns.length)} of {campaigns.length} campaigns
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCampaignPage(prev => Math.max(prev - 1, 1))}
+                      disabled={campaignPage === 1}
+                      className="p-1 rounded bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-gray-400 hover:bg-slate-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="text-[10px] font-mono text-slate-500 dark:text-gray-400">
+                      Page {campaignPage} of {totalCampaignPages}
+                    </span>
+                    <button
+                      onClick={() => setCampaignPage(prev => Math.min(prev + 1, totalCampaignPages))}
+                      disabled={campaignPage === totalCampaignPages}
+                      className="p-1 rounded bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-gray-400 hover:bg-slate-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    >
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
       )}
 
-      {activeTab === 'transactions' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-              <Coins className="w-4 h-4 text-brand-primary" />
-              <span>SaaS Transaction Ledger</span>
-            </h3>
+      {activeTab === 'revenue' && (
+        <div className="space-y-6">
+          {/* Section Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="text-left">
+              <h2 className="text-xl font-display font-black text-slate-900 dark:text-white">Revenue & Transactions</h2>
+              <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">Financial analytics & payment history</p>
+            </div>
+            <button
+              onClick={handleExportCSV}
+              className="clay-button-primary flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer shadow-lg shadow-brand-primary/10 self-start sm:self-auto"
+            >
+              <Save className="w-3.5 h-3.5" />
+              <span>Export CSV</span>
+            </button>
           </div>
 
-          {loadingTransactions ? (
-            <div className="text-center py-12"><Loader size="md" /></div>
+          {/* Stats Cards Row */}
+          {loadingRevenue ? (
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="clay-card rounded-3xl p-5 animate-pulse space-y-3 h-28" />
+              ))}
+            </div>
           ) : (
-            <div className="clay-card rounded-3xl overflow-hidden">
-              <div className="overflow-x-auto font-sans">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="border-b border-slate-200/20 dark:border-white/6 clay-inset">
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Client</th>
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Type</th>
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Reference</th>
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Amount</th>
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">SMS Credits</th>
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Description</th>
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {transactions.map((t) => (
-                      <tr key={t.id} className="border-b border-slate-100 dark:border-white/[0.03] last:border-0 hover:bg-slate-50 dark:hover:bg-white/[0.01] transition-colors">
-                        <td className="px-5 py-3 text-sm text-slate-900 dark:text-white">
-                          <div className="font-semibold">{t.user_name}</div>
-                          <div className="text-[10px] text-slate-400 dark:text-gray-500 font-mono mt-0.5">{t.user_email}</div>
-                        </td>
-                        <td className="px-5 py-3">
-                          <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                            t.type === 'deposit' 
-                              ? 'bg-brand-emerald/10 text-brand-emerald' 
-                              : t.type === 'bonus' 
-                              ? 'bg-purple-500/10 text-purple-500' 
-                              : 'bg-amber-500/10 text-amber-500'
-                          }`}>
-                            {t.type}
-                          </span>
-                        </td>
-                        <td className="px-5 py-3 text-xs text-slate-500 dark:text-gray-400 font-mono">
-                          {t.reference}
-                        </td>
-                        <td className="px-5 py-3 text-sm font-bold text-slate-800 dark:text-white font-mono">
-                          {t.amount > 0 ? `KES ${t.amount.toLocaleString()}` : '-'}
-                        </td>
-                        <td className={`px-5 py-3 text-sm font-bold font-mono ${t.sms_credits >= 0 ? 'text-brand-emerald' : 'text-red-500'}`}>
-                          {t.sms_credits >= 0 ? `+${t.sms_credits.toLocaleString()}` : t.sms_credits.toLocaleString()} cr
-                        </td>
-                        <td className="px-5 py-3 text-xs text-slate-500 dark:text-gray-400 max-w-xs truncate" title={t.description}>
-                          {t.description || '-'}
-                        </td>
-                        <td className="px-5 py-3 text-xs text-slate-500 dark:text-gray-400 font-mono">
-                          {new Date(t.created_at).toLocaleDateString()}
-                        </td>
-                      </tr>
-                    ))}
-                    {transactions.length === 0 && (
-                      <tr>
-                        <td colSpan={7} className="text-center py-16">
-                          <Coins className="w-10 h-10 text-slate-300 dark:text-gray-600 mx-auto mb-3" />
-                          <p className="text-sm text-slate-500 dark:text-gray-400">No transaction logs available yet.</p>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+              {[
+                { label: 'TOTAL REVENUE', value: revenueStats?.total_revenue, sub: 'All time' },
+                { label: 'TODAY', value: revenueStats?.today_revenue, sub: 'Today' },
+                { label: 'THIS WEEK', value: revenueStats?.week_revenue, sub: 'This week' },
+                { label: 'THIS MONTH', value: revenueStats?.month_revenue, sub: 'This month' },
+                { label: 'THIS YEAR', value: revenueStats?.year_revenue, sub: 'This year' },
+              ].map((c, i) => (
+                <div key={i} className="clay-card rounded-3xl p-5 text-left flex flex-col justify-between h-28 relative overflow-hidden group hover:scale-[1.02] transition-all">
+                  <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-brand-emerald/10 flex items-center justify-center text-brand-emerald text-xs font-bold">
+                    KES
+                  </div>
+                  <div className="text-[10px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-wider">{c.label}</div>
+                  <div className="text-lg font-display font-black text-slate-900 dark:text-white font-mono leading-none mt-2">
+                    KES {c.value?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
+                  </div>
+                  <div className="text-[9px] text-slate-400 dark:text-gray-500 mt-2 font-mono">{c.sub}</div>
+                </div>
+              ))}
             </div>
           )}
+
+          {/* Chart & Payment Method Breakdown */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            {/* Column 1 & 2: Revenue Trend Line Chart */}
+            <div className="lg:col-span-2 clay-card rounded-3xl p-5 space-y-3 relative overflow-visible">
+              <div className="flex items-center justify-between">
+                <div className="text-left">
+                  <h4 className="text-xs font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider pl-1">Revenue Trend</h4>
+                  <p className="text-[10px] text-slate-400">Last 30 days top-ups</p>
+                </div>
+              </div>
+
+              <div className="h-44 relative mt-3 flex items-center justify-center overflow-visible">
+                {loadingRevenue ? (
+                  <Loader size="md" />
+                ) : (() => {
+                  const trendData = revenueStats?.trend_data || [];
+                  const maxVal = Math.max(...trendData.map(v => v.amount), 1000);
+                  
+                  const points = trendData.map((v, i) => {
+                    const x = 30 + (i * (440 / 29));
+                    const y = 150 - (v.amount / maxVal * 120);
+                    return { x, y, date: v.date, full_date: v.full_date, amount: v.amount };
+                  });
+
+                  const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+                  const areaD = pathD ? `${pathD} L 470 150 L 30 150 Z` : '';
+
+                  return (
+                    <div className="w-full h-full relative overflow-visible">
+                      <svg viewBox="0 0 500 180" className="w-full h-full overflow-visible">
+                        <defs>
+                          <linearGradient id="revAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="rgba(16,185,129,0.3)" />
+                            <stop offset="100%" stopColor="rgba(16,185,129,0.0)" />
+                          </linearGradient>
+                        </defs>
+                        
+                        {/* Y-axis gridlines */}
+                        <line x1="30" y1="30" x2="470" y2="30" stroke="rgba(148, 163, 184, 0.08)" strokeDasharray="3" />
+                        <line x1="30" y1="70" x2="470" y2="70" stroke="rgba(148, 163, 184, 0.08)" strokeDasharray="3" />
+                        <line x1="30" y1="110" x2="470" y2="110" stroke="rgba(148, 163, 184, 0.08)" strokeDasharray="3" />
+                        <line x1="30" y1="150" x2="470" y2="150" stroke="rgba(148, 163, 184, 0.08)" strokeDasharray="3" />
+
+                        {areaD && <path d={areaD} fill="url(#revAreaGrad)" />}
+                        {pathD && <path d={pathD} fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />}
+
+                        {/* Interactive hovered elements */}
+                        {points.map((p, i) => (
+                          <g key={i}>
+                            <circle 
+                              cx={p.x} 
+                              cy={p.y} 
+                              r="12" 
+                              fill="transparent" 
+                              className="cursor-pointer"
+                              onMouseEnter={() => setHoveredTrendPoint(p)}
+                              onMouseLeave={() => setHoveredTrendPoint(null)}
+                            />
+                            <circle 
+                              cx={p.x} 
+                              cy={p.y} 
+                              r="3.5" 
+                              fill={hoveredTrendPoint?.full_date === p.full_date ? '#10b981' : '#6366f1'} 
+                              stroke="white" 
+                              strokeWidth="1.2" 
+                              className="pointer-events-none transition-all duration-150"
+                            />
+                            {i % 5 === 0 && (
+                              <text x={p.x} y="170" textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="bold">{p.date}</text>
+                            )}
+                          </g>
+                        ))}
+                      </svg>
+
+                      {/* Tooltip Overlay */}
+                      {hoveredTrendPoint && (
+                        <div 
+                          className="absolute bg-slate-950/90 text-white text-[10px] p-2 rounded-xl shadow-xl border border-white/10 text-left pointer-events-none font-mono"
+                          style={{ 
+                            left: `${(hoveredTrendPoint.x / 500) * 100}%`, 
+                            top: `${(hoveredTrendPoint.y / 180) * 100}%`,
+                            transform: 'translate(-50%, -125%)',
+                            zIndex: 40
+                          }}
+                        >
+                          <div className="font-semibold text-slate-400">{hoveredTrendPoint.full_date}</div>
+                          <div className="text-brand-emerald font-bold mt-0.5">Revenue: KES {hoveredTrendPoint.amount.toLocaleString()}</div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+
+            {/* Column 3: Revenue By Payment Method */}
+            <div className="clay-card rounded-3xl p-5 space-y-4">
+              <div className="text-left">
+                <h4 className="text-xs font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider pl-1">By Payment Method</h4>
+                <p className="text-[10px] text-slate-400">Revenue breakdown</p>
+              </div>
+
+              {loadingRevenue ? (
+                <div className="space-y-4 py-6"><Loader size="sm" /></div>
+              ) : (
+                <div className="space-y-4 pt-2">
+                  {(revenueStats?.by_payment_method || []).map((item: any, idx: number) => (
+                    <div key={idx} className="space-y-1.5 text-left text-xs font-sans">
+                      <div className="flex justify-between font-bold text-slate-700 dark:text-gray-200">
+                        <span className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full bg-brand-emerald" />
+                          {item.method}
+                        </span>
+                        <span className="font-mono text-[11px]">
+                          KES {item.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })} ({item.percentage}%)
+                        </span>
+                      </div>
+                      <div className="w-full h-2 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-brand-emerald rounded-full transition-all duration-500" 
+                          style={{ width: `${item.percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Transactions Statement Section */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2 text-left pl-1">
+              <span>Transaction Statements</span>
+            </h3>
+
+            {/* Advanced Filters Card */}
+            <div className="clay-card rounded-3xl p-5 space-y-4 text-left">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                {/* Search */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1">Search</label>
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input 
+                      type="text" 
+                      placeholder="Search email, ref..." 
+                      value={txSearch}
+                      onChange={e => setTxSearch(e.target.value)}
+                      className="clay-input w-full pl-9 pr-4 py-2 rounded-2xl text-xs focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Status */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1">Status</label>
+                  <select 
+                    value={txStatus}
+                    onChange={e => setTxStatus(e.target.value)}
+                    className="clay-input w-full px-3 py-2 rounded-2xl text-xs focus:outline-none cursor-pointer"
+                  >
+                    <option value="all">All Statuses</option>
+                    <option value="completed">Completed</option>
+                    <option value="failed">Failed</option>
+                    <option value="pending">Pending</option>
+                  </select>
+                </div>
+
+                {/* Method */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1">Method</label>
+                  <select 
+                    value={txMethod}
+                    onChange={e => setTxMethod(e.target.value)}
+                    className="clay-input w-full px-3 py-2 rounded-2xl text-xs focus:outline-none cursor-pointer"
+                  >
+                    <option value="all">All Methods</option>
+                    <option value="mpesa">Mpesa</option>
+                    <option value="card">Card</option>
+                    <option value="stripe">Stripe</option>
+                    <option value="paypal">PayPal</option>
+                  </select>
+                </div>
+
+                {/* Type */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1">Type</label>
+                  <select 
+                    value={txType}
+                    onChange={e => setTxType(e.target.value)}
+                    className="clay-input w-full px-3 py-2 rounded-2xl text-xs focus:outline-none cursor-pointer"
+                  >
+                    <option value="all">All Types</option>
+                    <option value="topup">Topup</option>
+                    <option value="sms_send">SMS Send</option>
+                    <option value="refund">Refund</option>
+                    <option value="bonus">Bonus</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Date Filters & Clear */}
+              <div className="flex flex-wrap items-end justify-between gap-4 pt-2 border-t border-slate-100/5">
+                <div className="flex items-center gap-3">
+                  <div className="space-y-1 text-left">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">From</span>
+                    <input 
+                      type="date" 
+                      value={txDateFrom}
+                      onChange={e => setTxDateFrom(e.target.value)}
+                      className="clay-input px-3 py-2 rounded-2xl text-xs focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1 text-left">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">To</span>
+                    <input 
+                      type="date" 
+                      value={txDateTo}
+                      onChange={e => setTxDateTo(e.target.value)}
+                      className="clay-input px-3 py-2 rounded-2xl text-xs focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setTxSearch('');
+                    setTxStatus('all');
+                    setTxMethod('all');
+                    setTxType('all');
+                    setTxDateFrom('');
+                    setTxDateTo('');
+                  }}
+                  className="px-4 py-2 rounded-2xl text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-white transition-all cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5"
+                >
+                  Clear Filters
+                </button>
+              </div>
+            </div>
+
+            {/* Statements List Table */}
+            {loadingTransactions ? (
+              <div className="text-center py-12"><Loader size="md" /></div>
+            ) : (
+              <div className="clay-card rounded-3xl overflow-hidden">
+                <div className="overflow-x-auto font-sans">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="border-b border-slate-200/20 dark:border-white/6 clay-inset">
+                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Date</th>
+                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">User</th>
+                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Amount</th>
+                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Method</th>
+                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Type</th>
+                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Status</th>
+                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Reference</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {transactions.map((t) => (
+                        <tr key={t.id} className="border-b border-slate-100 dark:border-white/[0.03] last:border-0 hover:bg-slate-50 dark:hover:bg-white/[0.01] transition-colors">
+                          <td className="px-5 py-3 text-xs text-slate-500 dark:text-gray-400 font-mono">
+                            {new Date(t.created_at).toLocaleString()}
+                          </td>
+                          <td className="px-5 py-3 text-sm text-slate-900 dark:text-white">
+                            <div className="font-semibold">{t.user_name}</div>
+                            <div className="text-[10px] text-slate-400 dark:text-gray-500 font-mono mt-0.5">{t.user_email}</div>
+                          </td>
+                          <td className="px-5 py-3 text-sm font-bold text-slate-800 dark:text-white font-mono">
+                            KES {t.amount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          </td>
+                          <td className="px-5 py-3 text-xs font-mono font-bold text-brand-emerald">
+                            {t.payment_method}
+                          </td>
+                          <td className="px-5 py-3 text-xs font-mono uppercase text-slate-500 dark:text-gray-400">
+                            {t.type}
+                          </td>
+                          <td className="px-5 py-3">
+                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                              t.status === 'completed' 
+                                ? 'bg-brand-emerald/10 text-brand-emerald' 
+                                : t.status === 'failed' 
+                                ? 'bg-red-500/10 text-red-500' 
+                                : 'bg-amber-500/10 text-amber-500'
+                            }`}>
+                              {t.status}
+                            </span>
+                          </td>
+                          <td className="px-5 py-3 text-xs text-slate-500 dark:text-gray-400 font-mono">
+                            {t.reference || '-'}
+                          </td>
+                        </tr>
+                      ))}
+                      {transactions.length === 0 && (
+                        <tr>
+                          <td colSpan={7} className="text-center py-16">
+                            <Coins className="w-10 h-10 text-slate-300 dark:text-gray-600 mx-auto mb-3" />
+                            <p className="text-sm text-slate-500 dark:text-gray-400">No transaction logs match current filters.</p>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -2197,55 +2585,9 @@ export default function AdminPanelPage() {
           </div>
 
           <form onSubmit={handleSaveSettings} className="space-y-6 text-left">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="max-w-2xl">
               
-              {/* CARD 1: MPESA WALLET SETTINGS */}
-              <div className="clay-card rounded-3xl p-5 space-y-4">
-                <h4 className="text-xs font-bold text-slate-800 dark:text-white border-b border-slate-200/20 dark:border-white/5 pb-2">
-                  MPESA Gateway Settings
-                </h4>
-                <div className="space-y-3">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">MPESA Paybill Number</label>
-                    <input type="text" value={mpesaPaybill} onChange={e => setMpesaPaybill(e.target.value)} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">MPESA Till / Buy Goods Number</label>
-                    <input type="text" value={mpesaTill} onChange={e => setMpesaTill(e.target.value)} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Minimum Deposit Limit (KES)</label>
-                    <input type="number" value={minDeposit} onChange={e => setMinDeposit(Number(e.target.value))} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
-                  </div>
-                  <div className="flex items-center gap-2.5 pt-2">
-                    <input type="checkbox" id="autoCreditCheck" checked={autoCredit} onChange={e => setAutoCredit(e.target.checked)} className="rounded border-slate-300 text-brand-primary focus:ring-brand-primary" />
-                    <label htmlFor="autoCreditCheck" className="text-xs font-semibold text-slate-700 dark:text-gray-300 cursor-pointer">Auto-credit user wallets on payment verification</label>
-                  </div>
-                </div>
-              </div>
-
-              {/* CARD 2: DEFAULT TENANT RATES */}
-              <div className="clay-card rounded-3xl p-5 space-y-4">
-                <h4 className="text-xs font-bold text-slate-800 dark:text-white border-b border-slate-200/20 dark:border-white/5 pb-2">
-                  Portal Defaults & Registration Economics
-                </h4>
-                <div className="space-y-3">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Base Cost per SMS Credit (KES)</label>
-                    <input type="number" step="0.01" value={baseSmsCost} onChange={e => setBaseSmsCost(Number(e.target.value))} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Sender ID Registration Charge (KES)</label>
-                    <input type="number" value={senderIdFee} onChange={e => setSenderIdFee(Number(e.target.value))} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">AdvantaSMS Default Sender ID / Shortcode</label>
-                    <input type="text" value={advantasmsDefaultShortcode} onChange={e => setAdvantasmsDefaultShortcode(e.target.value)} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
-                  </div>
-                </div>
-              </div>
-
-              {/* CARD 4: PLATFORM SUPPORT & BANNER */}
+              {/* CARD 2: PLATFORM SUPPORT & BANNER */}
               <div className="clay-card rounded-3xl p-5 space-y-4">
                 <h4 className="text-xs font-bold text-slate-800 dark:text-white border-b border-slate-200/20 dark:border-white/5 pb-2">
                   Support Channels & Platform State
