@@ -881,13 +881,55 @@ async def list_all_campaigns(
 
 @router.get("/transactions")
 async def list_all_transactions(
+    search: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+    method: Optional[str] = Query(None),
+    type: Optional[str] = Query(None),
+    date_from: Optional[str] = Query(None),
+    date_to: Optional[str] = Query(None),
     admin: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db)
 ):
-    """List recent transactions across all tenants."""
-    q = select(Transaction).options(joinedload(Transaction.user)).order_by(Transaction.created_at.desc()).limit(100)
+    """List transactions across all tenants with advanced filters."""
+    q = select(Transaction).options(joinedload(Transaction.user)).order_by(Transaction.created_at.desc())
+    
+    # We join with User if filtering by client details
+    if search:
+        q = q.join(Transaction.user).where(
+            User.email.ilike(f"%{search}%") | 
+            User.full_name.ilike(f"%{search}%") | 
+            Transaction.reference.ilike(f"%{search}%") |
+            Transaction.description.ilike(f"%{search}%")
+        )
+        
+    if status and status != 'all':
+        q = q.where(Transaction.status == status)
+        
+    if method and method != 'all':
+        q = q.where(Transaction.payment_method.ilike(method))
+        
+    if type and type != 'all':
+        q = q.where(Transaction.type == type)
+        
+    from datetime import timedelta
+    if date_from:
+        try:
+            df = datetime.strptime(date_from, "%Y-%m-%d")
+            q = q.where(Transaction.created_at >= df)
+        except ValueError:
+            pass
+            
+    if date_to:
+        try:
+            dt = datetime.strptime(date_to, "%Y-%m-%d") + timedelta(days=1)
+            q = q.where(Transaction.created_at < dt)
+        except ValueError:
+            pass
+
+    q = q.limit(150)
     res = await db.execute(q)
     txs = res.scalars().all()
+    
     return [
         {
             "id": t.id,
@@ -897,7 +939,7 @@ async def list_all_transactions(
             "balance_after": t.balance_after,
             "reference": t.reference,
             "description": t.description,
-            "payment_method": t.payment_method,
+            "payment_method": t.payment_method or "Mpesa",
             "status": t.status,
             "created_at": t.created_at,
             "user_email": t.user.email if t.user else "Unknown User",
@@ -905,6 +947,108 @@ async def list_all_transactions(
         }
         for t in txs
     ]
+
+
+@router.get("/revenue/stats")
+async def get_revenue_stats(
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Retrieve financial analytics and payment stats for the Revenue section."""
+    from datetime import timedelta
+    now = datetime.utcnow()
+    today_start = datetime(now.year, now.month, now.day)
+    
+    # Start of week (Monday)
+    week_start = today_start - timedelta(days=now.weekday())
+    
+    # Start of month
+    month_start = datetime(now.year, now.month, 1)
+    
+    # Start of year
+    year_start = datetime(now.year, 1, 1)
+    
+    # Helper to sum amounts for topups with completed status
+    async def sum_topup_since(start_date=None):
+        q = select(func.coalesce(func.sum(Transaction.amount), 0)).where(
+            (Transaction.type == "topup") &
+            (Transaction.status == "completed")
+        )
+        if start_date:
+            q = q.where(Transaction.created_at >= start_date)
+        res = await db.execute(q)
+        return float(res.scalar())
+
+    total_revenue = await sum_topup_since()
+    today_revenue = await sum_topup_since(today_start)
+    week_revenue = await sum_topup_since(week_start)
+    month_revenue = await sum_topup_since(month_start)
+    year_revenue = await sum_topup_since(year_start)
+
+    # 30 days trend
+    trend_data = []
+    for i in range(29, -1, -1):
+        target_day = today_start - timedelta(days=i)
+        next_day = target_day + timedelta(days=1)
+        
+        q = select(func.coalesce(func.sum(Transaction.amount), 0)).where(
+            (Transaction.type == "topup") &
+            (Transaction.status == "completed") &
+            (Transaction.created_at >= target_day) &
+            (Transaction.created_at < next_day)
+        )
+        res = await db.execute(q)
+        daily_amount = float(res.scalar())
+        trend_data.append({
+            "date": target_day.strftime("%m-%d"),
+            "full_date": target_day.strftime("%Y-%m-%d"),
+            "amount": daily_amount
+        })
+
+    # By Payment Method
+    q_method = select(
+        func.coalesce(Transaction.payment_method, 'mpesa').label('method'),
+        func.coalesce(func.sum(Transaction.amount), 0).label('amount')
+    ).where(
+        (Transaction.type == "topup") &
+        (Transaction.status == "completed")
+    ).group_by(Transaction.payment_method)
+    
+    res_method = await db.execute(q_method)
+    methods_raw = res_method.all()
+    
+    by_payment_method = []
+    total_method_sum = sum(float(r[1]) for r in methods_raw)
+    
+    for r in methods_raw:
+        method_name = str(r[0]).title() if r[0] else "Mpesa"
+        if not method_name or method_name == 'None':
+            method_name = "Mpesa"
+            
+        amt = float(r[1])
+        percentage = (amt / total_method_sum * 100) if total_method_sum > 0 else 0
+        by_payment_method.append({
+            "method": method_name,
+            "amount": amt,
+            "percentage": round(percentage, 2)
+        })
+        
+    if not by_payment_method:
+        by_payment_method.append({
+            "method": "Mpesa",
+            "amount": 0,
+            "percentage": 0
+        })
+
+    return {
+        "total_revenue": total_revenue,
+        "today_revenue": today_revenue,
+        "week_revenue": week_revenue,
+        "month_revenue": month_revenue,
+        "year_revenue": year_revenue,
+        "trend_data": trend_data,
+        "by_payment_method": by_payment_method
+    }
 
 
 import json
