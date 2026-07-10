@@ -146,3 +146,17 @@ async def seed_demo_user():
             )
             session.add(admin_sender)
             await session.commit()
+
+        # Seed default SMS Gateway (AdvantaSMS)
+        from app.models.gateway import SmsGateway
+        result_gw = await session.execute(select(SmsGateway).where(SmsGateway.name == "AdvantaSMS Gateway"))
+        if not result_gw.scalar_one_or_none():
+            default_gw = SmsGateway(
+                name="AdvantaSMS Gateway",
+                api_url=settings.ADVANTA_BASE_URL,
+                api_key=settings.ADVANTA_API_KEY,
+                weight=100,
+                is_active=True
+            )
+            session.add(default_gw)
+            await session.commit()

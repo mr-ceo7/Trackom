@@ -474,6 +474,26 @@ export default function AdminPanelPage() {
     } catch { /* noop */ }
   };
 
+  // Update Gateway Weight directly from Dashboard Card
+  const handleUpdateGatewayWeight = async (gateway: SmsGatewayConfig, newWeight: number) => {
+    try {
+      await api.post('/admin/gateways', {
+        name: gateway.name,
+        api_url: gateway.api_url,
+        api_key: gateway.api_key,
+        weight: newWeight,
+        is_active: gateway.is_active
+      }, {
+        params: { gateway_id: gateway.id }
+      });
+      await fetchStats();
+      await fetchGateways();
+    } catch {
+      alert("Failed to save gateway weight.");
+      await fetchGateways();
+    }
+  };
+
   return (
     <div className="min-h-screen flex overflow-hidden light-dashboard-bg dark:bg-surface-dark font-sans text-left w-full">
       {/* Sidebar Panel for Admin Console */}
@@ -714,26 +734,63 @@ export default function AdminPanelPage() {
 
                 {/* CARD 5: GATEWAYS & ROUTING */}
                 <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-cyan-500">
-                        <Activity className="w-5 h-5 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]" />
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-cyan-500">
+                          <Activity className="w-5 h-5 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]" />
+                        </div>
+                        <div className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider">SMS Gateways</div>
                       </div>
-                      <div className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider">SMS Gateways Whitelisted</div>
+                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${gateways.some(g => g.is_active) ? 'bg-brand-emerald/10 text-brand-emerald' : 'bg-slate-100 dark:bg-white/5 text-slate-500'}`}>
+                        {gateways.filter(g => g.is_active).length}/{gateways.length} ONLINE
+                      </span>
+                    </div>
+
+                    <div className="pt-1.5 flex items-baseline gap-2">
+                      <div className="text-3xl font-black text-slate-900 dark:text-white font-mono leading-none">
+                        {gateways.length}
+                      </div>
+                      <span className="text-[10px] font-semibold text-slate-400 dark:text-gray-500">Whitelisted Nodes</span>
+                    </div>
+
+                    {/* Quick Load Balancer Sliders */}
+                    <div className="space-y-2 mt-3 pt-2.5 border-t border-slate-200/20 dark:border-white/5">
+                      <span className="block text-[8px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">
+                        Quick Load Split Weights
+                      </span>
+                      {gateways.length > 0 ? (
+                        <div className="space-y-2 max-h-[85px] overflow-y-auto custom-scrollbar pr-1">
+                          {gateways.map(gw => (
+                            <div key={gw.id} className="space-y-0.5">
+                              <div className="flex justify-between items-center text-[10px] font-semibold text-slate-700 dark:text-gray-300">
+                                <span className="truncate max-w-[100px]">{gw.name}</span>
+                                <span className="font-mono text-brand-primary font-bold">{gw.weight}%</span>
+                              </div>
+                              <input 
+                                type="range" 
+                                min="0" 
+                                max="100" 
+                                value={gw.weight} 
+                                onChange={e => {
+                                  const val = Number(e.target.value);
+                                  setGateways(prev => prev.map(g => g.id === gw.id ? { ...g, weight: val } : g));
+                                }}
+                                onMouseUp={() => handleUpdateGatewayWeight(gw, gw.weight)}
+                                onTouchEnd={() => handleUpdateGatewayWeight(gw, gw.weight)}
+                                className="w-full h-1 bg-slate-200 dark:bg-white/10 rounded-lg appearance-none cursor-pointer accent-brand-primary" 
+                                disabled={!gw.is_active}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-[10px] text-slate-400 italic block py-1">No active gateways</span>
+                      )}
                     </div>
                   </div>
-                  <div className="mt-2">
-                    <div className="text-3xl font-black text-slate-900 dark:text-white font-mono leading-none">{gateways.length}</div>
-                  </div>
-                  <div className="flex gap-2 mt-2">
-                    <span className="text-[9px] font-bold px-2 py-0.5 bg-brand-emerald/10 text-brand-emerald rounded-full">
-                      ONLINE {gateways.filter(g => g.is_active).length}
-                    </span>
-                    <span className="text-[9px] font-bold px-2 py-0.5 bg-slate-100 dark:bg-white/5 text-slate-500 rounded-full">
-                      OFFLINE {gateways.filter(g => !g.is_active).length}
-                    </span>
-                  </div>
-                  <div className="border-t border-slate-200/20 dark:border-white/5 pt-2.5 mt-2.5 flex justify-between text-[9px] text-slate-500 font-mono">
+
+                  <div className="border-t border-slate-200/20 dark:border-white/5 pt-2 mt-3 flex justify-between text-[9px] text-slate-500 font-mono">
                     <div>SAF <span className="text-brand-emerald font-bold">142ms</span></div>
                     <div>AIR <span className="text-brand-emerald font-bold">178ms</span></div>
                   </div>
@@ -834,29 +891,89 @@ export default function AdminPanelPage() {
 
                 {/* CARD 8: SMS DISPATCH ANALYTICS */}
                 <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-teal-500">
-                        <Send className="w-5 h-5 drop-shadow-[0_0_8px_rgba(20,184,166,0.5)]" />
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-teal-500">
+                          <Send className="w-5 h-5 drop-shadow-[0_0_8px_rgba(20,184,166,0.5)]" />
+                        </div>
+                        <div className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider">SMS Delivery Rate</div>
                       </div>
-                      <div className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider">Sms Delivery Rate</div>
+                      <span className="text-[9px] text-brand-emerald font-bold font-mono bg-brand-emerald/10 px-2 py-0.5 rounded-full">
+                        ↑ {(stats?.total_sms_sent || 0).toLocaleString()} total
+                      </span>
                     </div>
-                    <span className="text-[9px] text-brand-emerald font-bold">↑ {(stats?.total_sms_sent || 0).toLocaleString()} total</span>
-                  </div>
-                  <div className="mt-2">
-                    <div className="text-3xl font-black text-slate-900 dark:text-white font-mono leading-none">{stats?.success_rate ?? 100.0}%</div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-1 mt-2 text-[9px]">
-                    <div className="bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded text-slate-600 dark:text-gray-300 truncate">
-                      DELIVERED: <span className="font-bold text-brand-emerald">{(stats?.delivered_sms_count || 0).toLocaleString()}</span>
+
+                    <div className="pt-1.5 flex items-baseline gap-2">
+                      <div className="text-3xl font-black text-slate-900 dark:text-white font-mono leading-none">
+                        {stats?.success_rate ?? 100.0}%
+                      </div>
+                      <span className="text-[10px] font-semibold text-slate-400 dark:text-gray-500">Success Rate</span>
                     </div>
-                    <div className="bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded text-slate-600 dark:text-gray-300 truncate">
-                      FAILED: <span className="font-bold text-rose-500">{(stats?.failed_sms_count || 0).toLocaleString()}</span>
-                    </div>
+
+                    {/* Delivery Visual Progress Bar */}
+                    {(() => {
+                      const total = stats?.total_sms_sent || 0;
+                      if (total === 0) {
+                        return (
+                          <div className="h-1.5 w-full bg-slate-200 dark:bg-white/10 rounded-full" />
+                        );
+                      }
+                      const deliveredPct = ((stats?.delivered_sms_count || 0) / total) * 100;
+                      const failedPct = ((stats?.failed_sms_count || 0) / total) * 100;
+                      const pendingPct = ((stats?.pending_sms_count || 0) / total) * 100;
+                      return (
+                        <div className="h-1.5 w-full bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden flex">
+                          {deliveredPct > 0 && (
+                            <div 
+                              className="bg-brand-emerald h-full transition-all duration-500" 
+                              style={{ width: `${deliveredPct}%` }} 
+                              title={`Delivered: ${deliveredPct.toFixed(1)}%`}
+                            />
+                          )}
+                          {failedPct > 0 && (
+                            <div 
+                              className="bg-rose-500 h-full transition-all duration-500" 
+                              style={{ width: `${failedPct}%` }} 
+                              title={`Failed: ${failedPct.toFixed(1)}%`}
+                            />
+                          )}
+                          {pendingPct > 0 && (
+                            <div 
+                              className="bg-amber-500 h-full transition-all duration-500" 
+                              style={{ width: `${pendingPct}%` }} 
+                              title={`Pending: ${pendingPct.toFixed(1)}%`}
+                            />
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
-                  <div className="border-t border-slate-200/20 dark:border-white/5 pt-2.5 mt-2.5 flex justify-between text-[9px] text-slate-500">
-                    <div>PENDING <span className="text-amber-500 font-bold">{stats?.pending_sms_count || 0}</span></div>
-                    <div>VOID <span className="text-slate-400 font-bold">0</span></div>
+
+                  {/* 2x2 grid for sub-stats */}
+                  <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-slate-200/20 dark:border-white/5">
+                    <div className="p-2 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200/10 dark:border-white/[0.03] text-left">
+                      <span className="block text-[8px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Delivered</span>
+                      <span className="text-xs font-bold text-brand-emerald font-mono">
+                        {(stats?.delivered_sms_count || 0).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="p-2 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200/10 dark:border-white/[0.03] text-left">
+                      <span className="block text-[8px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Failed</span>
+                      <span className="text-xs font-bold text-rose-500 font-mono">
+                        {(stats?.failed_sms_count || 0).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="p-2 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200/10 dark:border-white/[0.03] text-left">
+                      <span className="block text-[8px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Pending</span>
+                      <span className="text-xs font-bold text-amber-500 font-mono">
+                        {(stats?.pending_sms_count || 0).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="p-2 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200/10 dark:border-white/[0.03] text-left">
+                      <span className="block text-[8px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Void</span>
+                      <span className="text-xs font-bold text-slate-500 font-mono">0</span>
+                    </div>
                   </div>
                 </div>
 
