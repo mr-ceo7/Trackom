@@ -100,8 +100,8 @@ function MobileBentoList() {
           </div>
         </div>
 
-        {/* Feature 3: Deep Analytics & Insights Dashboard (Horizontal Bento Card) */}
-        <div className="relative w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-white/5 shadow-md flex flex-row items-center justify-between p-4.5 gap-4.5 bg-white dark:bg-[#1a2433] transition-colors duration-300">
+        {/* Feature 3: Deep Analytics & Insights Dashboard (Horizontal Bento Card - Reversed) */}
+        <div className="relative w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-white/5 shadow-md flex flex-row-reverse items-center justify-between p-4.5 gap-4.5 bg-white dark:bg-[#1a2433] transition-colors duration-300">
           <div className="flex-1 flex flex-col gap-1.5 text-left">
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="text-[9px] font-mono font-bold text-violet-500 dark:text-violet-400 uppercase tracking-wider">Analytics</span>
