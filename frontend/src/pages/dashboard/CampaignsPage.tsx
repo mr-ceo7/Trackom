@@ -181,28 +181,28 @@ const CampaignRow: React.FC<{
           </div>
         </div>
 
-        <div className="flex items-center gap-6 text-sm">
-          <div className="text-center">
-            <div className="font-bold text-slate-900 dark:text-white font-mono">{c.total_recipients.toLocaleString()}</div>
-            <div className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Recipients</div>
+        <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-sm w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 border-slate-200/20 dark:border-white/5 pt-3 sm:pt-0">
+          <div className="text-center min-w-[3.5rem]">
+            <div className="font-bold text-slate-900 dark:text-white font-mono text-xs sm:text-sm">{c.total_recipients.toLocaleString()}</div>
+            <div className="text-[9px] sm:text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Recipients</div>
           </div>
-          <div className="text-center">
-            <div className="font-bold text-brand-primary font-mono">{c.sent_count.toLocaleString()}</div>
-            <div className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Sent</div>
+          <div className="text-center min-w-[3rem]">
+            <div className="font-bold text-brand-primary font-mono text-xs sm:text-sm">{c.sent_count.toLocaleString()}</div>
+            <div className="text-[9px] sm:text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Sent</div>
           </div>
-          <div className="text-center">
-            <div className="font-bold text-brand-emerald font-mono">{c.delivered_count.toLocaleString()}</div>
-            <div className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Delivered</div>
+          <div className="text-center min-w-[4rem]">
+            <div className="font-bold text-brand-emerald font-mono text-xs sm:text-sm">{c.delivered_count.toLocaleString()}</div>
+            <div className="text-[9px] sm:text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Delivered</div>
           </div>
           {c.sent_count > 0 && (
-            <div className="text-center">
-              <div className="font-bold text-brand-primary font-mono">{deliveryRate}%</div>
-              <div className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Delivery</div>
+            <div className="text-center min-w-[3.5rem]">
+              <div className="font-bold text-brand-primary font-mono text-xs sm:text-sm">{deliveryRate}%</div>
+              <div className="text-[9px] sm:text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Delivery</div>
             </div>
           )}
 
           {/* Action buttons */}
-          <div className="flex items-center gap-1 border-l border-slate-200/20 dark:border-white/5 pl-4 shrink-0">
+          <div className="flex items-center gap-1 border-l-0 sm:border-l border-slate-200/20 dark:border-white/5 pl-0 sm:pl-4 shrink-0">
             {/* Pause/Resume for active campaigns */}
             {c.status === 'sending' && (
               <button 

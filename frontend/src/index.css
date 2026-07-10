@@ -1026,3 +1026,228 @@ body {
   }
 }
 
+/* ==========================================================================
+   MOBILE RESPONSIVE OPTIMIZATIONS
+   Inspired by TrojanCrypto ambient-media, card-collapse, and scaling patterns.
+   Applied to both the Landing Page and Dashboard.
+   ========================================================================== */
+
+/* ===== HERO VIDEO AMBIENT OVERLAY (Mobile) ===== */
+.hero-video-container {
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .hero-video-container {
+    width: 60%;
+  }
+}
+
+@media (max-width: 767px) {
+  .hero-video-container {
+    opacity: 0.3;
+    mask-image: linear-gradient(to left, transparent 0%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0.8) 100%);
+    -webkit-mask-image: linear-gradient(to left, transparent 0%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0.8) 100%);
+  }
+}
+
+/* ===== LANDING PAGE MOBILE OVERRIDES ===== */
+@media (max-width: 767px) {
+  /* --- Typography Scaling --- */
+  h1 {
+    font-size: clamp(1.75rem, 7vw, 2.5rem) !important;
+    line-height: 1.1 !important;
+  }
+
+  h2 {
+    font-size: clamp(1.35rem, 5.5vw, 2rem) !important;
+    line-height: 1.15 !important;
+  }
+
+  h3 {
+    font-size: clamp(1rem, 4vw, 1.35rem) !important;
+  }
+
+  /* --- Section Padding Reduction --- */
+  section,
+  [class*="py-16"],
+  [class*="py-20"],
+  [class*="py-24"] {
+    padding-top: 2.5rem !important;
+    padding-bottom: 2.5rem !important;
+  }
+
+  [class*="px-4"],
+  [class*="px-6"],
+  [class*="px-8"] {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  /* --- Clay Card Shadows: lighter on mobile for performance --- */
+  .clay-card {
+    box-shadow:
+      5px 5px 12px rgba(136, 148, 178, 0.20),
+      -5px -5px 12px rgba(255, 255, 255, 0.90),
+      inset 2px 2px 4px rgba(255, 255, 255, 0.90),
+      inset -2px -2px 4px rgba(136, 148, 178, 0.08) !important;
+  }
+
+  .dark .clay-card {
+    box-shadow:
+      4px 4px 12px rgba(0, 0, 0, 0.45),
+      -4px -4px 12px rgba(255, 255, 255, 0.02),
+      inset 1px 1px 3px rgba(255, 255, 255, 0.06),
+      inset -2px -2px 5px rgba(0, 0, 0, 0.50) !important;
+  }
+
+  .clay-stat {
+    box-shadow:
+      4px 4px 10px rgba(136, 148, 178, 0.18),
+      -4px -4px 10px rgba(255, 255, 255, 0.90),
+      inset 2px 2px 4px rgba(255, 255, 255, 0.90),
+      inset -2px -2px 4px rgba(136, 148, 178, 0.06) !important;
+  }
+
+  /* --- Disable hover transforms on touch --- */
+  .clay-card-hover:hover,
+  .clay-stat:hover {
+    transform: none !important;
+  }
+
+  /* --- Marquee speed --- */
+  .animate-marquee {
+    animation-duration: 20s;
+  }
+}
+
+/* ===== DASHBOARD BOTTOM NAV ===== */
+.dashboard-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.dashboard-bottom-nav-inner {
+  background: rgba(241, 244, 251, 0.92);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-top: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow:
+    0 -4px 20px rgba(136, 148, 178, 0.15),
+    inset 0 1px 3px rgba(255, 255, 255, 0.8);
+}
+
+.dark .dashboard-bottom-nav-inner {
+  background: rgba(18, 20, 34, 0.92);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 -4px 20px rgba(0, 0, 0, 0.45),
+    inset 0 1px 2px rgba(255, 255, 255, 0.04);
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  flex: 1;
+  padding: 8px 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748b;
+  transition: color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+}
+
+.dark .bottom-nav-item {
+  color: #6b7280;
+}
+
+.bottom-nav-item.active {
+  color: #6366F1;
+}
+
+.dark .bottom-nav-item.active {
+  color: #818CF8;
+}
+
+.bottom-nav-item.active::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #6366F1;
+  box-shadow: 0 0 6px rgba(99, 102, 241, 0.5);
+}
+
+.dark .bottom-nav-item.active::before {
+  background: #818CF8;
+  box-shadow: 0 0 6px rgba(129, 140, 248, 0.5);
+}
+
+/* ===== DASHBOARD MOBILE TABLE → CARD OVERRIDES ===== */
+@media (max-width: 767px) {
+  /* Mobile card items in table replacements */
+  .mobile-data-card {
+    background: #FFFFFF;
+    border-radius: 16px;
+    padding: 14px 16px;
+    box-shadow:
+      4px 4px 10px rgba(136, 148, 178, 0.18),
+      -4px -4px 10px rgba(255, 255, 255, 0.90),
+      inset 1px 1px 3px rgba(255, 255, 255, 0.80);
+    transition: all 0.2s ease;
+  }
+
+  .dark .mobile-data-card {
+    background: #121422;
+    box-shadow:
+      4px 4px 10px rgba(0, 0, 0, 0.40),
+      -4px -4px 10px rgba(255, 255, 255, 0.02),
+      inset 1px 1px 2px rgba(255, 255, 255, 0.06),
+      inset -2px -2px 4px rgba(0, 0, 0, 0.45);
+  }
+
+  .mobile-data-card:active {
+    transform: scale(0.98);
+  }
+}
+
+/* ===== SAFE AREA SUPPORT (notch/gesture bar phones) ===== */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .dashboard-bottom-nav {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* ===== REDUCED MOTION PREFERENCE ===== */
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-float,
+  .animate-pulse-glow,
+  .animate-gradient-shift,
+  .animate-scroll-bounce {
+    animation: none !important;
+  }
+
+  .scroll-animate,
+  .scroll-animate-left,
+  .scroll-animate-right,
+  .scroll-animate-scale {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}

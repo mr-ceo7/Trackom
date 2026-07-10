@@ -218,7 +218,7 @@ export default function ResellerPanelPage() {
 
               {/* Clients Table */}
               <div className="clay-card rounded-3xl overflow-hidden">
-                <div className="overflow-x-auto">
+                <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-left">
                     <thead>
                       <tr className="border-b border-slate-200/20 dark:border-white/6 clay-inset">
@@ -266,6 +266,41 @@ export default function ResellerPanelPage() {
                     </tbody>
                   </table>
                 </div>
+
+                {/* Mobile Card View - shown only on mobile */}
+                <div className="md:hidden divide-y divide-slate-100 dark:divide-white/[0.03]">
+                  {users.map(u => (
+                    <div key={u.id} className="p-4 space-y-3 text-left">
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <div className="text-sm font-semibold text-slate-900 dark:text-white">{u.full_name}</div>
+                          <div className="text-[10px] text-slate-400 font-mono mt-0.5">{u.email}</div>
+                        </div>
+                        <span className="px-2.5 py-1 rounded-xl bg-brand-primary/10 text-brand-primary text-xs font-mono font-bold">
+                          {u.sms_balance.toLocaleString()} cr
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
+                        <span>Company: {u.company || ' - '}</span>
+                        <span>Created {new Date(u.created_at).toLocaleDateString()}</span>
+                      </div>
+                      <div className="pt-2 border-t border-slate-100 dark:border-white/[0.03] flex justify-end">
+                        <button
+                          onClick={() => { setSelectedUser(u); setIsTransferOpen(true); }}
+                          className="clay-button-secondary px-3 py-1.5 rounded-2xl text-brand-primary text-xs font-semibold cursor-pointer transition-all"
+                        >
+                          Allocate Credits
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  {users.length === 0 && (
+                    <div className="text-center py-16">
+                      <Users className="w-10 h-10 text-slate-300 dark:text-gray-600 mx-auto mb-3" />
+                      <p className="text-sm text-slate-500 dark:text-gray-400">No client accounts created yet.</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -279,7 +314,7 @@ export default function ResellerPanelPage() {
 
               {/* Logs Table */}
               <div className="clay-card rounded-3xl overflow-hidden">
-                <div className="overflow-x-auto">
+                <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-left">
                     <thead>
                       <tr className="border-b border-slate-200/20 dark:border-white/6 clay-inset">
@@ -318,6 +353,36 @@ export default function ResellerPanelPage() {
                       )}
                     </tbody>
                   </table>
+                </div>
+
+                {/* Mobile Card View - shown only on mobile */}
+                <div className="md:hidden divide-y divide-slate-100 dark:divide-white/[0.03]">
+                  {logs.map(log => (
+                    <div key={log.id} className="p-4 space-y-2 text-left">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-semibold text-slate-900 dark:text-white">{log.user_name}</span>
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${
+                          log.status === 'delivered' ? 'bg-brand-emerald/10 text-brand-emerald' : 'bg-red-500/10 text-red-500'
+                        }`}>
+                          {log.status}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-600 dark:text-gray-400 truncate">{log.content}</p>
+                      <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono pt-1.5 border-t border-slate-100 dark:border-white/[0.03]">
+                        <span>To: {log.recipient}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-slate-950 dark:text-white">{log.cost.toFixed(2)} cr</span>
+                          <span>{new Date(log.created_at).toLocaleTimeString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {logs.length === 0 && (
+                    <div className="text-center py-16">
+                      <Megaphone className="w-10 h-10 text-slate-300 dark:text-gray-600 mx-auto mb-3" />
+                      <p className="text-sm text-slate-500 dark:text-gray-400">No outbound traffic recorded from sub-users yet.</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

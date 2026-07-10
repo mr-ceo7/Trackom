@@ -203,7 +203,7 @@ export default function PlatformCapabilities() {
         <MobileDeck />
 
         <div ref={ctaRef} className={`flex flex-col gap-6 text-center max-w-3xl mx-auto mt-6 md:mt-12 items-center scroll-animate ${ctaVisible ? 'is-visible' : ''}`}>
-          <h3 className="font-display font-bold text-slate-900 dark:text-white text-2xl sm:text-3xl md:text-4xl uppercase tracking-wide">
+          <h3 className="font-display font-bold text-slate-900 dark:text-white text-xl sm:text-2xl md:text-3xl lg:text-4xl uppercase tracking-wide">
             Ready to Reach Every Customer in Kenya?
           </h3>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full sm:w-auto">

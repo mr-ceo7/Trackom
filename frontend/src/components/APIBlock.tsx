@@ -95,7 +95,7 @@ echo "Campaign {$campaign->id}: {$campaign->status}";`,
     <section id="api-docs" className="py-10 md:py-14 px-4 md:px-8 max-w-7xl mx-auto border-t border-slate-200 dark:border-white/6 scroll-mt-24">
       <div
         ref={ref}
-        className={`grid grid-cols-1 lg:grid-cols-[1fr_520px] gap-16 items-center scroll-animate ${isVisible ? 'is-visible' : ''}`}
+        className={`grid grid-cols-1 lg:grid-cols-[1fr_520px] gap-8 lg:gap-16 items-center scroll-animate ${isVisible ? 'is-visible' : ''}`}
       >
         {/* LEFT: DESCRIPTION */}
         <div className="flex flex-col gap-8 text-left">
@@ -103,12 +103,12 @@ echo "Campaign {$campaign->id}: {$campaign->status}";`,
             <div className="text-xs uppercase tracking-widest text-brand-accent font-mono font-semibold">
               Developer-First API
             </div>
-            <h2 className="font-display font-bold text-slate-900 dark:text-white text-3xl sm:text-4xl md:text-5xl leading-tight">
+            <h2 className="font-display font-bold text-slate-900 dark:text-white text-2xl sm:text-3xl md:text-4xl lg:text-5xl leading-tight">
               Ship your integration today.{' '}
               <br />
               <span className="gradient-text">Scale to millions tomorrow.</span>
             </h2>
-            <p className="text-slate-600 dark:text-gray-400 text-base md:text-lg leading-relaxed max-w-lg">
+            <p className="text-slate-600 dark:text-gray-400 text-sm sm:text-base md:text-lg leading-relaxed max-w-lg">
               Production-ready REST API, official SDKs for Node.js, Python & PHP, plus real-time webhooks. Trusted by Kenya's leading developers.
             </p>
           </div>
@@ -143,13 +143,13 @@ echo "Campaign {$campaign->id}: {$campaign->status}";`,
         {/* RIGHT: CODE BLOCK */}
         <div className="shadow-2xl rounded-2xl border border-slate-200 dark:border-white/6 overflow-hidden bg-white dark:bg-surface-card relative">
           {/* Tabs */}
-          <div className="flex items-center justify-between px-4 md:px-6 h-12 border-b border-slate-200 dark:border-white/6 bg-slate-50 dark:bg-white/[0.02]">
+          <div className="flex items-center justify-between px-3 sm:px-4 md:px-6 h-11 sm:h-12 border-b border-slate-200 dark:border-white/6 bg-slate-50 dark:bg-white/[0.02]">
             <div className="flex gap-1.5">
               {tabs.map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-3 py-1 rounded-lg text-xs font-mono font-semibold transition-all duration-300 cursor-pointer ${
+                  className={`px-2 sm:px-3 py-1 rounded-lg text-[10px] sm:text-xs font-mono font-semibold transition-all duration-300 cursor-pointer ${
                     activeTab === tab
                       ? 'bg-brand-primary text-white shadow-sm'
                       : 'text-slate-500 dark:text-gray-500 hover:text-slate-900 dark:hover:text-white'
@@ -165,7 +165,7 @@ echo "Campaign {$campaign->id}: {$campaign->status}";`,
           </div>
 
           {/* Code */}
-          <div className="p-6 md:p-8 bg-slate-50 dark:bg-surface-dark text-left font-mono text-xs sm:text-[13px] leading-relaxed relative overflow-hidden">
+          <div className="p-4 sm:p-6 md:p-8 bg-slate-50 dark:bg-surface-dark text-left font-mono text-[11px] sm:text-xs md:text-[13px] leading-relaxed relative overflow-hidden">
             <button
               onClick={handleCopyCode}
               className="absolute top-4 right-4 p-2.5 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-500 dark:text-gray-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.08] cursor-pointer transition-all duration-300 active:scale-95 group"
@@ -186,7 +186,7 @@ echo "Campaign {$campaign->id}: {$campaign->status}";`,
               </AnimatePresence>
             </button>
 
-            <pre className="text-slate-700 dark:text-gray-300 whitespace-pre overflow-x-auto select-all max-h-80 md:max-h-none py-1.5">
+            <pre className="text-slate-700 dark:text-gray-300 whitespace-pre overflow-x-auto select-all max-h-64 sm:max-h-80 md:max-h-none py-1.5 scrollbar-thin">
               <code>{codeSnippets[activeTab].code}</code>
             </pre>
           </div>

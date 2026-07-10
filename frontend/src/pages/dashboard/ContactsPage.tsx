@@ -814,7 +814,8 @@ export default function ContactsPage() {
             <div className="text-center py-12"><Loader size="md" /></div>
           ) : (
             <div className="clay-card rounded-3xl overflow-hidden">
-              <div className="overflow-x-auto">
+              {/* Desktop Table - hidden on mobile */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
                     <tr className="border-b border-slate-200/20 dark:border-white/6 clay-inset">
@@ -918,6 +919,99 @@ export default function ContactsPage() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile Card View - shown only on mobile */}
+              <div className="md:hidden">
+                {/* Mobile select-all header */}
+                <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-200/20 dark:border-white/6 clay-inset">
+                  <input
+                    type="checkbox"
+                    className="rounded border-slate-300 dark:border-white/10 text-brand-primary focus:ring-brand-primary cursor-pointer w-4 h-4"
+                    checked={contacts.length > 0 && contacts.every(c => selectedIds.includes(c.id))}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedIds(contacts.map(c => c.id));
+                      } else {
+                        setSelectedIds([]);
+                      }
+                    }}
+                  />
+                  <span className="text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Select All</span>
+                </div>
+
+                <div className="divide-y divide-slate-100 dark:divide-white/[0.03]">
+                  {contacts.map((c, i) => (
+                    <motion.div
+                      key={c.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: Math.min(i * 0.015, 0.5) }}
+                      className={`p-4 flex gap-3 transition-colors ${selectedIds.includes(c.id) ? 'bg-brand-primary/5' : ''}`}
+                    >
+                      <div className="flex items-start pt-0.5 shrink-0">
+                        <input
+                          type="checkbox"
+                          className="rounded border-slate-300 dark:border-white/10 text-brand-primary focus:ring-brand-primary cursor-pointer w-4 h-4"
+                          checked={selectedIds.includes(c.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedIds(prev => [...prev, c.id]);
+                            } else {
+                              setSelectedIds(prev => prev.filter(id => id !== c.id));
+                            }
+                          }}
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <div className="flex items-center gap-2.5">
+                          <div className={`w-8 h-8 rounded-lg ${c.is_blacklisted ? 'bg-rose-500/15 text-rose-500 font-bold' : 'bg-gradient-to-br from-brand-primary/20 to-brand-accent/20 text-brand-primary font-bold'} flex items-center justify-center text-xs shrink-0`}>
+                            {c.name.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-sm font-semibold text-slate-900 dark:text-white truncate">{c.name}</span>
+                              {c.is_blacklisted && (
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20">
+                                  Blacklisted
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-xs text-slate-600 dark:text-gray-400 font-mono mt-0.5">{c.phone}</div>
+                          </div>
+                        </div>
+                        {c.email && (
+                          <div className="text-xs text-slate-500 dark:text-gray-400 truncate pl-[2.625rem]">{c.email}</div>
+                        )}
+                        <div className="flex items-center gap-1 pl-[2.625rem]">
+                          <button 
+                            onClick={() => handleToggleBlacklist(c)} 
+                            className={`p-1.5 rounded-lg cursor-pointer transition-all ${
+                              c.is_blacklisted 
+                                ? 'text-rose-500 bg-rose-500/10' 
+                                : 'text-slate-400 hover:text-rose-500'
+                            }`}
+                            title={c.is_blacklisted ? "Whitelist Contact" : "Blacklist Contact"}
+                          >
+                            <Ban className="w-3.5 h-3.5" />
+                          </button>
+                          <button 
+                            onClick={() => openEditContactModal(c)} 
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-brand-primary cursor-pointer transition-all"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteContact(c.id)} 
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 cursor-pointer transition-all"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
               {contacts.length === 0 && (
                 <div className="text-center py-16">

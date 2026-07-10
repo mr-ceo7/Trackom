@@ -270,7 +270,7 @@ export default function MarketingFunnel() {
         {/* 3. Tech Stack Integration & Case Studies */}
         <div
           ref={stackSectionRef}
-          className={`grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 mt-12 md:mt-24 items-center scroll-animate ${stackSectionVisible ? 'is-visible' : ''}`}
+          className={`grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 mt-8 md:mt-24 items-center scroll-animate ${stackSectionVisible ? 'is-visible' : ''}`}
         >
           {/* Left Column: Tech Stack Connection */}
           <div className="lg:col-span-6 flex flex-col gap-6">
@@ -281,7 +281,7 @@ export default function MarketingFunnel() {
                   Enterprise Integration Hub
                 </span>
               </div>
-              <h3 className="font-display font-bold text-slate-900 dark:text-white text-2xl sm:text-3xl md:text-4xl leading-tight">
+              <h3 className="font-display font-bold text-slate-900 dark:text-white text-xl sm:text-2xl md:text-3xl lg:text-4xl leading-tight">
                 Seamlessly Connects with Your Tech Stack
               </h3>
               <p className="text-slate-600 dark:text-gray-400 text-sm md:text-base leading-relaxed">
@@ -360,7 +360,7 @@ export default function MarketingFunnel() {
         </div>
 
         {/* Section CTAs */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-12 md:mt-16">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mt-8 md:mt-16">
           <Link
             to="/login"
             className="w-full sm:w-auto h-12 px-8 rounded-full text-sm font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none flex items-center justify-center border border-transparent"

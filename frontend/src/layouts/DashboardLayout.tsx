@@ -13,6 +13,7 @@ import { useAuth } from '../contexts/AuthContext';
 import ThemeToggle from '../components/ThemeToggle';
 import SandboxToggle from '../components/SandboxToggle';
 import TrackomLogo from '../components/TrackomLogo';
+import BottomNav from '../components/BottomNav';
 import api from '../services/api';
 
 interface NotificationData {
@@ -278,7 +279,7 @@ export default function DashboardLayout() {
         </header>
 
         {/* PAGE CONTENT */}
-        <main className="flex-1 p-4 sm:p-6 overflow-y-auto min-h-0 space-y-4">
+        <main className="flex-1 p-4 sm:p-6 pb-24 lg:pb-6 overflow-y-auto min-h-0 space-y-4">
           {/* Admin Announcement Alert Banner */}
           {publicSettings?.alertBanner && (
             <div className="bg-brand-primary/10 border border-brand-primary/20 text-brand-primary dark:text-brand-primary-light px-4 py-3 rounded-2xl text-xs font-semibold flex items-center gap-2 shadow-sm text-left">
@@ -357,6 +358,9 @@ export default function DashboardLayout() {
           </>
         )}
       </AnimatePresence>
+
+      {/* MOBILE BOTTOM NAVIGATION */}
+      <BottomNav onOpenSidebar={() => setSidebarOpen(true)} />
     </div>
   );
 }

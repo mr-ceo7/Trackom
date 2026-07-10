@@ -296,7 +296,8 @@ export default function ReportsPage() {
               <div className="text-center py-12"><Loader size="md" /></div>
             ) : (
               <div className="clay-card rounded-3xl overflow-hidden dark:border-white/10">
-                <div className="overflow-x-auto">
+                {/* Desktop Table - hidden on mobile */}
+                <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-left">
                     <thead>
                       <tr className="border-b border-slate-200/20 dark:border-white/6 clay-inset">
@@ -375,6 +376,60 @@ export default function ReportsPage() {
                   </table>
                 </div>
 
+                {/* Mobile Card View - shown only on mobile */}
+                <div className="md:hidden divide-y divide-slate-100 dark:divide-white/[0.03]">
+                  {messages.map((m) => {
+                    const isRowExpanded = expandedMessageId === m.id;
+                    return (
+                      <div
+                        key={m.id}
+                        onClick={() => setExpandedMessageId(isRowExpanded ? null : m.id)}
+                        className="p-4 space-y-2 cursor-pointer active:bg-slate-50 dark:active:bg-white/[0.02] transition-colors"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-mono font-bold text-slate-900 dark:text-white">{m.recipient}</span>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase shrink-0 ${getStatusBadge(m.status)}`}>
+                            {m.status}
+                          </span>
+                        </div>
+                        <p className={`text-xs text-slate-600 dark:text-gray-300 leading-relaxed ${isRowExpanded ? 'whitespace-pre-wrap' : 'line-clamp-2'}`}>
+                          {m.content}
+                        </p>
+                        <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-white/[0.03]">
+                          <div className="flex items-center gap-2 text-[10px] text-slate-400 dark:text-gray-500 font-mono">
+                            <span>{m.sender_id}</span>
+                            {m.batch_number && (
+                              <>
+                                <span className="text-slate-200 dark:text-white/10">|</span>
+                                <span className="text-brand-primary">{m.batch_number}</span>
+                              </>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-mono text-slate-600 dark:text-gray-300 font-semibold">{m.cost.toFixed(2)} cr</span>
+                            <span className="text-[10px] text-slate-400 font-mono">{m.sent_at ? new Date(m.sent_at).toLocaleTimeString() : ' - '}</span>
+                            {m.status === 'failed' && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleRetryMessage(m.id); }}
+                                className="p-1 rounded bg-red-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 cursor-pointer shrink-0"
+                                title="Retry"
+                              >
+                                <RotateCcw className="w-3 h-3" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {messages.length === 0 && (
+                    <div className="text-center py-16">
+                      <BarChart3 className="w-10 h-10 text-slate-300 dark:text-gray-600 mx-auto mb-3" />
+                      <p className="text-sm text-slate-500 dark:text-gray-400">No message history matches your criteria.</p>
+                    </div>
+                  )}
+                </div>
+
                 <div className="px-5 py-3 border-t border-slate-200/20 dark:border-white/6 flex items-center justify-between text-xs text-slate-500">
                   <button 
                     onClick={() => setPage(p => Math.max(1, p - 1))}
@@ -401,7 +456,8 @@ export default function ReportsPage() {
             <div className="text-center py-12"><Loader size="md" /></div>
           ) : (
             <div className="clay-card rounded-3xl overflow-hidden dark:border-white/10">
-              <div className="overflow-x-auto">
+              {/* Desktop Table - hidden on mobile */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
                     <tr className="border-b border-slate-200/20 dark:border-white/6 clay-inset">
@@ -463,6 +519,50 @@ export default function ReportsPage() {
                     )}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile Card View - shown only on mobile */}
+              <div className="md:hidden divide-y divide-slate-100 dark:divide-white/[0.03]">
+                {scheduledMessages.map((m) => {
+                  const isRowExpanded = expandedMessageId === m.id;
+                  return (
+                    <div
+                      key={m.id}
+                      onClick={() => setExpandedMessageId(isRowExpanded ? null : m.id)}
+                      className="p-4 space-y-2 cursor-pointer active:bg-slate-50 dark:active:bg-white/[0.02] transition-colors"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-mono font-bold text-slate-900 dark:text-white">{m.recipient}</span>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-purple-500/10 text-purple-500 shrink-0">
+                          Scheduled
+                        </span>
+                      </div>
+                      <p className={`text-xs text-slate-600 dark:text-gray-300 leading-relaxed ${isRowExpanded ? 'whitespace-pre-wrap' : 'line-clamp-2'}`}>
+                        {m.content}
+                      </p>
+                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-white/[0.03]">
+                        <div className="space-y-0.5">
+                          <div className="text-[10px] text-slate-400 dark:text-gray-500 font-mono">{m.sender_id}</div>
+                          <div className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 font-mono">
+                            {m.scheduled_at ? new Date(m.scheduled_at).toLocaleString() : ' - '}
+                          </div>
+                        </div>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleCancelScheduled(m.id); }}
+                          className="px-3 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/25 text-red-500 text-xs font-bold transition-all cursor-pointer shrink-0"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+                {scheduledMessages.length === 0 && (
+                  <div className="text-center py-16">
+                    <Clock className="w-10 h-10 text-slate-300 dark:text-gray-600 mx-auto mb-3" />
+                    <p className="text-sm text-slate-500 dark:text-gray-400">No scheduled messages pending in the queue.</p>
+                  </div>
+                )}
               </div>
             </div>
           )

@@ -76,7 +76,7 @@ export default function Hero() {
   const renderVideoAndOverlay = () => (
     <>
       {/* VIDEO BACKGROUND RESTRICTED TO RIGHT SIDE WITHOUT SHRINKING */}
-      <div className="absolute right-0 top-0 bottom-0 w-full lg:w-[60%] z-0 pointer-events-none select-none overflow-hidden">
+      <div className="hero-video-container absolute right-0 top-0 bottom-0 w-full lg:w-[60%] z-0 pointer-events-none select-none overflow-hidden">
         <video
           autoPlay
           muted
@@ -101,7 +101,7 @@ export default function Hero() {
   );
 
   const renderStats = () => (
-    <div className="w-full bg-[#0B0B12] border-t border-white/5 py-4 px-4 md:px-8 relative z-20 transition-colors duration-300">
+    <div className="w-full bg-[#0B0B12] border-t border-white/5 py-3 sm:py-4 px-3 sm:px-4 md:px-8 relative z-20 transition-colors duration-300">
       <div className="max-w-7xl mx-auto relative z-30">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {stats.map((stat, index) => (
@@ -110,7 +110,7 @@ export default function Hero() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="bg-surface-card rounded-xl p-4 border border-white/5 shadow-sm hover:shadow-md dark:hover:border-brand-primary/20 flex items-center gap-3 transition-all duration-300"
+              className="bg-surface-card rounded-xl p-2.5 sm:p-4 border border-white/5 shadow-sm hover:shadow-md dark:hover:border-brand-primary/20 flex items-center gap-2 sm:gap-3 transition-all duration-300"
             >
               {/* ICON */}
               <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-white/5 text-gray-300">
@@ -119,7 +119,7 @@ export default function Hero() {
 
               {/* VALUE & LABEL */}
               <div className="flex flex-col min-w-0">
-                <div className="font-display font-extrabold text-white text-xl tracking-tight leading-none">
+                <div className="font-display font-extrabold text-white text-base sm:text-xl tracking-tight leading-none">
                   {stat.value}
                 </div>
                 <div className="text-[10px] font-bold text-gray-400 tracking-tight mt-0.5 truncate">
@@ -139,11 +139,11 @@ export default function Hero() {
         {renderVideoAndOverlay()}
 
         {/* MAIN CONTENT ROW */}
-        <div className="relative flex-grow flex items-start justify-center px-4 md:px-8 pt-28 pb-8">
+        <div className="relative flex-grow flex items-start justify-center px-4 md:px-8 pt-20 sm:pt-24 md:pt-28 pb-6 sm:pb-8">
           <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center relative z-10">
 
             {/* LEFT COLUMN: TRANSITIONS CONTENT IN-PLACE */}
-            <div className="lg:col-span-7 relative h-[280px] sm:h-[320px] lg:h-[380px] w-full">
+            <div className="lg:col-span-7 relative h-[220px] sm:h-[280px] md:h-[320px] lg:h-[380px] w-full">
 
               {/* SCREEN 1: BRAND LOGO INITIAL VIEW */}
               <motion.div
@@ -159,7 +159,7 @@ export default function Hero() {
                 <img
                   src="/Gemini_Generated_Image_8ab5bh8ab5bh8ab5.png"
                   alt="Trackom - The Ultimate Bulk SMS Platform"
-                  className="max-w-full h-auto max-h-[180px] lg:max-h-[240px] object-contain ml-0"
+                  className="max-w-full h-auto max-h-[140px] sm:max-h-[180px] lg:max-h-[240px] object-contain ml-0"
                 />
 
                 {/* CTA BUTTONS SCREEN 1 */}
@@ -186,13 +186,13 @@ export default function Hero() {
                   }`}
               >
                 {/* HEADLINE */}
-                <h1 className="font-display font-extrabold text-white text-4xl sm:text-5xl lg:text-6xl xl:text-7xl leading-[1.05] tracking-tighter text-balance">
+                <h1 className="font-display font-extrabold text-white text-[28px] sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl leading-[1.05] tracking-tighter text-balance">
                   Kenya's #1 Bulk <br />
                   <span className="text-white">SMS & Messaging Platform</span>
                 </h1>
 
                 {/* SUBTITLE */}
-                <p className="text-gray-300 text-base sm:text-lg md:text-xl font-medium max-w-xl mt-6 leading-relaxed text-balance">
+                <p className="text-gray-300 text-sm sm:text-base md:text-lg lg:text-xl font-medium max-w-xl mt-4 sm:mt-6 leading-relaxed text-balance">
                   Reach millions across Safaricom, Airtel & Telkom with AI-optimized campaigns, instant M-Pesa payments, and 99.99% delivery rates.
                 </p>
 
@@ -222,7 +222,7 @@ export default function Hero() {
             </div>
 
             {/* Right Column: Spacer */}
-            <div className="lg:col-span-5 h-[280px] sm:h-[350px] lg:h-full pointer-events-none" />
+            <div className="hidden lg:block lg:col-span-5 lg:h-full pointer-events-none" />
           </div>
         </div>
 

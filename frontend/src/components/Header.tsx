@@ -151,7 +151,7 @@ export default function Header() {
       </a>
       <header
       id="main-header"
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 px-4 md:px-8 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 px-3 sm:px-4 md:px-8 ${
         scrolled
           ? 'py-3 glass shadow-lg shadow-black/10'
           : 'py-5 bg-transparent'

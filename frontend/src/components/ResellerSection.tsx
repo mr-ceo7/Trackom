@@ -18,12 +18,12 @@ export default function ResellerSection() {
         {/* HEADER */}
         <div
           ref={headerRef}
-          className={`flex flex-col gap-4 text-center max-w-3xl mx-auto mb-14 md:mb-20 scroll-animate ${headerVisible ? 'is-visible' : ''}`}
+          className={`flex flex-col gap-3 sm:gap-4 text-center max-w-3xl mx-auto mb-8 md:mb-20 scroll-animate ${headerVisible ? 'is-visible' : ''}`}
         >
-          <h2 className="font-display font-bold text-slate-900 dark:text-white text-3xl sm:text-4xl md:text-5xl lg:text-[3.25rem] leading-[1.1] tracking-wide uppercase">
+          <h2 className="font-display font-bold text-slate-900 dark:text-white text-2xl sm:text-3xl md:text-4xl lg:text-5xl leading-[1.1] tracking-wide uppercase">
             Start Your Own SMS Business in Kenya
           </h2>
-          <p className="text-slate-600 dark:text-gray-400 text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
+          <p className="text-slate-600 dark:text-gray-400 text-sm sm:text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
             Buy wholesale SMS credits via M-Pesa, brand the platform as your own, and start earning from day one. Over 500 resellers already earning with Trackom.
           </p>
         </div>
@@ -31,7 +31,7 @@ export default function ResellerSection() {
         {/* BENTO GRID */}
         <div
           ref={gridRef}
-          className={`grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-20 scroll-animate ${gridVisible ? 'is-visible' : ''}`}
+          className={`grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-10 md:mb-20 scroll-animate ${gridVisible ? 'is-visible' : ''}`}
         >
           {/* Card 1: SIMPLE RESELLER ONBOARDING (Vertical, 1 Column span) */}
           <div
@@ -199,7 +199,7 @@ export default function ResellerSection() {
           ref={ctaRef}
           className={`flex flex-col gap-6 text-center max-w-3xl mx-auto items-center scroll-animate ${ctaVisible ? 'is-visible' : ''}`}
         >
-          <h3 className="font-display font-bold text-slate-900 dark:text-white text-2xl sm:text-3xl md:text-4xl uppercase tracking-wide">
+          <h3 className="font-display font-bold text-slate-900 dark:text-white text-xl sm:text-2xl md:text-3xl lg:text-4xl uppercase tracking-wide">
             Start Earning Today
           </h3>
 
