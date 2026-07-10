@@ -1030,7 +1030,7 @@ export default function AdminPanelPage() {
                   </div>
                   {stats && stats.monthly_breakdown && stats.monthly_breakdown.length > 5 && (
                     <button
-                      onClick={() => setActiveTab('transactions')}
+                      onClick={() => setActiveTab('revenue')}
                       className="w-full text-center text-[8px] font-black uppercase tracking-wider text-brand-primary hover:text-brand-primary/80 transition-colors mt-1 py-1 bg-transparent border-0 cursor-pointer"
                     >
                       Show More →
@@ -1075,7 +1075,7 @@ export default function AdminPanelPage() {
                   </div>
                   {stats && stats.daily_revenue_breakdown && stats.daily_revenue_breakdown.length > 5 && (
                     <button
-                      onClick={() => setActiveTab('transactions')}
+                      onClick={() => setActiveTab('revenue')}
                       className="w-full text-center text-[8px] font-black uppercase tracking-wider text-brand-primary hover:text-brand-primary/80 transition-colors mt-1 py-1 bg-transparent border-0 cursor-pointer"
                     >
                       Show More →
@@ -2054,7 +2054,7 @@ export default function AdminPanelPage() {
                       className="p-2 bg-brand-primary text-white hover:bg-brand-primary/95 rounded-2xl cursor-pointer transition-all flex items-center justify-center disabled:opacity-50"
                       title="Add to Pool"
                     >
-                      {submittingNewPoolId ? <Loader size="xs" /> : <Plus className="w-3.5 h-3.5" />}
+                      {submittingNewPoolId ? <Loader size="sm" /> : <Plus className="w-3.5 h-3.5" />}
                     </button>
                   </form>
                   
@@ -2277,15 +2277,15 @@ export default function AdminPanelPage() {
                   <Loader size="md" />
                 ) : (() => {
                   const trendData = revenueStats?.trend_data || [];
-                  const maxVal = Math.max(...trendData.map(v => v.amount), 1000);
+                  const maxVal = Math.max(...trendData.map((v: any) => v.amount), 1000);
                   
-                  const points = trendData.map((v, i) => {
+                  const points = trendData.map((v: any, i: number) => {
                     const x = 30 + (i * (440 / 29));
                     const y = 150 - (v.amount / maxVal * 120);
                     return { x, y, date: v.date, full_date: v.full_date, amount: v.amount };
                   });
 
-                  const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+                  const pathD = points.map((p: any, i: number) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
                   const areaD = pathD ? `${pathD} L 470 150 L 30 150 Z` : '';
 
                   return (
@@ -2308,7 +2308,7 @@ export default function AdminPanelPage() {
                         {pathD && <path d={pathD} fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />}
 
                         {/* Interactive hovered elements */}
-                        {points.map((p, i) => (
+                        {points.map((p: any, i: number) => (
                           <g key={i}>
                             <circle 
                               cx={p.x} 

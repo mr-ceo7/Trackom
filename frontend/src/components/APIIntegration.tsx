@@ -1,4 +1,5 @@
 import { CheckCircle2, Code2, Blocks, Webhook } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
 const integrationCards = [
@@ -55,9 +56,7 @@ const integrationCards = [
   },
 ];
 
-interface APIIntegrationProps {
-  onOpenSignup: () => void;
-}
+
 
 /* ──────────────────────────────────
    BENTO CARD (shared renderer)
@@ -66,13 +65,11 @@ function BentoCard({
   card,
   isHero = false,
   delay = 0,
-  onOpenSignup,
 }: {
   card: (typeof integrationCards)[number];
   isHero?: boolean;
   delay?: number;
   key?: any;
-  onOpenSignup: () => void;
 }) {
   const Icon = card.icon;
 
@@ -113,9 +110,9 @@ function BentoCard({
             <p className="text-xs leading-relaxed text-slate-800 dark:text-gray-200 font-medium">
               Test queries, inspect payloads, and mock responses directly inside our interactive Swagger sandbox before writing production code.
             </p>
-            <button onClick={onOpenSignup} className="h-8 px-4 rounded-full text-xs font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer hover:scale-[1.02] active:scale-95 transition-all duration-300 flex items-center justify-center border border-transparent">
+            <Link to="/docs" className="h-8 px-4 rounded-full text-xs font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer hover:scale-[1.02] active:scale-95 transition-all duration-300 flex items-center justify-center border border-transparent">
               Explore Developer Docs
-            </button>
+            </Link>
           </div>
         </div>
       ) : (
@@ -184,7 +181,7 @@ function BentoCard({
 /* ──────────────────────────────────
    MAIN COMPONENT
    ────────────────────────────────── */
-export default function APIIntegration({ onOpenSignup }: APIIntegrationProps) {
+export default function APIIntegration() {
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
   const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({ threshold: 0.1 });
   const { ref: ctaRef, isVisible: ctaVisible } = useScrollAnimation();
@@ -220,25 +217,25 @@ export default function APIIntegration({ onOpenSignup }: APIIntegrationProps) {
             {/* Hero card - col 1-2, row 1-2 (Developer Tools & SDKs) */}
             <div className="md:col-span-2 md:row-span-2 flex" style={{ transitionDelay: '0ms' }}>
               <div className="flex-1 flex">
-                <BentoCard card={integrationCards[1]} isHero delay={0} onOpenSignup={onOpenSignup} />
+                <BentoCard card={integrationCards[1]} isHero delay={0} />
               </div>
             </div>
 
             {/* Top-right card (REST API) */}
             <div className="flex" style={{ transitionDelay: '120ms' }}>
-              <BentoCard card={integrationCards[0]} delay={120} onOpenSignup={onOpenSignup} />
+              <BentoCard card={integrationCards[0]} delay={120} />
             </div>
 
             {/* Bottom-right card (Webhooks) */}
             <div className="flex" style={{ transitionDelay: '240ms' }}>
-              <BentoCard card={integrationCards[2]} delay={240} onOpenSignup={onOpenSignup} />
+              <BentoCard card={integrationCards[2]} delay={240} />
             </div>
           </div>
 
           {/* Mobile stack */}
           <div className="flex flex-col gap-5 md:hidden">
             {integrationCards.map((card, index) => (
-              <BentoCard key={card.title} card={card} delay={index * 120} onOpenSignup={onOpenSignup} />
+              <BentoCard key={card.title} card={card} delay={index * 120} />
             ))}
           </div>
         </div>
@@ -253,18 +250,18 @@ export default function APIIntegration({ onOpenSignup }: APIIntegrationProps) {
           </h3>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full sm:w-auto">
-            <button
-              onClick={onOpenSignup}
+            <Link
+              to="/login"
               className="w-full sm:w-auto h-12 px-8 rounded-full text-sm font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none flex items-center justify-center border border-transparent"
             >
               Get API Access Free
-            </button>
-            <button
-              onClick={onOpenSignup}
+            </Link>
+            <Link
+              to="/contact"
               className="w-full sm:w-auto h-12 px-8 rounded-full text-sm font-semibold text-slate-800 dark:text-white border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 cursor-pointer hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none flex items-center justify-center"
             >
               Talk to an Engineer
-            </button>
+            </Link>
           </div>
         </div>
       </div>

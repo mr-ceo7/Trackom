@@ -13,13 +13,11 @@ import HowItWorks from '../components/HowItWorks';
 import Testimonials from '../components/Testimonials';
 import FAQSection from '../components/FAQSection';
 import CTABanner from '../components/CTABanner';
-import SignupModal from '../components/SignupModal';
 import ParticleCanvas from '../components/ParticleCanvas';
 import TrackomLogo from '../components/TrackomLogo';
 import { Shield, CheckCircle2 } from 'lucide-react';
 
 export default function LandingPage() {
-  const [isSignupOpen, setIsSignupOpen] = useState(false);
   const [isAtBottom, setIsAtBottom] = useState(false);
 
   useEffect(() => {
@@ -74,33 +72,33 @@ export default function LandingPage() {
       <div className="absolute inset-0 dot-grid pointer-events-none z-0" />
 
       {/* HEADER */}
-      <Header onOpenSignup={() => setIsSignupOpen(true)} />
+      <Header />
 
       {/* MAIN */}
       <main className="flex-grow relative z-10">
         {/* Hero */}
-        <Hero onOpenSignup={() => setIsSignupOpen(true)} />
+        <Hero />
 
         {/* Feature Showcase */}
-        <FeatureShowcase onOpenSignup={() => setIsSignupOpen(true)} />
+        <FeatureShowcase />
 
         {/* Partner Logos Marquee */}
         <PartnerLogos />
 
         {/* Bulk SMS Control Section */}
-        <BulkSMSControl onOpenSignup={() => setIsSignupOpen(true)} />
+        <BulkSMSControl />
 
         {/* Marketing Funnel Section */}
-        <MarketingFunnel onOpenSignup={() => setIsSignupOpen(true)} />
+        <MarketingFunnel />
 
         {/* Detailed Platform Capabilities Section */}
-        <PlatformCapabilities onOpenSignup={() => setIsSignupOpen(true)} />
+        <PlatformCapabilities />
 
         {/* API Integration Section */}
-        <APIIntegration onOpenSignup={() => setIsSignupOpen(true)} />
+        <APIIntegration />
 
         {/* Reseller Section */}
-        <ResellerSection onOpenSignup={() => setIsSignupOpen(true)} />
+        <ResellerSection />
 
         {/* Services Grid */}
         <Services />
@@ -143,7 +141,7 @@ export default function LandingPage() {
         </section>
 
         {/* CTA Banner */}
-        <CTABanner onOpenSignup={() => setIsSignupOpen(true)} />
+        <CTABanner />
       </main>
 
       {/* FOOTER */}
@@ -206,9 +204,6 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
-
-      {/* SIGNUP MODAL */}
-      <SignupModal isOpen={isSignupOpen} onClose={() => setIsSignupOpen(false)} />
     </div>
   );
 }

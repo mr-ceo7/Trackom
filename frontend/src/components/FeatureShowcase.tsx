@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, useScroll, AnimatePresence } from 'motion/react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 import { CheckCircle2, MessageSquare, ShieldCheck, Repeat, Briefcase } from 'lucide-react';
@@ -24,14 +25,12 @@ const features = [
   },
 ];
 
-interface FeatureShowcaseProps {
-  onOpenSignup: () => void;
-}
+
 
 /* ──────────────────────────────────
    MOBILE DECK OF CARDS
    ────────────────────────────────── */
-function MobileDeck({ onOpenSignup }: { onOpenSignup: () => void }) {
+function MobileDeck() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
@@ -66,9 +65,9 @@ function MobileDeck({ onOpenSignup }: { onOpenSignup: () => void }) {
         ))}
       </div>
 
-      <button onClick={onOpenSignup} className="px-8 py-3 rounded-full text-sm font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer shadow-lg shadow-blue-500/25 active:scale-95 transition-all duration-300 z-10">
-        Start Your Free Trial
-      </button>
+      <Link to="/login" className="px-8 py-3 rounded-full text-sm font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer shadow-lg shadow-blue-500/25 active:scale-95 transition-all duration-300 z-10 text-center">
+        Get Started Now
+      </Link>
     </div>
   );
 }
@@ -113,7 +112,7 @@ function DeckCard({ feature, index, total, activeIndex, onNext, onPrev, setIsPau
 /* ──────────────────────────────────
    DESKTOP BENTO GRID
    ────────────────────────────────── */
-function DesktopBentoGrid({ onOpenSignup }: { onOpenSignup: () => void }) {
+function DesktopBentoGrid() {
   const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({ threshold: 0.1 });
 
   return (
@@ -208,12 +207,12 @@ function DesktopBentoGrid({ onOpenSignup }: { onOpenSignup: () => void }) {
 
               {/* Bottom CTA */}
               <div className="pt-6 border-t border-white/10 flex justify-start">
-                <button
-                  onClick={onOpenSignup}
-                  className="h-12 px-8 rounded-full text-sm font-bold text-white bg-[#2563EB] hover:bg-[#1D4ED8] hover:scale-[1.02] active:scale-95 transition-all duration-300 flex items-center justify-center border border-transparent shadow-lg shadow-blue-500/20 cursor-pointer"
+                <Link
+                  to="/login"
+                  className="h-12 px-8 rounded-full text-sm font-bold text-white bg-[#2563EB] hover:bg-[#1D4ED8] hover:scale-[1.02] active:scale-95 transition-all duration-300 flex items-center justify-center border border-transparent shadow-lg shadow-blue-500/20"
                 >
                   Configure Automated Journey
-                </button>
+                </Link>
               </div>
             </div>
           </div>
@@ -282,12 +281,12 @@ function DesktopBentoGrid({ onOpenSignup }: { onOpenSignup: () => void }) {
 /* ──────────────────────────────────
    MAIN COMPONENT
    ────────────────────────────────── */
-export default function FeatureShowcase({ onOpenSignup }: FeatureShowcaseProps) {
+export default function FeatureShowcase() {
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
   const { ref: ctaRef, isVisible: ctaVisible } = useScrollAnimation();
 
   return (
-    <section className="relative bg-[#E8ECF9] dark:bg-[#0A0A0F] transition-colors duration-300">
+    <section id="features" className="relative bg-[#E8ECF9] dark:bg-[#0A0A0F] transition-colors duration-300 scroll-mt-24">
       <div className="absolute inset-0 pointer-events-none overflow-hidden hidden dark:block">
         <div className="absolute top-1/3 left-1/4 w-[500px] h-[500px] rounded-full bg-brand-primary/[0.04] blur-[120px]" />
         <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-brand-accent/[0.03] blur-[100px]" />
@@ -303,16 +302,16 @@ export default function FeatureShowcase({ onOpenSignup }: FeatureShowcaseProps) 
           </p>
         </div>
 
-        <DesktopBentoGrid onOpenSignup={onOpenSignup} />
+        <DesktopBentoGrid />
 
         <div ref={ctaRef} className={`flex justify-center scroll-animate ${ctaVisible ? 'is-visible' : ''}`}>
-          <button onClick={onOpenSignup} className="px-8 py-3.5 rounded-full text-sm font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none">
-            Start Your Free Trial
-          </button>
+          <Link to="/login" className="px-8 py-3.5 rounded-full text-sm font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none flex items-center justify-center">
+            Get Started Now
+          </Link>
         </div>
       </div>
 
-      <MobileDeck onOpenSignup={onOpenSignup} />
+      <MobileDeck />
     </section>
   );
 }

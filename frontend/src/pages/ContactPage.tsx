@@ -60,7 +60,7 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen text-slate-800 bg-[#F3F4FD] dark:text-gray-200 dark:bg-surface-dark transition-colors duration-300 relative flex flex-col justify-between font-sans">
-      <Header onOpenSignup={() => {}} />
+      <Header />
 
       {/* DOT GRID OVERLAY */}
       <div className="absolute inset-0 dot-grid pointer-events-none z-0 opacity-50" />

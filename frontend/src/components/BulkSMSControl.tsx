@@ -29,14 +29,12 @@ const controlFeatures = [
   },
 ];
 
-interface BulkSMSControlProps {
-  onOpenSignup: () => void;
-}
+
 
 /* ──────────────────────────────────
    MOBILE DECK OF CARDS
    ────────────────────────────────── */
-function MobileDeck({ onOpenSignup }: { onOpenSignup: () => void }) {
+function MobileDeck() {
   const deckRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -69,9 +67,6 @@ function MobileDeck({ onOpenSignup }: { onOpenSignup: () => void }) {
           ))}
         </div>
 
-        <button onClick={onOpenSignup} className="px-8 py-3 rounded-full text-sm font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer shadow-lg shadow-blue-500/25 active:scale-95 transition-all duration-300">
-          Book a Free Demo
-        </button>
       </div>
     </div>
   );
@@ -207,9 +202,8 @@ function DesktopBentoGrid() {
 /* ──────────────────────────────────
    MAIN COMPONENT
    ────────────────────────────────── */
-export default function BulkSMSControl({ onOpenSignup }: BulkSMSControlProps) {
+export default function BulkSMSControl() {
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
-  const { ref: ctaRef, isVisible: ctaVisible } = useScrollAnimation();
 
   return (
     <section className="relative bg-[#E8ECF9] dark:bg-[#0A0A0F] py-10 md:py-14 transition-colors duration-300 border-t border-slate-200/50 dark:border-white/5">
@@ -229,15 +223,9 @@ export default function BulkSMSControl({ onOpenSignup }: BulkSMSControlProps) {
         </div>
 
         <DesktopBentoGrid />
-
-        <div ref={ctaRef} className={`flex justify-center scroll-animate ${ctaVisible ? 'is-visible' : ''}`}>
-          <button onClick={onOpenSignup} className="h-12 px-8 rounded-full text-sm font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none flex items-center justify-center border border-transparent">
-            Book a Free Demo
-          </button>
-        </div>
       </div>
 
-      <MobileDeck onOpenSignup={onOpenSignup} />
+      <MobileDeck />
     </section>
   );
 }
