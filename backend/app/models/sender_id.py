@@ -34,3 +34,15 @@ class SenderIdRequest(Base):
 
     def __repr__(self) -> str:
         return f"<SenderIdRequest {self.sender_id} status={self.status}>"
+
+
+class AdvantaSenderId(Base):
+    __tablename__ = "advanta_sender_ids"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    sender_id: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
+    status: Mapped[str] = mapped_column(String(20), default="active", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
+    def __repr__(self) -> str:
+        return f"<AdvantaSenderId {self.sender_id} status={self.status}>"

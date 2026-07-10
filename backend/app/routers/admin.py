@@ -15,7 +15,7 @@ from app.models.campaign import Campaign
 from app.models.sms import SmsMessage
 from app.models.transaction import Transaction
 from app.models.gateway import SmsGateway
-from app.models.sender_id import SenderIdRequest
+from app.models.sender_id import SenderIdRequest, AdvantaSenderId
 from app.models.notification import Notification
 from app.middleware.auth import get_current_user
 
@@ -695,6 +695,161 @@ async def reject_sender_id(
     ))
     await db.flush()
     return {"message": f"Sender ID {req.sender_id} rejected."}
+
+
+class AssignSenderIdRequest(BaseModel):
+    user_id: uuid.UUID
+    sender_id: str
+    purpose: Optional[str] = "Assigned by Administrator"
+
+
+@router.get("/sender-ids/advanta")
+async def list_advanta_sender_ids(
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """List all Advanta approved sender IDs."""
+    res = await db.execute(select(AdvantaSenderId).order_by(AdvantaSenderId.sender_id.asc()))
+    return res.scalars().all()
+
+
+@router.post("/sender-ids/assign")
+async def assign_sender_id(
+    data: AssignSenderIdRequest,
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Assign an Advanta approved Sender ID to a client."""
+    sender_upper = data.sender_id.upper().strip()
+    
+    # 1. Verify User exists
+    res_user = await db.execute(select(User).where(User.id == data.user_id))
+    user = res_user.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    # 2. Verify Sender ID exists in Advanta approved list
+    res_adv = await db.execute(
+        select(AdvantaSenderId).where(AdvantaSenderId.sender_id == sender_upper)
+    )
+    adv_sender = res_adv.scalar_one_or_none()
+    if not adv_sender:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Sender ID '{sender_upper}' is not in the Advanta-approved list."
+        )
+        
+    # 3. Check if user already has this sender ID assigned
+    res_exist = await db.execute(
+        select(SenderIdRequest).where(
+            (SenderIdRequest.user_id == data.user_id) & 
+            (SenderIdRequest.sender_id == sender_upper)
+        )
+    )
+    existing = res_exist.scalars().all()
+    
+    has_sandbox = any(e.sandbox_mode for e in existing)
+    has_live = any(not e.sandbox_mode for e in existing)
+    
+    # Create approved sender ID request for both sandbox and live modes if not existing
+    modes_to_create = []
+    if not has_sandbox:
+        modes_to_create.append(True)
+    if not has_live:
+        modes_to_create.append(False)
+        
+    for sandbox_mode in modes_to_create:
+        req = SenderIdRequest(
+            user_id=data.user_id,
+            sender_id=sender_upper,
+            purpose=data.purpose or "Assigned by Administrator",
+            status="approved",
+            sandbox_mode=sandbox_mode
+        )
+        db.add(req)
+        
+    # 4. Notify user
+    db.add(Notification(
+        user_id=data.user_id,
+        title="New Sender ID Assigned! 📱",
+        message=f"Administrator has assigned the Sender ID '{sender_upper}' to your account.",
+        type="success",
+        action_url="/dashboard/compose"
+    ))
+    
+    await db.flush()
+    return {"message": f"Sender ID '{sender_upper}' successfully assigned to {user.full_name}."}
+
+
+class CreateAdvantaSenderIdRequest(BaseModel):
+    sender_id: str
+    status: Optional[str] = "active"
+
+
+@router.post("/sender-ids/advanta")
+async def add_advanta_sender_id(
+    data: CreateAdvantaSenderIdRequest,
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Add a new carrier approved sender ID to the pool."""
+    sender_upper = data.sender_id.upper().strip()
+    if not sender_upper:
+        raise HTTPException(status_code=400, detail="Sender ID cannot be empty.")
+    if len(sender_upper) > 20:
+        raise HTTPException(status_code=400, detail="Sender ID too long (max 20 chars).")
+
+    # Check if already exists
+    res = await db.execute(
+        select(AdvantaSenderId).where(AdvantaSenderId.sender_id == sender_upper)
+    )
+    if res.scalar_one_or_none():
+        raise HTTPException(
+            status_code=400,
+            detail=f"Sender ID '{sender_upper}' is already in the Advanta-approved pool."
+        )
+
+    item = AdvantaSenderId(
+        sender_id=sender_upper,
+        status=data.status or "active"
+    )
+    db.add(item)
+    await db.flush()
+    return {"message": f"Sender ID '{sender_upper}' added to the pool successfully."}
+
+
+@router.delete("/sender-ids/advanta/{id}")
+async def delete_advanta_sender_id(
+    id: uuid.UUID,
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Remove a carrier approved sender ID from the pool."""
+    res = await db.execute(select(AdvantaSenderId).where(AdvantaSenderId.id == id))
+    item = res.scalar_one_or_none()
+    if not item:
+        raise HTTPException(status_code=404, detail="Sender ID not found in pool.")
+
+    await db.delete(item)
+    await db.flush()
+    return {"message": "Sender ID removed from pool successfully."}
+
+
+@router.post("/sender-ids/advanta/{id}/toggle")
+async def toggle_advanta_sender_id_status(
+    id: uuid.UUID,
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Toggle the carrier approved sender ID active status."""
+    res = await db.execute(select(AdvantaSenderId).where(AdvantaSenderId.id == id))
+    item = res.scalar_one_or_none()
+    if not item:
+        raise HTTPException(status_code=404, detail="Sender ID not found in pool.")
+
+    item.status = "inactive" if item.status == "active" else "active"
+    await db.flush()
+    return {"message": f"Sender ID status toggled to '{item.status}' successfully.", "status": item.status}
 
 
 @router.get("/campaigns")

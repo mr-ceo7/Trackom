@@ -160,3 +160,39 @@ async def seed_demo_user():
             )
             session.add(default_gw)
             await session.commit()
+
+        # Seed Advanta approved Sender IDs
+        from app.models.sender_id import AdvantaSenderId
+        advantasms_ids = [
+            ("GrandeAuto", "active"),
+            ("HOPEMARTLTD", "active"),
+            ("POTATOHead", "active"),
+            ("ArvocapInfo", "active"),
+            ("PapaJohns", "active"),
+            ("ChknCottage", "active"),
+            ("TERACREAT", "active"),
+            ("ARVOCAP", "active"),
+            ("GuruNanakH", "active"),
+            ("AndroidPOS", "active"),
+            ("SUNBRIM", "active"),
+            ("EMENTORING", "active"),
+            ("JOPEED_LTD", "active"),
+            ("VISCAR", "active"),
+            ("ADMGLGarage", "active"),
+            ("KEMU_ALUMNI", "active"),
+            ("MANGO", "active"),
+            ("RELIABLELTD", "active"),
+            ("VenasTips", "active"),
+            ("PalmsBet", "inactive"),
+            ("PETANNS", "active"),
+        ]
+        for sender_id, status in advantasms_ids:
+            res_adv = await session.execute(
+                select(AdvantaSenderId).where(AdvantaSenderId.sender_id == sender_id.upper())
+            )
+            if not res_adv.scalar_one_or_none():
+                session.add(AdvantaSenderId(
+                    sender_id=sender_id.upper(),
+                    status=status
+                ))
+        await session.commit()

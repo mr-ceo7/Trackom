@@ -11,6 +11,7 @@ import api from '../../services/api';
 import Loader from '../../components/Loader';
 import GenieModal from '../../components/GenieModal';
 import { parseApiError } from '../../utils';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface SenderIdRequest {
   id: string;
@@ -22,6 +23,7 @@ interface SenderIdRequest {
 }
 
 export default function SenderIdsPage() {
+  const { user } = useAuth();
   const [requests, setRequests] = useState<SenderIdRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [showRequestModal, setShowRequestModal] = useState(false);
@@ -157,12 +159,14 @@ export default function SenderIdsPage() {
                 <li>No symbols, punctuation, or spaces.</li>
                 <li>Must correspond directly to your registered brand or company name.</li>
               </ul>
-              <div className="p-3 bg-brand-primary/10 border border-brand-primary/20 text-brand-primary rounded-2xl text-[10px] leading-normal flex items-start gap-2">
-                <Sparkles className="w-4 h-4 shrink-0 mt-0.5" />
-                <span>
-                  <strong>Sandbox Tip:</strong> Requests starting with <code className="font-mono bg-white/40 dark:bg-black/20 px-1 py-0.5 rounded text-[9px]">TEST</code> or <code className="font-mono bg-white/40 dark:bg-black/20 px-1 py-0.5 rounded text-[9px]">DEMO</code> are approved immediately for testing!
-                </span>
-              </div>
+              {user?.sandbox_mode && (
+                <div className="p-3 bg-brand-primary/10 border border-brand-primary/20 text-brand-primary rounded-2xl text-[10px] leading-normal flex items-start gap-2">
+                  <Sparkles className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>
+                    <strong>Sandbox Tip:</strong> Requests starting with <code className="font-mono bg-white/40 dark:bg-black/20 px-1 py-0.5 rounded text-[9px]">TEST</code> or <code className="font-mono bg-white/40 dark:bg-black/20 px-1 py-0.5 rounded text-[9px]">DEMO</code> are approved immediately for testing!
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>

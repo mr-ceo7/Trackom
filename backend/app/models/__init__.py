@@ -9,7 +9,7 @@ from app.models.transaction import Transaction
 from app.models.notification import Notification
 from app.models.blog import BlogPost, BlogCategory
 from app.models.inquiry import ContactInquiry
-from app.models.sender_id import SenderIdRequest
+from app.models.sender_id import SenderIdRequest, AdvantaSenderId
 from app.models.gateway import SmsGateway
 from app.models.template import SmsTemplate
 from app.models.incoming import IncomingSms
@@ -28,6 +28,7 @@ __all__ = [
     "BlogCategory",
     "ContactInquiry",
     "SenderIdRequest",
+    "AdvantaSenderId",
     "SmsGateway",
     "SmsTemplate",
     "IncomingSms",
