@@ -46,57 +46,56 @@ export default function SandboxToggle() {
 
   return (
     <>
-      <button
+      <div
         onClick={handleToggle}
-        disabled={isToggling}
         className={`
-          relative flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold
-          transition-all duration-300 cursor-pointer select-none
-          border backdrop-blur-sm
-          ${isSandbox
-            ? 'bg-amber-500/10 border-amber-500/25 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 dark:hover:bg-amber-500/20'
-            : 'bg-emerald-500/10 border-emerald-500/25 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 dark:hover:bg-emerald-500/20'
-          }
+          relative flex items-center p-0.5 rounded-full bg-slate-200/40 dark:bg-white/5 border border-slate-300/20 dark:border-white/5 cursor-pointer select-none h-8 w-16 sm:w-36 transition-all
           ${isToggling ? 'opacity-60 pointer-events-none' : ''}
         `}
         aria-label={isSandbox ? 'Switch to Live mode' : 'Switch to Sandbox mode'}
       >
-        {/* Icon */}
+        {/* Sliding background */}
         <motion.div
-          key={isSandbox ? 'sandbox' : 'live'}
-          initial={{ rotate: -90, scale: 0 }}
-          animate={{ rotate: 0, scale: 1 }}
-          exit={{ rotate: 90, scale: 0 }}
-          transition={{ duration: 0.3, ease: 'backOut' }}
-          className="flex items-center justify-center"
-        >
-          {isSandbox ? (
-            <FlaskConical className="w-3.5 h-3.5" />
-          ) : (
-            <Radio className="w-3.5 h-3.5" />
+          className={`absolute top-0.5 bottom-0.5 rounded-full shadow-sm ${
+            isSandbox 
+              ? 'bg-amber-500/20 border border-amber-500/30' 
+              : 'bg-emerald-500/20 border border-emerald-500/30'
+          }`}
+          layout
+          initial={false}
+          animate={{
+            left: isSandbox ? '2px' : '50%',
+            right: isSandbox ? '50%' : '2px',
+          }}
+          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+        />
+
+        {/* Sandbox Option */}
+        <div className={`relative flex-1 flex items-center justify-center gap-1.5 z-10 text-[10px] font-bold transition-colors ${
+          isSandbox 
+            ? 'text-amber-600 dark:text-amber-400' 
+            : 'text-slate-500 dark:text-gray-400'
+        }`}>
+          <FlaskConical className="w-3.5 h-3.5 shrink-0" />
+          <span className="hidden sm:inline">Sandbox</span>
+        </div>
+
+        {/* Live Option */}
+        <div className={`relative flex-1 flex items-center justify-center gap-1.5 z-10 text-[10px] font-bold transition-colors ${
+          !isSandbox 
+            ? 'text-emerald-600 dark:text-emerald-400' 
+            : 'text-slate-500 dark:text-gray-400'
+        }`}>
+          <Radio className="w-3.5 h-3.5 shrink-0" />
+          <span className="hidden sm:inline">Live</span>
+          {!isSandbox && (
+            <span className="relative flex h-1.5 w-1.5 shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75" />
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+            </span>
           )}
-        </motion.div>
-
-        {/* Label */}
-        <span className="tracking-wide hidden sm:inline">
-          {isSandbox ? 'Sandbox' : 'Live'}
-        </span>
-
-        {/* Pulsing green dot for Live mode */}
-        {!isSandbox && (
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-          </span>
-        )}
-
-        {/* TEST badge for Sandbox mode */}
-        {isSandbox && (
-          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold leading-none bg-amber-500/20 text-amber-600 dark:text-amber-400 tracking-widest hidden sm:inline-block">
-            TEST
-          </span>
-        )}
-      </button>
+        </div>
+      </div>
 
       {/* Confirmation Modal for switching to Live */}
       <AnimatePresence>

@@ -82,15 +82,15 @@ export default function DashboardOverview() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {stats.map((stat) => (
-          <div key={stat.label} className="clay-stat rounded-3xl p-5 flex items-start gap-4">
-            <div className={`w-11 h-11 rounded-2xl ${stat.bg} flex items-center justify-center shrink-0`}>
-              <stat.icon className={`w-5 h-5 ${stat.color} ${stat.glow}`} />
+          <div key={stat.label} className="clay-stat rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 flex items-center gap-3 sm:gap-4 text-left">
+            <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl ${stat.bg} flex items-center justify-center shrink-0`}>
+              <stat.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${stat.color} ${stat.glow}`} />
             </div>
-            <div>
-              <div className="text-2xl font-bold text-slate-900 dark:text-white font-mono">{stat.value}</div>
-              <div className="text-xs text-slate-500 dark:text-gray-400 font-medium mt-0.5">{stat.label}</div>
+            <div className="min-w-0">
+              <div className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-white font-mono truncate">{stat.value}</div>
+              <div className="text-[10px] sm:text-xs text-slate-500 dark:text-gray-400 font-medium mt-0.5 truncate">{stat.label}</div>
             </div>
           </div>
         ))}
