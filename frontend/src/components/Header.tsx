@@ -171,7 +171,7 @@ export default function Header() {
           <TrackomLogo
             size={28}
             glowing={scrolled}
-            textColorClass={scrolled ? 'text-slate-900 dark:text-white' : 'text-white'}
+            textColorClass="text-slate-900 dark:text-white"
           />
         </Link>
 
@@ -187,9 +187,7 @@ export default function Header() {
               className={`flex items-center gap-1 text-sm font-medium transition-colors duration-300 focus:outline-none cursor-pointer ${
                 ['features', 'services', 'resellers'].includes(activeSection) || location.pathname.startsWith('/solutions')
                   ? 'text-brand-primary dark:text-white font-bold'
-                  : scrolled
-                  ? 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
-                  : 'text-gray-300 hover:text-white'
+                  : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <span>Solutions</span>
@@ -254,9 +252,7 @@ export default function Header() {
             className={`text-sm font-medium transition-colors duration-300 relative group ${
               activeSection === 'how-it-works'
                 ? 'text-brand-primary dark:text-white font-bold'
-                : scrolled
-                ? 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
-                : 'text-gray-300 hover:text-white'
+                : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             About Us
@@ -275,9 +271,7 @@ export default function Header() {
               className={`flex items-center gap-1 text-sm font-medium transition-colors duration-300 focus:outline-none cursor-pointer ${
                 activeSection === 'api-docs' || location.pathname === '/docs'
                   ? 'text-brand-primary dark:text-white font-bold'
-                  : scrolled
-                  ? 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
-                  : 'text-gray-300 hover:text-white'
+                  : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <span>Developers</span>
@@ -341,9 +335,7 @@ export default function Header() {
             className={`text-sm font-medium transition-colors duration-300 relative group ${
               location.pathname === '/blog'
                 ? 'text-brand-primary dark:text-white font-bold'
-                : scrolled
-                ? 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
-                : 'text-gray-300 hover:text-white'
+                : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             Blog
@@ -359,9 +351,7 @@ export default function Header() {
             className={`text-sm font-medium transition-colors duration-300 relative group ${
               activeSection === 'faq'
                 ? 'text-brand-primary dark:text-white font-bold'
-                : scrolled
-                ? 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
-                : 'text-gray-300 hover:text-white'
+                : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             FAQ
@@ -373,11 +363,7 @@ export default function Header() {
           {/* Contact Link */}
           <Link
             to="/contact"
-            className={`text-sm font-medium transition-colors duration-300 relative group ${
-              scrolled
-                ? 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
-                : 'text-gray-300 hover:text-white'
-            }`}
+            className="text-sm font-medium transition-colors duration-300 relative group text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white"
           >
             Contact
             <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-brand-primary to-brand-accent group-hover:w-full transition-all duration-300 rounded-full" />
@@ -387,11 +373,7 @@ export default function Header() {
         {/* RIGHT ACTIONS */}
         <div className="flex items-center gap-4">
           <ThemeToggle
-            className={
-              scrolled
-                ? 'border border-slate-200 dark:border-white/10 text-slate-500 dark:text-gray-400 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 dark:hover:text-white'
-                : 'border border-white/10 text-gray-400 bg-white/5 hover:bg-white/10 hover:text-white'
-            }
+            className="border border-slate-200 dark:border-white/10 text-slate-500 dark:text-gray-400 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 dark:hover:text-white"
           />
 
           <Link
@@ -405,11 +387,7 @@ export default function Header() {
           {/* HAMBURGER */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className={`md:hidden flex items-center justify-center p-2 rounded-lg transition-all duration-200 cursor-pointer border ${
-              scrolled
-                ? 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 border-slate-200 dark:border-white/10'
-                : 'text-gray-300 hover:text-white hover:bg-white/5 border-white/10'
-            }`}
+            className="md:hidden flex items-center justify-center p-2 rounded-lg transition-all duration-200 cursor-pointer border text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 border-slate-200 dark:border-white/10"
             aria-label="Toggle navigation menu"
             aria-expanded={isOpen}
           >

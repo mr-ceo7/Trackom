@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../../components/Header';
 import TrackomLogo from '../../components/TrackomLogo';
+import Footer from '../../components/Footer';
 import ParticleCanvas from '../../components/ParticleCanvas';
 import { Briefcase, ArrowRight, ShieldCheck, CheckCircle2, TrendingUp, Key } from 'lucide-react';
 
@@ -121,14 +122,7 @@ export default function ResellerPage() {
       </main>
 
       {/* FOOTER */}
-      <footer className="bg-white dark:bg-surface-dark border-t border-slate-200 dark:border-white/6 py-12 px-4 md:px-8 text-center relative z-10">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <TrackomLogo size={20} />
-          <span className="text-[10px] text-slate-500 font-medium font-mono">
-            © 2026 Trackom Group. All rights reserved.
-          </span>
-        </div>
-      </footer>
+      <Footer />
 
     </div>
   );

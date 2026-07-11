@@ -1,0 +1,525 @@
+"""AdvantaSMS compatibility routes — sendsms, sendbulk, sendotp, getbalance, getdlr."""
+
+from datetime import datetime
+import math
+import uuid as uuid_mod
+from typing import Optional, List, Dict, Any
+
+from fastapi import APIRouter, Depends, Form, Request, status
+import sqlalchemy as sa
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+from app.database import get_db
+from app.models.api_key import ApiKey
+from app.models.user import User
+from app.models.sms import SmsMessage
+from app.utils.security import verify_password
+from app.utils.sms_calc import calculate_sms_parts
+from app.services.sms_gateway import get_sms_gateway
+
+router = APIRouter(tags=["Advanta Compatibility Service"])
+
+
+async def authenticate_api_key(apikey: str, db: AsyncSession) -> Optional[User]:
+    if not apikey or not apikey.startswith("trk_") or len(apikey) < 10:
+        return None
+    prefix = apikey[:8]
+    # Query all active keys with this prefix
+    q = select(ApiKey).where(ApiKey.key_prefix == prefix, ApiKey.is_active == True).options(selectinload(ApiKey.user))
+    res = await db.execute(q)
+    keys = res.scalars().all()
+    for key in keys:
+        if verify_password(apikey, key.hashed_key):
+            if key.expires_at and key.expires_at < datetime.utcnow():
+                continue
+            return key.user
+    return None
+
+
+async def process_sendsms(
+    apikey: str,
+    partnerID: Optional[str],
+    message: str,
+    shortcode: str,
+    mobile: str,
+    timeToSend: Optional[str],
+    hashed: Optional[bool],
+    db: AsyncSession
+):
+    # Validate parameters
+    if not apikey:
+        return {"response-code": 1006, "response-description": "Invalid credentials"}
+    if not mobile or not message:
+        return {"response-code": 1005, "response-description": "System error"}
+
+    # 2. Authenticate by Trackom API key
+    user = await authenticate_api_key(apikey, db)
+    if not user or not user.is_active:
+        return {"response-code": 1006, "response-description": "Invalid credentials"}
+
+    # 3. Parse recipients
+    recipients = [r.strip() for r in mobile.split(",") if r.strip()]
+    if not recipients:
+        return {"response-code": 1003, "response-description": "Invalid mobile number"}
+
+    # 4. Check balance
+    calc = calculate_sms_parts(message)
+    sms_parts = calc["parts"]
+    per_message_cost = float(sms_parts)
+    total_cost = int(math.ceil(len(recipients) * per_message_cost))
+
+    if user.active_balance < total_cost:
+        return {"response-code": 1004, "response-description": "Low bulk credits"}
+
+    # Check for live gateway liquidity if live
+    if not user.sandbox_mode:
+        from app.services.email import check_and_enforce_gateway_liquidity
+        is_held = await check_and_enforce_gateway_liquidity(db)
+        if is_held:
+            return {"response-code": 1007, "response-description": "System error"}
+
+    # Handle scheduling if timeToSend is provided
+    scheduled_time = None
+    initial_status = "queued"
+    if timeToSend:
+        try:
+            # Check if unix timestamp or string date
+            if str(timeToSend).isdigit():
+                scheduled_time = datetime.utcfromtimestamp(int(timeToSend))
+            else:
+                scheduled_time = datetime.fromisoformat(str(timeToSend).replace("Z", "+00:00"))
+            initial_status = "scheduled"
+        except Exception:
+            pass
+
+    # 5. Create SmsMessage records
+    batch_id = str(uuid_mod.uuid4())
+    now = datetime.utcnow()
+    messages_to_send = []
+
+    for phone in recipients:
+        msg = SmsMessage(
+            user_id=user.id,
+            recipient=phone,
+            content=message,
+            sender_id=shortcode,
+            status=initial_status,
+            cost=per_message_cost,
+            batch_number=batch_id,
+            sent_at=None if initial_status == "scheduled" else now,
+            scheduled_at=scheduled_time,
+            sandbox_mode=user.sandbox_mode,
+        )
+        db.add(msg)
+        messages_to_send.append(msg)
+
+    user.active_balance -= total_cost
+    await db.flush()
+
+    # 6. Dispatch via SMS gateway if not scheduled
+    if initial_status == "queued":
+        gateway = get_sms_gateway()
+        try:
+            gateway_results = await gateway.send_messages(
+                sender_id=shortcode,
+                recipients=[m.recipient for m in messages_to_send],
+                message=message,
+                db=db,
+                sandbox_mode=user.sandbox_mode
+            )
+            for msg, res in zip(messages_to_send, gateway_results):
+                msg.status = "delivered" if res["status"] == "success" else "failed"
+                msg.gateway_message_id = res["message_id"]
+                msg.error_message = res["error_message"]
+        except Exception as e:
+            for msg in messages_to_send:
+                msg.status = "failed"
+                msg.error_message = str(e)
+    
+    await db.flush()
+
+    # 7. Format exact Advanta compatible response
+    response_items = []
+    for msg in messages_to_send:
+        is_success = msg.status in ("delivered", "scheduled")
+        response_items.append({
+            "response-code": 200 if is_success else 1003,
+            "response-description": "Success" if is_success else (msg.error_message or "System error"),
+            "mobile": msg.recipient,
+            "messageid": msg.gateway_message_id or batch_id
+        })
+
+    return {"responses": response_items}
+
+
+@router.post("/api/services/sendsms")
+async def sendsms_post(
+    request: Request,
+    db: AsyncSession = Depends(get_db)
+):
+    content_type = request.headers.get("content-type", "")
+    apikey = None
+    partnerID = None
+    message = None
+    shortcode = None
+    mobile = None
+    timeToSend = None
+    hashed = None
+
+    if "application/json" in content_type:
+        try:
+            body = await request.json()
+            apikey = body.get("apikey")
+            partnerID = body.get("partnerID")
+            message = body.get("message")
+            shortcode = body.get("shortcode")
+            mobile = body.get("mobile")
+            timeToSend = body.get("timeToSend")
+            hashed = body.get("hashed")
+        except Exception:
+            pass
+    else:
+        form = await request.form()
+        apikey = form.get("apikey")
+        partnerID = form.get("partnerID")
+        message = form.get("message")
+        shortcode = form.get("shortcode")
+        mobile = form.get("mobile")
+        timeToSend = form.get("timeToSend")
+        hashed = form.get("hashed")
+
+    return await process_sendsms(
+        apikey=apikey,
+        partnerID=partnerID,
+        message=message,
+        shortcode=shortcode,
+        mobile=mobile,
+        timeToSend=timeToSend,
+        hashed=hashed,
+        db=db
+    )
+
+
+@router.get("/api/services/sendsms")
+async def sendsms_get(
+    apikey: str,
+    mobile: str,
+    message: str,
+    shortcode: str,
+    partnerID: Optional[str] = None,
+    timeToSend: Optional[str] = None,
+    hashed: Optional[bool] = None,
+    db: AsyncSession = Depends(get_db)
+):
+    return await process_sendsms(
+        apikey=apikey,
+        partnerID=partnerID,
+        message=message,
+        shortcode=shortcode,
+        mobile=mobile,
+        timeToSend=timeToSend,
+        hashed=hashed,
+        db=db
+    )
+
+
+@router.post("/api/services/sendotp")
+async def sendotp_post(
+    request: Request,
+    db: AsyncSession = Depends(get_db)
+):
+    return await sendsms_post(request, db)
+
+
+@router.get("/api/services/sendotp")
+async def sendotp_get(
+    apikey: str,
+    mobile: str,
+    message: str,
+    shortcode: str,
+    partnerID: Optional[str] = None,
+    timeToSend: Optional[str] = None,
+    hashed: Optional[bool] = None,
+    db: AsyncSession = Depends(get_db)
+):
+    return await process_sendsms(
+        apikey=apikey,
+        partnerID=partnerID,
+        message=message,
+        shortcode=shortcode,
+        mobile=mobile,
+        timeToSend=timeToSend,
+        hashed=hashed,
+        db=db
+    )
+
+
+@router.post("/api/services/sendbulk")
+async def sendbulk(
+    request: Request,
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        body = await request.json()
+    except Exception:
+        return {"response-code": 1005, "response-description": "System error"}
+
+    smslist = body.get("smslist", [])
+    if not smslist:
+        return {"response-code": 1005, "response-description": "System error"}
+
+    first_item = smslist[0]
+    apikey = first_item.get("apikey")
+    if not apikey:
+        return {"response-code": 1006, "response-description": "Invalid credentials"}
+
+    user = await authenticate_api_key(apikey, db)
+    if not user or not user.is_active:
+        return {"response-code": 1006, "response-description": "Invalid credentials"}
+
+    total_cost = 0
+    items_to_process = []
+    for item in smslist:
+        mobile = item.get("mobile")
+        message = item.get("message")
+        shortcode = item.get("shortcode")
+        timeToSend = item.get("timeToSend")
+        
+        if not mobile or not message:
+            continue
+            
+        calc = calculate_sms_parts(message)
+        parts = calc["parts"]
+        cost = float(parts)
+        total_cost += int(math.ceil(cost))
+        items_to_process.append({
+            "mobile": mobile,
+            "message": message,
+            "shortcode": shortcode,
+            "timeToSend": timeToSend,
+            "cost": cost
+        })
+
+    if not items_to_process:
+        return {"response-code": 1005, "response-description": "System error"}
+
+    if user.active_balance < total_cost:
+        return {"response-code": 1004, "response-description": "Low bulk credits"}
+
+    if not user.sandbox_mode:
+        from app.services.email import check_and_enforce_gateway_liquidity
+        is_held = await check_and_enforce_gateway_liquidity(db)
+        if is_held:
+            return {"response-code": 1007, "response-description": "System error"}
+
+    batch_id = str(uuid_mod.uuid4())
+    now = datetime.utcnow()
+    messages_to_send = []
+
+    for item in items_to_process:
+        scheduled_time = None
+        initial_status = "queued"
+        if item["timeToSend"]:
+            try:
+                if str(item["timeToSend"]).isdigit():
+                    scheduled_time = datetime.utcfromtimestamp(int(item["timeToSend"]))
+                else:
+                    scheduled_time = datetime.fromisoformat(str(item["timeToSend"]).replace("Z", "+00:00"))
+                initial_status = "scheduled"
+            except Exception:
+                pass
+
+        msg = SmsMessage(
+            user_id=user.id,
+            recipient=item["mobile"],
+            content=item["message"],
+            sender_id=item["shortcode"],
+            status=initial_status,
+            cost=item["cost"],
+            batch_number=batch_id,
+            sent_at=None if initial_status == "scheduled" else now,
+            scheduled_at=scheduled_time,
+            sandbox_mode=user.sandbox_mode,
+        )
+        db.add(msg)
+        messages_to_send.append(msg)
+
+    user.active_balance -= total_cost
+    await db.flush()
+
+    unscheduled = [m for m in messages_to_send if m.status == "queued"]
+    if unscheduled:
+        gateway = get_sms_gateway()
+        groups = {}
+        for m in unscheduled:
+            key = (m.content, m.sender_id)
+            if key not in groups:
+                groups[key] = []
+            groups[key].append(m)
+
+        for (content, sender_id), msgs in groups.items():
+            try:
+                gateway_results = await gateway.send_messages(
+                    sender_id=sender_id,
+                    recipients=[m.recipient for m in msgs],
+                    message=content,
+                    db=db,
+                    sandbox_mode=user.sandbox_mode
+                )
+                for m, res in zip(msgs, gateway_results):
+                    m.status = "delivered" if res["status"] == "success" else "failed"
+                    m.gateway_message_id = res["message_id"]
+                    m.error_message = res["error_message"]
+            except Exception as e:
+                for m in msgs:
+                    m.status = "failed"
+                    m.error_message = str(e)
+
+    await db.flush()
+
+    response_items = []
+    for msg in messages_to_send:
+        is_success = msg.status in ("delivered", "scheduled")
+        response_items.append({
+            "response-code": 200 if is_success else 1003,
+            "response-description": "Success" if is_success else (msg.error_message or "System error"),
+            "mobile": msg.recipient,
+            "messageid": msg.gateway_message_id or batch_id
+        })
+
+    return {"responses": response_items}
+
+
+@router.get("/api/services/getbalance")
+async def getbalance_get(
+    apikey: str,
+    partnerID: Optional[str] = None,
+    db: AsyncSession = Depends(get_db)
+):
+    if not apikey:
+        return {"response-code": 1006, "response-description": "Invalid credentials"}
+
+    user = await authenticate_api_key(apikey, db)
+    if not user or not user.is_active:
+        return {"response-code": 1006, "response-description": "Invalid credentials"}
+
+    return {
+        "response-code": 200,
+        "response-description": "Success",
+        "credit": float(user.active_balance)
+    }
+
+
+@router.post("/api/services/getbalance")
+async def getbalance_post(
+    request: Request,
+    db: AsyncSession = Depends(get_db)
+):
+    content_type = request.headers.get("content-type", "")
+    apikey = None
+    partnerID = None
+
+    if "application/json" in content_type:
+        try:
+            body = await request.json()
+            apikey = body.get("apikey")
+            partnerID = body.get("partnerID")
+        except Exception:
+            pass
+    else:
+        form = await request.form()
+        apikey = form.get("apikey")
+        partnerID = form.get("partnerID")
+
+    if not apikey:
+        return {"response-code": 1006, "response-description": "Invalid credentials"}
+
+    user = await authenticate_api_key(apikey, db)
+    if not user or not user.is_active:
+        return {"response-code": 1006, "response-description": "Invalid credentials"}
+
+    return {
+        "response-code": 200,
+        "response-description": "Success",
+        "credit": float(user.active_balance)
+    }
+
+
+async def process_getdlr(
+    apikey: str,
+    partnerID: Optional[str],
+    messageid: str,
+    db: AsyncSession
+):
+    if not apikey or not messageid:
+        return {"response-code": 1006, "response-description": "Invalid credentials"}
+
+    user = await authenticate_api_key(apikey, db)
+    if not user or not user.is_active:
+        return {"response-code": 1006, "response-description": "Invalid credentials"}
+
+    q = select(SmsMessage).where(
+        SmsMessage.user_id == user.id,
+        (SmsMessage.gateway_message_id == messageid) | 
+        (sa.cast(SmsMessage.id, sa.String) == messageid)
+    )
+    res = await db.execute(q)
+    msg = res.scalar_one_or_none()
+
+    if not msg:
+        return {"response-code": 1008, "response-description": "No Delivery Report"}
+
+    status_mapping = {
+        "delivered": "Delivered",
+        "sent": "Sent",
+        "failed": "Failed",
+        "queued": "Queued",
+        "scheduled": "Scheduled",
+        "rejected": "Rejected"
+    }
+    status_str = status_mapping.get(msg.status, "Queued")
+
+    return {
+        "response-code": 200,
+        "response-description": "Success",
+        "status": status_str
+    }
+
+
+@router.get("/api/services/getdlr")
+async def getdlr_get(
+    apikey: str,
+    messageid: str,
+    partnerID: Optional[str] = None,
+    db: AsyncSession = Depends(get_db)
+):
+    return await process_getdlr(apikey, partnerID, messageid, db)
+
+
+@router.post("/api/services/getdlr")
+async def getdlr_post(
+    request: Request,
+    db: AsyncSession = Depends(get_db)
+):
+    content_type = request.headers.get("content-type", "")
+    apikey = None
+    partnerID = None
+    messageid = None
+
+    if "application/json" in content_type:
+        try:
+            body = await request.json()
+            apikey = body.get("apikey")
+            partnerID = body.get("partnerID")
+            messageid = body.get("messageid")
+        except Exception:
+            pass
+    else:
+        form = await request.form()
+        apikey = form.get("apikey")
+        partnerID = form.get("partnerID")
+        messageid = form.get("messageid")
+
+    return await process_getdlr(apikey, partnerID, messageid, db)

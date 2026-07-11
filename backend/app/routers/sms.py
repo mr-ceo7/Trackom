@@ -463,7 +463,7 @@ async def incoming_sms_webhook(
 
     # Fallback: if not matched, associate with the default demo user or the first active user
     if not user_id:
-        user_q = select(User).where(User.email == "demo@trackom.co.ke")
+        user_q = select(User).where(User.email == "demo@trackomgroup.com")
         user_res = await db.execute(user_q)
         demo_user = user_res.scalar_one_or_none()
         if demo_user:

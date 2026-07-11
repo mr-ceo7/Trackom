@@ -8,6 +8,7 @@ import { Calendar, Eye, ArrowRight, Tag } from 'lucide-react';
 import api from '../services/api';
 import Header from '../components/Header';
 import TrackomLogo from '../components/TrackomLogo';
+import Footer from '../components/Footer';
 
 interface BlogPost {
   id: string; title: string; slug: string; excerpt: string | null;
@@ -96,10 +97,7 @@ export default function BlogPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-white dark:bg-surface-dark border-t border-slate-200 dark:border-white/6 py-8 px-4 text-center">
-        <TrackomLogo size={20} />
-        <p className="text-[10px] text-slate-400 dark:text-gray-600 mt-3 uppercase tracking-widest font-display">© 2026 Trackom Group. All rights reserved.</p>
-      </footer>
+      <Footer />
     </div>
   );
 }

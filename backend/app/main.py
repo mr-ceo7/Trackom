@@ -14,7 +14,7 @@ from slowapi.errors import RateLimitExceeded
 
 from app.config import get_settings
 from app.database import init_db, seed_demo_user
-from app.routers import auth, users, blog, contacts, sms, api_keys, campaigns, wallet, notifications, inquiry, sender_ids, admin, reseller, templates
+from app.routers import auth, users, blog, contacts, sms, api_keys, campaigns, wallet, notifications, inquiry, sender_ids, admin, reseller, templates, public_services
 from app.services.campaign_worker import scheduled_campaign_monitor_loop
 
 # Setup logging
@@ -104,6 +104,7 @@ app.include_router(sender_ids.router, prefix="/api/v1")
 app.include_router(admin.router, prefix="/api/v1")
 app.include_router(reseller.router, prefix="/api/v1")
 app.include_router(templates.router, prefix="/api/v1")
+app.include_router(public_services.router)
 
 
 @app.get("/api/health")

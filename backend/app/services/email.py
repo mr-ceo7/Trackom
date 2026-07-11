@@ -114,7 +114,7 @@ async def check_and_enforce_gateway_liquidity(db) -> bool:
         res_admins = await db.execute(select(User.email).where(User.is_superuser == True))
         admin_emails = [email for email in res_admins.scalars().all()]
         if not admin_emails:
-            admin_emails = ["admin@trackom.co.ke"] # Fallback
+            admin_emails = ["admin@trackomgroup.com"] # Fallback
             
         # Send/Log alert
         send_admin_underfunded_alert(admin_emails, total_client_credits, system_balance)

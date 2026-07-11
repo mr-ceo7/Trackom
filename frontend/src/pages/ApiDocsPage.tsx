@@ -6,36 +6,84 @@ import { motion } from 'motion/react';
 import { Code2, Copy, CheckCircle2, Terminal, Cpu, Lock, Globe } from 'lucide-react';
 import Header from '../components/Header';
 import TrackomLogo from '../components/TrackomLogo';
+import Footer from '../components/Footer';
 
 const endpoints = [
-  { method: 'POST', path: '/api/messages/send', desc: 'Send bulk SMS messages. Automatically detects Unicode and deducts credits accordingly.', auth: true, body: '{ "recipients": ["+254712345678", "+254723456789"], "message": "Hello from Trackom!", "sender_id": "TRACKOM" }', response: '{ "queued": 2, "total_cost": 2, "message_id": "batch_uuid_...", "status": "queued" }' },
-  { method: 'POST', path: '/api/contacts/import', desc: 'Asynchronously import contacts via CSV upload. Sanitizes phone numbers and filters duplicates.', auth: true, body: 'multipart/form-data:\n- file: contacts.csv\n- group_id: group_uuid (optional)', response: '{ "status": "queued", "message": "CSV import initiated successfully." }' },
-  { method: 'POST', path: '/api/auth/register', desc: 'Create a new user account', auth: false, body: '{ "full_name": "John Doe", "email": "john@example.com", "password": "SecurePass1!", "account_type": "business" }', response: '{ "access_token": "eyJ...", "refresh_token": "eyJ...", "token_type": "bearer" }' },
-  { method: 'POST', path: '/api/auth/login', desc: 'Authenticate with email & password', auth: false, body: '{ "email": "john@example.com", "password": "SecurePass1!" }', response: '{ "access_token": "eyJ...", "refresh_token": "eyJ...", "token_type": "bearer" }' },
-  { method: 'GET', path: '/api/users/me', desc: 'Get current user profile', auth: true, body: null, response: '{ "id": "uuid", "email": "john@example.com", "full_name": "John Doe", "sms_balance": 10000, "plan": "starter" }' },
-  { method: 'GET', path: '/api/health', desc: 'Health check', auth: false, body: null, response: '{ "status": "healthy", "app": "Trackom API", "version": "1.0.0" }' },
+  { 
+    method: 'POST', 
+    path: '/api/services/sendsms', 
+    desc: 'Send standard SMS. Accepts JSON or URL-encoded form data. Supports phone normalization and scheduling via timeToSend.', 
+    auth: false,
+    body: '{\n  "apikey": "trk_your_api_key",\n  "partnerID": "your_partner_id",\n  "message": "Hello from Trackom!",\n  "shortcode": "TRACKOM",\n  "mobile": "254712345678,254723456789",\n  "timeToSend": "1783726765" // Optional unix timestamp or date string\n}', 
+    response: '{\n  "responses": [\n    {\n      "response-code": 200,\n      "response-description": "Success",\n      "mobile": "254712345678",\n      "messageid": "batch_uuid_..."\n    }\n  ]\n}' 
+  },
+  { 
+    method: 'POST', 
+    path: '/api/services/sendbulk', 
+    desc: 'Send unique bulk messages. Send up to 1000 unique messages in a single request.', 
+    auth: false,
+    body: '{\n  "count": 2,\n  "smslist": [\n    {\n      "partnerID": "your_partner_id",\n      "apikey": "trk_your_api_key",\n      "mobile": "254712345678",\n      "message": "First unique message content",\n      "shortcode": "TRACKOM"\n    },\n    {\n      "partnerID": "your_partner_id",\n      "apikey": "trk_your_api_key",\n      "mobile": "254723456789",\n      "message": "Second unique message content",\n      "shortcode": "TRACKOM"\n    }\n  ]\n}', 
+    response: '{\n  "responses": [\n    {\n      "response-code": 200,\n      "response-description": "Success",\n      "mobile": "254712345678",\n      "messageid": "message_id_uuid"\n    },\n    {\n      "response-code": 200,\n      "response-description": "Success",\n      "mobile": "254723456789",\n      "messageid": "message_id_uuid"\n    }\n  ]\n}' 
+  },
+  { 
+    method: 'POST', 
+    path: '/api/services/sendotp', 
+    desc: 'Send time-critical OTP (One-Time Password) verification messages.', 
+    auth: false,
+    body: '{\n  "apikey": "trk_your_api_key",\n  "partnerID": "your_partner_id",\n  "message": "Your OTP code is 123456",\n  "shortcode": "TRACKOM",\n  "mobile": "254712345678"\n}', 
+    response: '{\n  "responses": [\n    {\n      "response-code": 200,\n      "response-description": "Success",\n      "mobile": "254712345678",\n      "messageid": "batch_uuid_..."\n    }\n  ]\n}' 
+  },
+  { 
+    method: 'GET', 
+    path: '/api/services/getbalance', 
+    desc: 'Retrieve active SMS balance in credits.', 
+    auth: false,
+    body: 'Query Parameters:\n- apikey: trk_your_api_key\n- partnerID: your_partner_id (optional)', 
+    response: '{\n  "response-code": 200,\n  "response-description": "Success",\n  "credit": 10000.0\n}' 
+  },
+  { 
+    method: 'GET', 
+    path: '/api/services/getdlr', 
+    desc: 'Query delivery status/report for a previously sent message.', 
+    auth: false,
+    body: 'Query Parameters:\n- apikey: trk_your_api_key\n- messageid: message_id_uuid\n- partnerID: your_partner_id (optional)', 
+    response: '{\n  "response-code": 200,\n  "response-description": "Success",\n  "status": "Delivered"\n}' 
+  },
 ];
 
 const sdkExamples: Record<string, string> = {
-  curl: `curl -X POST https://api.trackom.co.ke/api/auth/login \\
+  curl: `curl -X POST https://api.trackomgroup.com/api/services/sendsms \\
   -H "Content-Type: application/json" \\
-  -d '{"email":"you@company.co.ke","password":"your-password"}'`,
+  -d '{
+    "apikey": "trk_your_api_key",
+    "partnerID": "your_partner_id",
+    "message": "Hello from Trackom!",
+    "shortcode": "TRACKOM",
+    "mobile": "254712345678,254723456789"
+  }'`,
   python: `import httpx
 
-resp = httpx.post("https://api.trackom.co.ke/api/auth/login", json={
-    "email": "you@company.co.ke",
-    "password": "your-password"
+resp = httpx.post("https://api.trackomgroup.com/api/services/sendsms", json={
+    "apikey": "trk_your_api_key",
+    "partnerID": "your_partner_id",
+    "message": "Hello from Trackom!",
+    "shortcode": "TRACKOM",
+    "mobile": "254712345678,254723456789"
 })
-token = resp.json()["access_token"]`,
-  javascript: `const resp = await fetch("https://api.trackom.co.ke/api/auth/login", {
+print(resp.json())`,
+  javascript: `const resp = await fetch("https://api.trackomgroup.com/api/services/sendsms", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    email: "you@company.co.ke",
-    password: "your-password"
+    apikey: "trk_your_api_key",
+    partnerID: "your_partner_id",
+    message: "Hello from Trackom!",
+    shortcode: "TRACKOM",
+    mobile: "254712345678,254723456789"
   })
 });
-const { access_token } = await resp.json();`,
+const result = await resp.json();
+console.log(result);`,
 };
 
 const methodColors: Record<string, string> = {
@@ -70,7 +118,7 @@ export default function ApiDocsPage() {
           <h1 className="text-4xl md:text-5xl font-display font-bold text-slate-900 dark:text-white">API Documentation</h1>
           <p className="text-slate-500 dark:text-gray-400 mt-3 max-w-lg mx-auto">Integrate Trackom's messaging platform into your application. RESTful API with JSON responses.</p>
           <div className="flex items-center justify-center gap-6 mt-6 text-xs text-slate-500 dark:text-gray-400">
-            <span className="flex items-center gap-1.5"><Globe className="w-3.5 h-3.5" />Base URL: <code className="font-mono text-brand-primary">https://api.trackom.co.ke</code></span>
+            <span className="flex items-center gap-1.5"><Globe className="w-3.5 h-3.5" />Base URL: <code className="font-mono text-brand-primary">https://api.trackomgroup.com</code></span>
             <span className="flex items-center gap-1.5"><Lock className="w-3.5 h-3.5" />Auth: Bearer JWT</span>
             <span className="flex items-center gap-1.5"><Cpu className="w-3.5 h-3.5" />JSON / REST</span>
           </div>
@@ -136,10 +184,7 @@ export default function ApiDocsPage() {
         </div>
       </section>
 
-      <footer className="bg-white dark:bg-surface-dark border-t border-slate-200 dark:border-white/6 py-8 px-4 text-center">
-        <TrackomLogo size={20} />
-        <p className="text-[10px] text-slate-400 dark:text-gray-600 mt-3 uppercase tracking-widest font-display">© 2026 Trackom Group. All rights reserved.</p>
-      </footer>
+      <Footer />
     </div>
   );
 }

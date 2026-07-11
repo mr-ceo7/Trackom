@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Mail, Phone, MapPin, Clock, MessageSquare, CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
 import Header from '../components/Header';
 import TrackomLogo from '../components/TrackomLogo';
+import Footer from '../components/Footer';
 import api from '../services/api';
 import Loader from '../components/Loader';
 
@@ -218,7 +219,7 @@ export default function ContactPage() {
                 
                 <div className="space-y-4">
                   {[
-                    { icon: <Mail className="w-5 h-5 text-brand-primary" />, label: 'General & Support Email', val: 'support@trackom.co.ke' },
+                    { icon: <Mail className="w-5 h-5 text-brand-primary" />, label: 'General & Support Email', val: 'support@trackomgroup.com' },
                     { icon: <Phone className="w-5 h-5 text-brand-accent" />, label: 'Sales Hotline', val: '+254 700 123 456' },
                     { icon: <MapPin className="w-5 h-5 text-brand-emerald" />, label: 'Nairobi Office', val: 'Delta Corner, Upper Hill, Nairobi, Kenya' },
                     { icon: <Clock className="w-5 h-5 text-purple-500" />, label: 'Business Hours', val: 'Mon - Fri, 8:00 AM - 5:00 PM EAT' }
@@ -248,10 +249,7 @@ export default function ContactPage() {
       </main>
 
       {/* FOOTER */}
-      <footer className="bg-white dark:bg-surface-dark border-t border-slate-200 dark:border-white/6 py-8 px-4 text-center">
-        <TrackomLogo size={20} />
-        <p className="text-[10px] text-slate-400 dark:text-gray-600 mt-3 uppercase tracking-widest font-display">© 2026 Trackom Group. All rights reserved.</p>
-      </footer>
+      <Footer />
     </div>
   );
 }

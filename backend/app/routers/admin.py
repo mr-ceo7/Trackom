@@ -1067,7 +1067,7 @@ DEFAULT_SETTINGS = {
     "growthRate": 0.85,
     "enterpriseRate": 0.70,
     "maintenanceMode": False,
-    "supportEmail": "support@trackom.co.ke",
+    "supportEmail": "support@trackomgroup.com",
     "supportPhone": "+254 700 000 000",
     "alertBanner": "",
     "advantasmsDefaultShortcode": "ARVOCAP"

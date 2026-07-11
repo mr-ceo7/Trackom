@@ -180,7 +180,7 @@ export default function AdminPanelPage() {
   const [growthRate, setGrowthRate] = useState(0.85);
   const [enterpriseRate, setEnterpriseRate] = useState(0.70);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
-  const [supportEmail, setSupportEmail] = useState('support@trackom.co.ke');
+  const [supportEmail, setSupportEmail] = useState('support@trackomgroup.com');
   const [supportPhone, setSupportPhone] = useState('+254 700 000 000');
   const [alertBanner, setAlertBanner] = useState('');
   const [advantasmsDefaultShortcode, setAdvantasmsDefaultShortcode] = useState('ARVOCAP');

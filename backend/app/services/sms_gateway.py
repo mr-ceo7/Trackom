@@ -207,7 +207,8 @@ class AdvantaSMSGateway(BaseSMSGateway):
 
             if responses:
                 for item in responses:
-                    resp_code = item.get("response-code", item.get("responsecode", 0))
+                    # AdvantaSMS uses "respose-code" in their API documentation and live response, support all variants
+                    resp_code = item.get("respose-code", item.get("response-code", item.get("responsecode", item.get("response code", 0))))
                     resp_code = int(resp_code) if resp_code else 0
                     msg_id = item.get("messageid", item.get("message-id"))
                     recipient_phone = item.get("mobile", item.get("recipient", ""))
@@ -230,7 +231,8 @@ class AdvantaSMSGateway(BaseSMSGateway):
                     )
             else:
                 # Fallback: API returned a single-level response (no responses array)
-                resp_code = int(resp_data.get("response-code", resp_data.get("responsecode", 0)))
+                # AdvantaSMS uses "respose-code" in their API documentation and live response, support all variants
+                resp_code = int(resp_data.get("respose-code", resp_data.get("response-code", resp_data.get("responsecode", resp_data.get("response code", 0)))))
                 msg_id = resp_data.get("messageid", resp_data.get("message-id"))
                 is_success = resp_code == 200
                 error_desc = None if is_success else ADVANTA_RESPONSE_CODES.get(

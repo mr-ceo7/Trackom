@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Header from '../components/Header';
+import Footer from '../components/Footer';
 import Hero from '../components/Hero';
 import FeatureShowcase from '../components/FeatureShowcase';
 import PartnerLogos from '../components/PartnerLogos';
@@ -151,65 +152,7 @@ export default function LandingPage() {
         </main>
 
         {/* FOOTER */}
-        <footer id="contact" className="bg-white dark:bg-surface-dark border-t border-slate-200 dark:border-white/6 py-16 px-4 md:px-8 relative z-10">
-          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 text-left">
-            {/* Brand */}
-            <div className="flex flex-col gap-4">
-              <TrackomLogo size={24} />
-              <p className="text-xs text-slate-500 dark:text-gray-500 leading-relaxed max-w-xs">
-                Kenya's leading enterprise communications platform. Bulk SMS, USSD, WhatsApp Business API, OTP, and more.
-              </p>
-              <div className="flex items-center gap-3 mt-2">
-                {/* Social icons */}
-                {['X', 'in', 'GH'].map((icon) => (
-                  <a key={icon} href="#" className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/6 flex items-center justify-center text-slate-500 dark:text-gray-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-all text-xs font-bold">
-                    {icon}
-                  </a>
-                ))}
-              </div>
-            </div>
-
-            {/* Products */}
-            <div>
-              <h5 className="font-display font-semibold text-xs uppercase text-slate-700 dark:text-gray-300 tracking-wider mb-4">Products</h5>
-              <ul className="space-y-2.5 text-xs text-slate-500 dark:text-gray-500 font-medium">
-                {['Bulk SMS', 'USSD Services', 'WhatsApp API', 'OTP Verification', 'Shortcodes', 'Reseller Platform'].map((item) => (
-                  <li key={item}><a href="#services" className="hover:text-brand-primary-light transition-colors">{item}</a></li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Developers */}
-            <div>
-              <h5 className="font-display font-semibold text-xs uppercase text-slate-700 dark:text-gray-300 tracking-wider mb-4">Developers</h5>
-              <ul className="space-y-2.5 text-xs text-slate-500 dark:text-gray-500 font-medium">
-                {['REST API Docs', 'Node.js SDK', 'Python SDK', 'PHP SDK', 'Webhooks', 'Sandbox'].map((item) => (
-                  <li key={item}><a href="#api-docs" className="hover:text-brand-primary-light transition-colors">{item}</a></li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Status */}
-            <div className="flex flex-col gap-4">
-              <h5 className="font-display font-semibold text-xs uppercase text-slate-700 dark:text-gray-300 tracking-wider">Platform Status</h5>
-              
-              <div className="flex items-center gap-2 p-3 rounded-xl border border-slate-200 dark:border-white/6 bg-slate-50 dark:bg-white/[0.01] w-fit font-mono text-[10px] font-semibold text-brand-emerald">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-emerald opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-emerald" />
-                </span>
-                <span>ALL SYSTEMS OPERATIONAL</span>
-              </div>
-              
-              <span className="text-[10px] text-slate-500 dark:text-gray-500 leading-normal font-medium uppercase tracking-widest font-display">
-                © 2026 Trackom Group. All rights reserved.
-              </span>
-              <span className="text-[10px] text-slate-400 dark:text-gray-600">
-                trackomgroup.com
-              </span>
-            </div>
-          </div>
-        </footer>
+        <Footer />
       </div>
     </>
   );

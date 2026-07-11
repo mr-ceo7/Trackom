@@ -66,12 +66,12 @@ async def seed_demo_user():
     from sqlalchemy import select
 
     async with async_session() as session:
-        result = await session.execute(select(User).where(User.email == "demo@trackom.co.ke"))
+        result = await session.execute(select(User).where(User.email == "demo@trackomgroup.com"))
         existing_user = result.scalar_one_or_none()
         
         if not existing_user:
             demo = User(
-                email="demo@trackom.co.ke",
+                email="demo@trackomgroup.com",
                 hashed_password=hash_password("Password123!"),
                 full_name="Demo User",
                 phone="+254712345678",
@@ -86,7 +86,7 @@ async def seed_demo_user():
             await session.commit()
             
             # Fetch again to get the saved user with ID
-            result = await session.execute(select(User).where(User.email == "demo@trackom.co.ke"))
+            result = await session.execute(select(User).where(User.email == "demo@trackomgroup.com"))
             existing_user = result.scalar_one()
 
         # Seed TRACKOM sender ID for demo user
@@ -107,11 +107,11 @@ async def seed_demo_user():
             await session.commit()
 
         # Seed default admin user
-        result_admin = await session.execute(select(User).where(User.email == "admin@trackom.co.ke"))
+        result_admin = await session.execute(select(User).where(User.email == "admin@trackomgroup.com"))
         existing_admin = result_admin.scalar_one_or_none()
         if not existing_admin:
             admin_user = User(
-                email="admin@trackom.co.ke",
+                email="admin@trackomgroup.com",
                 hashed_password=hash_password("Password123!"),
                 full_name="Trackom Admin",
                 phone="+254788888888",
@@ -127,7 +127,7 @@ async def seed_demo_user():
             await session.commit()
             
             # Fetch again to get the saved admin with ID
-            result_admin = await session.execute(select(User).where(User.email == "admin@trackom.co.ke"))
+            result_admin = await session.execute(select(User).where(User.email == "admin@trackomgroup.com"))
             existing_admin = result_admin.scalar_one()
 
         # Seed TRACKOM sender ID for admin user

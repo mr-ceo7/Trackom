@@ -145,9 +145,21 @@ async def login(request: Request, data: LoginRequest, db: AsyncSession = Depends
 async def google_auth(data: GoogleAuthRequest, db: AsyncSession = Depends(get_db)):
     """Authenticate with Google OAuth2 ID token."""
     # Verify Google token
-    async with httpx.AsyncClient() as client:
-        resp = await client.get(
-            f"https://oauth2.googleapis.com/tokeninfo?id_token={data.credential}"
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(
+                f"https://oauth2.googleapis.com/tokeninfo?id_token={data.credential}",
+                timeout=5.0
+            )
+    except httpx.TimeoutException:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Timeout connecting to Google authentication service"
+        )
+    except httpx.RequestError as e:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Network error connecting to Google authentication service: {str(e)}"
         )
 
     if resp.status_code != 200:
