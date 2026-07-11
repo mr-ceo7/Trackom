@@ -18,6 +18,7 @@ from app.models.sms import SmsMessage
 from app.utils.security import verify_password
 from app.utils.sms_calc import calculate_sms_parts
 from app.services.sms_gateway import get_sms_gateway
+from app.utils.limiter import limiter
 
 router = APIRouter(tags=["Advanta Compatibility Service"])
 
@@ -155,6 +156,7 @@ async def process_sendsms(
 
 
 @router.post("/api/services/sendsms")
+@limiter.limit("60/minute")
 async def sendsms_post(
     request: Request,
     db: AsyncSession = Depends(get_db)
@@ -203,7 +205,9 @@ async def sendsms_post(
 
 
 @router.get("/api/services/sendsms")
+@limiter.limit("60/minute")
 async def sendsms_get(
+    request: Request,
     apikey: str,
     mobile: str,
     message: str,
@@ -226,6 +230,7 @@ async def sendsms_get(
 
 
 @router.post("/api/services/sendotp")
+@limiter.limit("60/minute")
 async def sendotp_post(
     request: Request,
     db: AsyncSession = Depends(get_db)
@@ -234,7 +239,9 @@ async def sendotp_post(
 
 
 @router.get("/api/services/sendotp")
+@limiter.limit("60/minute")
 async def sendotp_get(
+    request: Request,
     apikey: str,
     mobile: str,
     message: str,
@@ -257,6 +264,7 @@ async def sendotp_get(
 
 
 @router.post("/api/services/sendbulk")
+@limiter.limit("60/minute")
 async def sendbulk(
     request: Request,
     db: AsyncSession = Depends(get_db)
@@ -393,7 +401,9 @@ async def sendbulk(
 
 
 @router.get("/api/services/getbalance")
+@limiter.limit("120/minute")
 async def getbalance_get(
+    request: Request,
     apikey: str,
     partnerID: Optional[str] = None,
     db: AsyncSession = Depends(get_db)
@@ -413,6 +423,7 @@ async def getbalance_get(
 
 
 @router.post("/api/services/getbalance")
+@limiter.limit("120/minute")
 async def getbalance_post(
     request: Request,
     db: AsyncSession = Depends(get_db)
@@ -489,7 +500,9 @@ async def process_getdlr(
 
 
 @router.get("/api/services/getdlr")
+@limiter.limit("120/minute")
 async def getdlr_get(
+    request: Request,
     apikey: str,
     messageid: str,
     partnerID: Optional[str] = None,
@@ -499,6 +512,7 @@ async def getdlr_get(
 
 
 @router.post("/api/services/getdlr")
+@limiter.limit("120/minute")
 async def getdlr_post(
     request: Request,
     db: AsyncSession = Depends(get_db)

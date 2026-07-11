@@ -21,12 +21,15 @@ from app.middleware.auth import get_current_user
 from app.schemas.sms import SmsSendRequest, SmsSendResponse, SmsMessageResponse, IncomingSmsResponse, BulkDeleteRequest
 from app.utils.sms_calc import calculate_sms_parts
 from app.services.sms_gateway import get_sms_gateway, AdvantaSMSGateway, SmsGatewayException
+from app.utils.limiter import limiter
 
 router = APIRouter(prefix="/messages", tags=["SMS"])
 
 
 @router.post("/send", response_model=SmsSendResponse)
+@limiter.limit("20/minute")
 async def send_sms(
+    request: Request,
     data: SmsSendRequest,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -682,7 +685,9 @@ async def get_delivery_report(
 
 
 @router.post("/{message_id}/retry")
+@limiter.limit("10/minute")
 async def retry_failed_message(
+    request: Request,
     message_id: str,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)

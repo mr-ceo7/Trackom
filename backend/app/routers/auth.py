@@ -135,7 +135,10 @@ async def login(request: Request, data: LoginRequest, db: AsyncSession = Depends
             await db.commit()
             
             if user.two_factor_method == "sms":
-                print(f"[SMS 2FA LOGIN] Code: {code} sent to phone: {user.phone}")
+                if settings.ENVIRONMENT != "production":
+                    print(f"[SMS 2FA LOGIN] Code: {code} sent to phone: {user.phone}")
+                else:
+                    print(f"[SMS 2FA LOGIN] Code sent to phone: {user.phone}")
                 if user.phone:
                     from app.services.sms_gateway import get_sms_gateway
                     import asyncio
@@ -150,7 +153,10 @@ async def login(request: Request, data: LoginRequest, db: AsyncSession = Depends
                         )
                     )
             else:
-                print(f"[EMAIL 2FA LOGIN] Code: {code} sent to email: {user.email}")
+                if settings.ENVIRONMENT != "production":
+                    print(f"[EMAIL 2FA LOGIN] Code: {code} sent to email: {user.email}")
+                else:
+                    print(f"[EMAIL 2FA LOGIN] Code sent to email: {user.email}")
                 if user.email:
                     from app.services.email import send_email
                     send_email(
@@ -436,7 +442,10 @@ async def setup_2fa(
     if method == "sms":
         if not current_user.phone:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Please configure a phone number in your profile before enabling SMS 2FA.")
-        print(f"[SMS 2FA SETUP] Code: {code} sent to phone: {current_user.phone}")
+        if settings.ENVIRONMENT != "production":
+            print(f"[SMS 2FA SETUP] Code: {code} sent to phone: {current_user.phone}")
+        else:
+            print(f"[SMS 2FA SETUP] Code sent to phone: {current_user.phone}")
         from app.services.sms_gateway import get_sms_gateway
         import asyncio
         gateway = get_sms_gateway()
@@ -451,7 +460,10 @@ async def setup_2fa(
         )
         return TwoFactorSetupResponse(phone=current_user.phone)
     else:
-        print(f"[EMAIL 2FA SETUP] Code: {code} sent to email: {current_user.email}")
+        if settings.ENVIRONMENT != "production":
+            print(f"[EMAIL 2FA SETUP] Code: {code} sent to email: {current_user.email}")
+        else:
+            print(f"[EMAIL 2FA SETUP] Code sent to email: {current_user.email}")
         from app.services.email import send_email
         send_email(
             to_email=current_user.email,
@@ -516,7 +528,10 @@ async def disable_2fa_request(
     await db.commit()
 
     if db_user.two_factor_method == "sms":
-        print(f"[SMS 2FA DISABLE] Code: {code} sent to phone: {db_user.phone}")
+        if settings.ENVIRONMENT != "production":
+            print(f"[SMS 2FA DISABLE] Code: {code} sent to phone: {db_user.phone}")
+        else:
+            print(f"[SMS 2FA DISABLE] Code sent to phone: {db_user.phone}")
         if db_user.phone:
             from app.services.sms_gateway import get_sms_gateway
             import asyncio
@@ -531,7 +546,10 @@ async def disable_2fa_request(
                 )
             )
     else:
-        print(f"[EMAIL 2FA DISABLE] Code: {code} sent to email: {db_user.email}")
+        if settings.ENVIRONMENT != "production":
+            print(f"[EMAIL 2FA DISABLE] Code: {code} sent to email: {db_user.email}")
+        else:
+            print(f"[EMAIL 2FA DISABLE] Code sent to email: {db_user.email}")
         if db_user.email:
             from app.services.email import send_email
             send_email(
