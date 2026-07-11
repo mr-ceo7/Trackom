@@ -45,6 +45,7 @@ interface RegisterData {
   phone?: string;
   company?: string;
   account_type?: 'business' | 'reseller';
+  parent_id?: string;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);

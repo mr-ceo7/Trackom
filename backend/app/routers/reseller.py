@@ -231,3 +231,57 @@ async def reseller_history(
     )
     result = await db.execute(q)
     return result.all()
+
+
+class EditSubUserRequest(BaseModel):
+    full_name: Optional[str] = None
+    phone: Optional[str] = None
+    company: Optional[str] = None
+    credit_rate: Optional[float] = None
+    is_active: Optional[bool] = None
+
+class ResellerBrandingRequest(BaseModel):
+    custom_logo_url: Optional[str] = None
+    custom_brand_name: Optional[str] = None
+    custom_primary_color: Optional[str] = None
+
+
+@router.put("/users/{user_id}", response_model=ResellerUserResponse)
+async def update_sub_user(
+    user_id: uuid.UUID,
+    data: EditSubUserRequest,
+    reseller: User = Depends(get_current_reseller),
+    db: AsyncSession = Depends(get_db)
+):
+    """Update a sub-user's details, credit rate, or active status."""
+    result = await db.execute(select(User).where(User.id == user_id, User.parent_id == reseller.id))
+    child = result.scalar_one_or_none()
+    if not child:
+        raise HTTPException(status_code=404, detail="Child account not found under your reseller tree.")
+    
+    update_data = data.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(child, field, value)
+    
+    await db.commit()
+    return child
+
+
+@router.put("/branding")
+async def update_branding(
+    data: ResellerBrandingRequest,
+    reseller: User = Depends(get_current_reseller),
+    db: AsyncSession = Depends(get_db)
+):
+    """Update the reseller's custom white-label branding settings."""
+    update_data = data.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(reseller, field, value)
+    
+    await db.commit()
+    return {
+        "message": "Branding updated successfully",
+        "custom_logo_url": reseller.custom_logo_url,
+        "custom_brand_name": reseller.custom_brand_name,
+        "custom_primary_color": reseller.custom_primary_color
+    }

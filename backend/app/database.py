@@ -54,7 +54,9 @@ async def init_db():
         await conn.execute(text("ALTER TABLE sender_id_requests ADD COLUMN IF NOT EXISTS sandbox_mode BOOLEAN NOT NULL DEFAULT TRUE;"))
         await conn.execute(text("ALTER TABLE sms_templates ADD COLUMN IF NOT EXISTS sandbox_mode BOOLEAN NOT NULL DEFAULT TRUE;"))
         await conn.execute(text("ALTER TABLE incoming_sms ADD COLUMN IF NOT EXISTS sandbox_mode BOOLEAN NOT NULL DEFAULT TRUE;"))
-        await conn.execute(text("ALTER TABLE notifications ADD COLUMN IF NOT EXISTS sandbox_mode BOOLEAN NOT NULL DEFAULT TRUE;"))
+        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS custom_logo_url VARCHAR(500) NULL;"))
+        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS custom_brand_name VARCHAR(255) NULL;"))
+        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS custom_primary_color VARCHAR(50) NULL;"))
 
 
 

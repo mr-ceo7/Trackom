@@ -58,6 +58,11 @@ class User(Base):
     # Reseller structure
     parent_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
 
+    # White-label branding (for resellers)
+    custom_logo_url: Mapped[str] = mapped_column(String(500), nullable=True)
+    custom_brand_name: Mapped[str] = mapped_column(String(255), nullable=True)
+    custom_primary_color: Mapped[str] = mapped_column(String(50), nullable=True)
+
     # OAuth
     google_id: Mapped[str] = mapped_column(String(255), unique=True, nullable=True)
 

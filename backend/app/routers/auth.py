@@ -65,6 +65,7 @@ async def register(request: Request, data: RegisterRequest, db: AsyncSession = D
         sms_balance=0,
         sandbox_sms_balance=0,
         credit_rate=default_rate,
+        parent_id=data.parent_id,
     )
     db.add(user)
     await db.flush()  # Get user.id

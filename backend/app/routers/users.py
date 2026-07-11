@@ -12,9 +12,32 @@ from app.utils.security import verify_password, hash_password
 router = APIRouter(prefix="/users", tags=["Users"])
 
 
+from sqlalchemy import select
+
+async def resolve_user_branding(user: User, db: AsyncSession) -> dict:
+    if user.parent_id:
+        result = await db.execute(select(User).where(User.id == user.parent_id))
+        parent = result.scalar_one_or_none()
+        if parent:
+            return {
+                "logo_url": parent.custom_logo_url,
+                "brand_name": parent.custom_brand_name,
+                "primary_color": parent.custom_primary_color
+            }
+    return {
+        "logo_url": user.custom_logo_url,
+        "brand_name": user.custom_brand_name,
+        "primary_color": user.custom_primary_color
+    }
+
+
 @router.get("/me", response_model=UserResponse)
-async def get_me(current_user: User = Depends(get_current_user)):
+async def get_me(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
     """Get the current user's profile."""
+    current_user.branding = await resolve_user_branding(current_user, db)
     return current_user
 
 
@@ -28,6 +51,8 @@ async def update_me(
     update_data = data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(current_user, field, value)
+    await db.flush()
+    current_user.branding = await resolve_user_branding(current_user, db)
     return current_user
 
 

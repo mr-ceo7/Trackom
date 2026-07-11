@@ -2,11 +2,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Users, Megaphone, Coins, Calendar, Plus, X, 
-  Send, ShieldAlert, ArrowDownRight, MessageSquare, Key
+  Send, ShieldAlert, ArrowDownRight, MessageSquare, Key,
+  Edit, Sparkles, Sliders, Palette, CheckCircle2
 } from 'lucide-react';
 import api from '../../services/api';
 import Loader from '../../components/Loader';
 import GenieModal from '../../components/GenieModal';
+import { useAuth } from '../../contexts/AuthContext';
 
 
 interface ResellerStats {
@@ -23,6 +25,7 @@ interface ResellerUser {
   company: string | null;
   plan: string;
   sms_balance: number;
+  credit_rate: number;
   is_active: boolean;
   created_at: string;
 }
@@ -39,11 +42,12 @@ interface ResellerMessageLog {
 }
 
 export default function ResellerPanelPage() {
+  const { user, refreshUser } = useAuth();
   const [stats, setStats] = useState<ResellerStats | null>(null);
   const [users, setUsers] = useState<ResellerUser[]>([]);
   const [logs, setLogs] = useState<ResellerMessageLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'clients' | 'logs'>('clients');
+  const [activeTab, setActiveTab] = useState<'clients' | 'logs' | 'branding'>('clients');
 
   // Credit Transfer Modal
   const [selectedUser, setSelectedUser] = useState<ResellerUser | null>(null);
@@ -60,6 +64,32 @@ export default function ResellerPanelPage() {
   const [childPassword, setChildPassword] = useState('');
   const [submittingCreate, setSubmittingCreate] = useState(false);
   const [createError, setCreateError] = useState('');
+
+  // Edit Client Modal
+  const [editingUser, setEditingUser] = useState<ResellerUser | null>(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editCompany, setEditCompany] = useState('');
+  const [editRate, setEditRate] = useState('');
+  const [editActive, setEditActive] = useState(true);
+  const [submittingEdit, setSubmittingEdit] = useState(false);
+
+  // Branding Panel States
+  const [brandName, setBrandName] = useState(user?.custom_brand_name || '');
+  const [logoUrl, setLogoUrl] = useState(user?.custom_logo_url || '');
+  const [brandColor, setBrandColor] = useState(user?.custom_primary_color || '#6366F1');
+  const [savingBranding, setSavingBranding] = useState(false);
+  const [brandingSuccess, setBrandingSuccess] = useState(false);
+
+  // Sync branding states when user loads
+  useEffect(() => {
+    if (user) {
+      setBrandName(user.custom_brand_name || '');
+      setLogoUrl(user.custom_logo_url || '');
+      setBrandColor(user.custom_primary_color || '#6366F1');
+    }
+  }, [user]);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -144,6 +174,50 @@ export default function ResellerPanelPage() {
     }
   };
 
+  // Edit Child Handler
+  const handleEditChild = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser) return;
+    setSubmittingEdit(true);
+    try {
+      await api.put(`/reseller/users/${editingUser.id}`, {
+        full_name: editName,
+        phone: editPhone || undefined,
+        company: editCompany || undefined,
+        credit_rate: parseFloat(editRate) || 1.0,
+        is_active: editActive
+      });
+      setIsEditOpen(false);
+      setEditingUser(null);
+      await loadAll();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Failed to update client.');
+    } finally {
+      setSubmittingEdit(false);
+    }
+  };
+
+  // Branding Update Handler
+  const handleSaveBranding = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingBranding(true);
+    setBrandingSuccess(false);
+    try {
+      await api.put('/reseller/branding', {
+        custom_logo_url: logoUrl || undefined,
+        custom_brand_name: brandName || undefined,
+        custom_primary_color: brandColor || undefined
+      });
+      await refreshUser();
+      setBrandingSuccess(true);
+      setTimeout(() => setBrandingSuccess(false), 3000);
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Failed to update branding settings.');
+    } finally {
+      setSavingBranding(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Title */}
@@ -153,7 +227,7 @@ export default function ResellerPanelPage() {
         </div>
         <div>
           <h1 className="text-2xl font-display font-bold text-slate-900 dark:text-white">Reseller Console</h1>
-          <p className="text-sm text-slate-500 dark:text-gray-400 mt-0.5">Manage credit wallets and monitor client messaging history.</p>
+          <p className="text-sm text-slate-500 dark:text-gray-400 mt-0.5">Manage credit wallets, customize white-labeling, and monitor client routing activity.</p>
         </div>
       </div>
 
@@ -181,30 +255,56 @@ export default function ResellerPanelPage() {
 
           {/* Navigation Tabs */}
           <div className="flex gap-4 border-b border-slate-200 dark:border-white/5 pb-px">
-            <button
-              onClick={() => setActiveTab('clients')}
-              className={`pb-3 text-sm font-semibold tracking-wide transition-all border-b-2 px-1 cursor-pointer ${
-                activeTab === 'clients' 
-                  ? 'border-brand-primary text-brand-primary dark:text-brand-primary-light' 
-                  : 'border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-white'
-              }`}
-            >
-              My Clients
-            </button>
-            <button
-              onClick={() => setActiveTab('logs')}
-              className={`pb-3 text-sm font-semibold tracking-wide transition-all border-b-2 px-1 cursor-pointer ${
-                activeTab === 'logs' 
-                  ? 'border-brand-primary text-brand-primary dark:text-brand-primary-light' 
-                  : 'border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-white'
-              }`}
-            >
-              Real-time Sub-user Logs
-            </button>
+            {[
+              { id: 'clients', label: 'My Clients', icon: Users },
+              { id: 'logs', label: 'Real-time Sub-user Logs', icon: MessageSquare },
+              { id: 'branding', label: 'White-label Branding', icon: Palette }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`pb-3 text-sm font-semibold tracking-wide transition-all border-b-2 px-1 cursor-pointer flex items-center gap-1.5 ${
+                  activeTab === tab.id 
+                    ? 'border-brand-primary text-brand-primary dark:text-brand-primary-light' 
+                    : 'border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-white'
+                }`}
+              >
+                <tab.icon className="w-4 h-4" />
+                <span>{tab.label}</span>
+              </button>
+            ))}
           </div>
 
           {activeTab === 'clients' && (
-            <div className="space-y-4">
+            <div className="space-y-4 animate-fadeIn">
+              {/* Referral Link Widget */}
+              <div className="clay-card rounded-3xl p-5 bg-gradient-to-r from-brand-primary/10 via-brand-accent/5 to-transparent border border-brand-primary/15 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="space-y-1 text-left">
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-brand-primary" />
+                    <span>Client Referral Link</span>
+                  </h4>
+                  <p className="text-xs text-slate-500 dark:text-gray-400">Share this link to automatically onboard clients directly under your reseller account.</p>
+                </div>
+                <div className="flex items-center gap-2 w-full md:w-auto">
+                  <input
+                    type="text"
+                    readOnly
+                    value={`${window.location.origin}/register?type=business&ref=${user?.id}`}
+                    className="clay-input px-3 py-2 rounded-xl text-xs font-mono select-all bg-slate-100/50 dark:bg-black/10 border-0 outline-none w-full md:w-80"
+                  />
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/register?type=business&ref=${user?.id}`);
+                      alert('Referral link copied to clipboard!');
+                    }}
+                    className="clay-button-secondary px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer"
+                  >
+                    Copy Link
+                  </button>
+                </div>
+              </div>
+
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Business Sub-accounts</h3>
                 <button
@@ -224,8 +324,9 @@ export default function ResellerPanelPage() {
                       <tr className="border-b border-slate-200/20 dark:border-white/6 clay-inset">
                         <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Client User</th>
                         <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Company</th>
+                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">SMS Rate</th>
                         <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">SMS Balance</th>
-                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Created At</th>
+                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Status</th>
                         <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider text-right">Actions</th>
                       </tr>
                     </thead>
@@ -239,25 +340,51 @@ export default function ResellerPanelPage() {
                             </div>
                           </td>
                           <td className="px-5 py-3 text-xs text-slate-600 dark:text-gray-400">{u.company || ' - '}</td>
+                          <td className="px-5 py-3">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/10 font-mono">
+                              KES {u.credit_rate.toFixed(2)}/SMS
+                            </span>
+                          </td>
                           <td className="px-5 py-3 font-bold font-mono text-slate-900 dark:text-white">
                             {u.sms_balance.toLocaleString()} cr
                           </td>
-                          <td className="px-5 py-3 text-xs text-slate-500 font-mono">
-                            {new Date(u.created_at).toLocaleDateString()}
+                          <td className="px-5 py-3">
+                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${
+                              u.is_active ? 'bg-brand-emerald/10 text-brand-emerald' : 'bg-red-500/10 text-red-500'
+                            }`}>
+                              {u.is_active ? 'Active' : 'Suspended'}
+                            </span>
                           </td>
                           <td className="px-5 py-3 text-right">
-                            <button
-                              onClick={() => { setSelectedUser(u); setIsTransferOpen(true); }}
-                              className="clay-button-secondary px-3 py-1.5 rounded-2xl text-brand-primary text-xs font-semibold cursor-pointer transition-all"
-                            >
-                              Allocate Credits
-                            </button>
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => { setSelectedUser(u); setIsTransferOpen(true); }}
+                                className="clay-button-secondary px-3 py-1.5 rounded-xl text-brand-primary text-xs font-semibold cursor-pointer transition-all"
+                              >
+                                Allocate Credits
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setEditingUser(u);
+                                  setEditName(u.full_name);
+                                  setEditPhone(u.phone || '');
+                                  setEditCompany(u.company || '');
+                                  setEditRate(u.credit_rate.toString());
+                                  setEditActive(u.is_active);
+                                  setIsEditOpen(true);
+                                }}
+                                className="p-2 rounded-xl text-slate-400 hover:text-brand-primary hover:bg-slate-100 dark:hover:bg-white/5 transition-all cursor-pointer"
+                                title="Edit Client Details & Rate"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
                       {users.length === 0 && (
                         <tr>
-                          <td colSpan={5} className="text-center py-16">
+                          <td colSpan={6} className="text-center py-16">
                             <Users className="w-10 h-10 text-slate-300 dark:text-gray-600 mx-auto mb-3" />
                             <p className="text-sm text-slate-500 dark:text-gray-400">No client accounts created yet.</p>
                           </td>
@@ -271,7 +398,7 @@ export default function ResellerPanelPage() {
           )}
 
           {activeTab === 'logs' && (
-            <div className="space-y-4">
+            <div className="space-y-4 animate-fadeIn">
               <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                 <MessageSquare className="w-4 h-4 text-brand-primary" />
                 <span>Aggregated Sub-user Dispatch History</span>
@@ -318,6 +445,115 @@ export default function ResellerPanelPage() {
                       )}
                     </tbody>
                   </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'branding' && (
+            <div className="space-y-6 animate-fadeIn text-left">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-500">
+                  <Palette className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-900 dark:text-white">White-label Branding Settings</h3>
+                  <p className="text-xs text-slate-500 dark:text-gray-400">Rebrand your clients' portals with your own business logo, name, and color theme.</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Configuration Form */}
+                <div className="md:col-span-2 clay-card rounded-3xl p-6 space-y-4">
+                  {brandingSuccess && (
+                    <div className="flex items-center gap-2 p-3 rounded-xl bg-brand-emerald/10 border border-brand-emerald/20 text-brand-emerald text-xs font-semibold">
+                      <CheckCircle2 className="w-4 h-4 shrink-0" />
+                      <span>Branding configurations updated successfully!</span>
+                    </div>
+                  )}
+
+                  <form onSubmit={handleSaveBranding} className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Custom Portal Name</label>
+                      <input 
+                        type="text" 
+                        value={brandName} 
+                        onChange={e => setBrandName(e.target.value)} 
+                        placeholder="e.g. Mwangi SMS Solutions" 
+                        className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" 
+                        required 
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Logo Image URL</label>
+                      <input 
+                        type="url" 
+                        value={logoUrl} 
+                        onChange={e => setLogoUrl(e.target.value)} 
+                        placeholder="e.g. https://domain.com/assets/logo.png" 
+                        className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" 
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Primary Brand Color</label>
+                      <div className="flex items-center gap-3">
+                        <input 
+                          type="color" 
+                          value={brandColor} 
+                          onChange={e => setBrandColor(e.target.value)} 
+                          className="w-10 h-10 rounded-xl cursor-pointer border border-slate-200 dark:border-white/10 p-0.5 bg-white dark:bg-slate-800" 
+                        />
+                        <input 
+                          type="text" 
+                          value={brandColor} 
+                          onChange={e => setBrandColor(e.target.value)} 
+                          placeholder="#6366F1" 
+                          className="clay-input px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none w-32 font-mono uppercase" 
+                        />
+                      </div>
+                    </div>
+
+                    <button 
+                      type="submit" 
+                      disabled={savingBranding} 
+                      className="clay-button-primary px-6 py-3 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2"
+                    >
+                      {savingBranding ? <Loader size="sm" /> : <span>Apply White-label Branding</span>}
+                    </button>
+                  </form>
+                </div>
+
+                {/* Preview Card */}
+                <div className="clay-card rounded-3xl p-6 flex flex-col justify-between border border-slate-200/50 dark:border-white/5 bg-slate-50/50 dark:bg-black/10">
+                  <div className="space-y-4">
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Preview Card</h4>
+                    
+                    {/* Fake Header */}
+                    <div className="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {logoUrl ? (
+                          <img src={logoUrl} alt="Logo" className="w-6 h-6 object-contain rounded" />
+                        ) : (
+                          <div className="w-6 h-6 rounded-lg bg-indigo-500 flex items-center justify-center text-[10px] font-black text-white">T</div>
+                        )}
+                        <span className="text-xs font-black text-slate-900 dark:text-white">{brandName || 'Trackom'}</span>
+                      </div>
+                      <div className="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-800" />
+                    </div>
+
+                    {/* Fake Dashboard Button */}
+                    <div 
+                      className="p-3 rounded-2xl text-white text-xs font-bold text-center flex items-center justify-center gap-1"
+                      style={{ backgroundColor: brandColor }}
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Explore Portal</span>
+                    </div>
+                  </div>
+
+                  <p className="text-[10px] text-slate-400 mt-6 leading-relaxed">This card displays a live mockup of how your logo, custom brand name, and color theme will render on your clients' portals.</p>
                 </div>
               </div>
             </div>
@@ -380,27 +616,107 @@ export default function ResellerPanelPage() {
 
               <div className="space-y-1.5 text-left">
                 <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Client Email Address</label>
-                <input type="email" value={childEmail} onChange={e => setChildEmail(e.target.value)} placeholder="james@company.co.ke" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
+                <input type="email" value={childEmail} onChange={(e) => setChildEmail(e.target.value)} placeholder="james@company.co.ke" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5 text-left">
                   <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Phone (Optional)</label>
-                  <input type="tel" value={childPhone} onChange={e => setChildPhone(e.target.value)} placeholder="0712345678" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
+                  <input type="tel" value={childPhone} onChange={(e) => setChildPhone(e.target.value)} placeholder="0712345678" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
                 </div>
                 <div className="space-y-1.5 text-left">
                   <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Company (Optional)</label>
-                  <input type="text" value={childCompany} onChange={e => setChildCompany(e.target.value)} placeholder="Mwangi Builders" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
+                  <input type="text" value={childCompany} onChange={(e) => setChildCompany(e.target.value)} placeholder="Mwangi Builders" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
                 </div>
               </div>
 
               <div className="space-y-1.5 text-left">
                 <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Login Password</label>
-                <input type="password" value={childPassword} onChange={e => setChildPassword(e.target.value)} placeholder="••••••••" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
+                <input type="password" value={childPassword} onChange={(e) => setChildPassword(e.target.value)} placeholder="••••••••" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
               </div>
 
               <button type="submit" disabled={submittingCreate} className="clay-button-primary w-full py-3 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2">
                 {submittingCreate ? <Loader size="sm" /> : <span>Create Client Account</span>}
+              </button>
+            </form>
+          </GenieModal>
+        )}
+      </AnimatePresence>
+
+      {/* Edit Sub-account Modal */}
+      <AnimatePresence>
+        {isEditOpen && editingUser && (
+          <GenieModal onClose={() => setIsEditOpen(false)} className="p-6">
+            <div className="flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-4 mb-4">
+              <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                <Sliders className="w-5 h-5 text-brand-primary" />
+                <span>Configure Client Profile</span>
+              </h3>
+              <button onClick={() => setIsEditOpen(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"><X className="w-4 h-4" /></button>
+            </div>
+
+            <form onSubmit={handleEditChild} className="space-y-4">
+              <div className="space-y-1.5 text-left">
+                <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Full Name</label>
+                <input type="text" value={editName} onChange={e => setEditName(e.target.value)} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5 text-left">
+                  <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Phone</label>
+                  <input type="tel" value={editPhone} onChange={e => setEditPhone(e.target.value)} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
+                </div>
+                <div className="space-y-1.5 text-left">
+                  <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Company</label>
+                  <input type="text" value={editCompany} onChange={e => setEditCompany(e.target.value)} className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" />
+                </div>
+              </div>
+
+              <div className="space-y-1.5 text-left">
+                <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">SMS Markup Rate (KES per SMS)</label>
+                <input 
+                  type="number" 
+                  step="0.01" 
+                  min="0.01"
+                  value={editRate} 
+                  onChange={e => setEditRate(e.target.value)} 
+                  placeholder="e.g. 0.25"
+                  className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none font-mono" 
+                  required 
+                />
+                <p className="text-[10px] text-slate-400">Determines client billing rate per SMS credit when topping up.</p>
+              </div>
+
+              <div className="space-y-1.5 text-left">
+                <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Account Status</label>
+                <div className="flex items-center gap-3">
+                  <button 
+                    type="button" 
+                    onClick={() => setEditActive(true)}
+                    className={`flex-1 py-2.5 rounded-2xl text-xs font-bold cursor-pointer transition-all ${
+                      editActive 
+                        ? 'clay-nav-active text-brand-primary border-brand-primary' 
+                        : 'clay-button-secondary border-transparent'
+                    }`}
+                  >
+                    Active / Enabled
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => setEditActive(false)}
+                    className={`flex-1 py-2.5 rounded-2xl text-xs font-bold cursor-pointer transition-all ${
+                      !editActive 
+                        ? 'bg-red-500/10 text-red-500 border border-red-500/20' 
+                        : 'clay-button-secondary border-transparent'
+                    }`}
+                  >
+                    Suspended
+                  </button>
+                </div>
+              </div>
+
+              <button type="submit" disabled={submittingEdit} className="clay-button-primary w-full py-3 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2">
+                {submittingEdit ? <Loader size="sm" /> : <span>Update Client configurations</span>}
               </button>
             </form>
           </GenieModal>

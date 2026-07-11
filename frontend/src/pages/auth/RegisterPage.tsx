@@ -60,7 +60,16 @@ export default function RegisterPage() {
     setError('');
     setIsSubmitting(true);
     try {
-      await register({ full_name: fullName, email, password, phone: phone ? `+254${phone}` : undefined, company: company || undefined, account_type: accountType });
+      const parentId = searchParams.get('parent_id') || searchParams.get('ref') || undefined;
+      await register({
+        full_name: fullName,
+        email,
+        password,
+        phone: phone ? `+254${phone}` : undefined,
+        company: company || undefined,
+        account_type: accountType,
+        parent_id: parentId
+      });
       navigate('/dashboard', { replace: true });
     } catch (err: any) {
       const { parseApiError } = await import('../../utils');

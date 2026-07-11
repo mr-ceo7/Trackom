@@ -28,6 +28,7 @@ class RegisterRequest(BaseModel):
     company: Optional[str] = Field(None, max_length=255)
     password: str = Field(..., min_length=8, max_length=128)
     account_type: str = Field("business", pattern="^(business|reseller)$")
+    parent_id: Optional[uuid.UUID] = None
 
     @field_validator('password')
     @classmethod
@@ -91,6 +92,10 @@ class UserResponse(BaseModel):
     two_factor_method: str = "totp"
     sandbox_mode: bool = True
     created_at: datetime
+    custom_logo_url: Optional[str] = None
+    custom_brand_name: Optional[str] = None
+    custom_primary_color: Optional[str] = None
+    branding: Optional[dict] = None
 
     model_config = {"from_attributes": True}
 
