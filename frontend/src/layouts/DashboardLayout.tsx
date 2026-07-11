@@ -193,7 +193,10 @@ export default function DashboardLayout() {
             <motion.aside initial={{ x: -280 }} animate={{ x: 0 }} exit={{ x: -280 }} transition={{ type: 'spring', damping: 25 }} className="fixed left-0 top-0 bottom-0 w-72 clay-sidebar z-50 lg:hidden flex flex-col">
               <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200/40 dark:border-white/6">
                 <TrackomLogo size={24} />
-                <button onClick={() => setSidebarOpen(false)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer transition-colors"><X className="w-5 h-5" /></button>
+                <div className="flex items-center gap-2">
+                  <ThemeToggle className="clay-button-secondary text-slate-500 dark:text-gray-400" storageKey="trackom-dashboard-theme" />
+                  <button onClick={() => setSidebarOpen(false)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer transition-colors"><X className="w-5 h-5" /></button>
+                </div>
               </div>
               <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
                 {currentNavItems.map((item) => (
@@ -214,6 +217,17 @@ export default function DashboardLayout() {
                   </NavLink>
                 ))}
               </nav>
+              <div className="p-4 border-t border-slate-200/40 dark:border-white/6 mt-auto">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-2xl clay-inset">
+                  <MessageSquare className="w-4 h-4 text-brand-primary" />
+                  <div className="flex-1">
+                    <div className="text-[10px] text-slate-400 dark:text-gray-500 uppercase tracking-wider font-semibold">SMS Balance</div>
+                    <div className="text-sm font-bold text-slate-900 dark:text-white font-mono">
+                      {user?.sms_balance?.toLocaleString() || '0'}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </motion.aside>
           </>
         )}
@@ -232,7 +246,7 @@ export default function DashboardLayout() {
 
           <div className="flex items-center gap-3">
             <SandboxToggle />
-            <ThemeToggle className="clay-button-secondary text-slate-500 dark:text-gray-400" storageKey="trackom-dashboard-theme" />
+            <ThemeToggle className="clay-button-secondary text-slate-500 dark:text-gray-400 hidden sm:flex" storageKey="trackom-dashboard-theme" />
 
             {/* Notifications */}
             <button onClick={() => setNotiOpen(true)} className="relative p-2 rounded-2xl text-slate-500 hover:text-slate-700 dark:text-gray-400 dark:hover:text-white clay-button-secondary cursor-pointer transition-all">

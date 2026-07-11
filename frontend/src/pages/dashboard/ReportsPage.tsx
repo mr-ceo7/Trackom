@@ -302,10 +302,10 @@ export default function ReportsPage() {
                       <tr className="border-b border-slate-200/20 dark:border-white/6 clay-inset">
                         <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Recipient</th>
                         <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Message Content</th>
-                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Sender & Batch</th>
+                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider hidden sm:table-cell">Sender & Batch</th>
                         <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Status</th>
-                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Cost</th>
-                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Time</th>
+                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider hidden sm:table-cell">Cost</th>
+                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider hidden md:table-cell">Time</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -322,14 +322,30 @@ export default function ReportsPage() {
                             </td>
                             <td className="px-5 py-3 text-xs text-slate-600 dark:text-gray-300 max-w-xs">
                               {isRowExpanded ? (
-                                <div className="font-sans whitespace-pre-wrap bg-slate-50 dark:bg-slate-900/50 p-2.5 rounded-xl border border-slate-200/30 dark:border-white/5 shadow-inner leading-relaxed">
-                                  {m.content}
+                                <div className="space-y-2.5 font-sans bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200/30 dark:border-white/5 shadow-inner leading-relaxed text-left">
+                                  <div>{m.content}</div>
+                                  <div className="flex flex-col gap-1.5 pt-2.5 border-t border-slate-200/20 dark:border-white/5 text-[10px] text-slate-500 dark:text-gray-400">
+                                    <div className="sm:hidden flex justify-between gap-4">
+                                      <span>Sender ID:</span>
+                                      <span className="font-mono font-semibold text-slate-700 dark:text-gray-200">{m.sender_id} {m.batch_number ? `(${m.batch_number})` : ''}</span>
+                                    </div>
+                                    <div className="sm:hidden flex justify-between gap-4">
+                                      <span>Cost:</span>
+                                      <span className="font-mono font-semibold text-slate-700 dark:text-gray-200">{m.cost.toFixed(2)} cr</span>
+                                    </div>
+                                    <div className="md:hidden flex justify-between gap-4">
+                                      <span>Time:</span>
+                                      <span className="font-mono font-semibold text-slate-700 dark:text-gray-200">
+                                        {m.sent_at ? new Date(m.sent_at).toLocaleString() : new Date(m.created_at).toLocaleString()}
+                                      </span>
+                                    </div>
+                                  </div>
                                 </div>
                               ) : (
                                 <div className="truncate">{m.content}</div>
                               )}
                             </td>
-                            <td className="px-5 py-3 text-left">
+                            <td className="px-5 py-3 text-left hidden sm:table-cell">
                               <div className="text-xs font-semibold text-slate-900 dark:text-white font-mono">{m.sender_id}</div>
                               {m.batch_number && (
                                 <div className="text-[10px] text-brand-primary font-mono mt-0.5">{m.batch_number}</div>
@@ -354,10 +370,10 @@ export default function ReportsPage() {
                                  )}
                                </div>
                              </td>
-                            <td className="px-5 py-3 text-xs font-mono text-slate-900 dark:text-white">
+                            <td className="px-5 py-3 text-xs font-mono text-slate-900 dark:text-white hidden sm:table-cell">
                               {m.cost.toFixed(2)} cr
                             </td>
-                            <td className="px-5 py-3 text-xs text-slate-500 dark:text-gray-400 font-mono">
+                            <td className="px-5 py-3 text-xs text-slate-500 dark:text-gray-400 font-mono hidden md:table-cell">
                               {m.sent_at ? new Date(m.sent_at).toLocaleTimeString() : ' - '}
                             </td>
                           </tr>
@@ -407,8 +423,8 @@ export default function ReportsPage() {
                     <tr className="border-b border-slate-200/20 dark:border-white/6 clay-inset">
                       <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Recipient</th>
                       <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Message Content</th>
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Sender & Batch</th>
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Scheduled Time</th>
+                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider hidden sm:table-cell">Sender & Batch</th>
+                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider hidden sm:table-cell">Scheduled Time</th>
                       <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Actions</th>
                     </tr>
                   </thead>
@@ -426,20 +442,30 @@ export default function ReportsPage() {
                           </td>
                           <td className="px-5 py-3 text-xs text-slate-600 dark:text-gray-300 max-w-xs">
                             {isRowExpanded ? (
-                              <div className="font-sans whitespace-pre-wrap bg-slate-50 dark:bg-slate-900/50 p-2.5 rounded-xl border border-slate-200/30 dark:border-white/5 shadow-inner leading-relaxed">
-                                {m.content}
+                              <div className="space-y-2.5 font-sans bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200/30 dark:border-white/5 shadow-inner leading-relaxed text-left">
+                                <div>{m.content}</div>
+                                <div className="flex flex-col gap-1.5 pt-2.5 border-t border-slate-200/20 dark:border-white/5 text-[10px] text-slate-500 dark:text-gray-400">
+                                  <div className="sm:hidden flex justify-between gap-4">
+                                    <span>Sender ID:</span>
+                                    <span className="font-mono font-semibold text-slate-700 dark:text-gray-200">{m.sender_id} {m.batch_number ? `(${m.batch_number})` : ''}</span>
+                                  </div>
+                                  <div className="sm:hidden flex justify-between gap-4">
+                                    <span>Scheduled:</span>
+                                    <span className="font-mono font-semibold text-slate-700 dark:text-gray-200">{m.scheduled_at ? new Date(m.scheduled_at).toLocaleString() : ' - '}</span>
+                                  </div>
+                                </div>
                               </div>
                             ) : (
                               <div className="truncate">{m.content}</div>
                             )}
                           </td>
-                          <td className="px-5 py-3 text-left">
+                          <td className="px-5 py-3 text-left hidden sm:table-cell">
                             <div className="text-xs font-semibold text-slate-900 dark:text-white font-mono">{m.sender_id}</div>
                             {m.batch_number && (
                               <div className="text-[10px] text-brand-primary font-mono mt-0.5">{m.batch_number}</div>
                             )}
                           </td>
-                          <td className="px-5 py-3 text-xs font-semibold text-amber-600 dark:text-amber-400 font-mono">
+                          <td className="px-5 py-3 text-xs font-semibold text-amber-600 dark:text-amber-400 font-mono hidden sm:table-cell">
                             {m.scheduled_at ? new Date(m.scheduled_at).toLocaleString() : ' - '}
                           </td>
                           <td className="px-5 py-3">

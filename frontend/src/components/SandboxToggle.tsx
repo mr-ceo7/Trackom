@@ -78,7 +78,7 @@ export default function SandboxToggle() {
         </motion.div>
 
         {/* Label */}
-        <span className="tracking-wide">
+        <span className="tracking-wide hidden sm:inline">
           {isSandbox ? 'Sandbox' : 'Live'}
         </span>
 
@@ -92,7 +92,7 @@ export default function SandboxToggle() {
 
         {/* TEST badge for Sandbox mode */}
         {isSandbox && (
-          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold leading-none bg-amber-500/20 text-amber-600 dark:text-amber-400 tracking-widest">
+          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold leading-none bg-amber-500/20 text-amber-600 dark:text-amber-400 tracking-widest hidden sm:inline-block">
             TEST
           </span>
         )}

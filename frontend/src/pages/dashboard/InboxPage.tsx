@@ -265,7 +265,7 @@ export default function InboxPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Webhook Simulator */}
         {isSandbox && (
-          <div className="lg:col-span-1 space-y-6">
+          <div className="lg:col-span-1 space-y-6 order-2 lg:order-1">
             <div className="clay-card rounded-3xl p-5 space-y-4">
               <div className="flex items-center gap-2 pb-2 border-b border-slate-200/20">
                 <Smartphone className="w-5 h-5 text-brand-primary" />
@@ -340,7 +340,7 @@ export default function InboxPage() {
         )}
 
         {/* Right Column: Inbound SMS List */}
-        <div className={`${isSandbox ? 'lg:col-span-2' : 'lg:col-span-3'} space-y-4`}>
+        <div className={`${isSandbox ? 'lg:col-span-2' : 'lg:col-span-3'} space-y-4 order-1 lg:order-2`}>
 
           {/* Filters Card */}
           <div className="clay-card rounded-3xl p-4 flex flex-col gap-3">

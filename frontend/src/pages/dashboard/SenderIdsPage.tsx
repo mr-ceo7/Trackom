@@ -139,7 +139,7 @@ export default function SenderIdsPage() {
       {/* Main content grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Help block */}
-        <div className="md:col-span-1 space-y-4">
+        <div className="md:col-span-1 space-y-4 order-2 md:order-1">
           <div className="clay-card rounded-3xl p-5 space-y-4">
             <div className="flex items-center gap-2 pb-2 border-b border-slate-200/20">
               <Info className="w-5 h-5 text-brand-primary" />
@@ -172,7 +172,7 @@ export default function SenderIdsPage() {
         </div>
 
         {/* Requests List */}
-        <div className="md:col-span-2 space-y-3">
+        <div className="md:col-span-2 space-y-3 order-1 md:order-2">
           {loading ? (
             <div className="text-center py-12 clay-card rounded-3xl"><Loader size="md" /></div>
           ) : (

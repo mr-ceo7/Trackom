@@ -724,7 +724,7 @@ export default function ComposeSMS() {
   };
 
   return (
-    <div className="max-w-5xl space-y-6">
+    <div className="max-w-5xl space-y-6 pb-20 lg:pb-0">
       <div>
         <h1 className="text-2xl font-display font-bold text-slate-900 dark:text-white">Compose SMS</h1>
         <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">Send messages to individuals or in bulk.</p>
@@ -1111,6 +1111,41 @@ export default function ComposeSMS() {
               <Clock className="w-3 h-3" />
               <span>Delivery typically under 3 seconds</span>
             </div>
+          </div>
+        </div>
+
+        {/* Sticky Mobile Send Bar */}
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 dark:bg-surface-dark/95 backdrop-blur-md border-t border-slate-200/50 dark:border-white/10 z-40 lg:hidden flex items-center justify-between gap-4 shadow-lg">
+          <div className="text-left">
+            <div className="text-[10px] text-slate-400 dark:text-gray-500 uppercase tracking-wider font-semibold">Estimated Cost</div>
+            <div className="text-sm font-bold text-brand-primary font-mono">
+              {estimatedCost.toLocaleString()} credits
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowScheduleModal(true)}
+              disabled={isSending || charCount === 0 || recipientCount === 0 || estimatedCost > (user?.sms_balance || 0)}
+              className="clay-button-secondary p-3 rounded-2xl text-slate-600 dark:text-gray-300 transition-all disabled:opacity-50"
+              title="Schedule send"
+            >
+              <Clock className="w-4 h-4" />
+            </button>
+            <button
+              type="submit"
+              disabled={isSending || charCount === 0 || recipientCount === 0 || estimatedCost > (user?.sms_balance || 0)}
+              className="clay-button-primary px-5 py-3 rounded-2xl text-sm font-semibold text-white flex items-center gap-2 transition-all disabled:opacity-50"
+            >
+              {isSending ? (
+                <Loader size="sm" />
+              ) : (
+                <>
+                  <Send className="w-4 h-4" />
+                  <span>Send</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
       </form>

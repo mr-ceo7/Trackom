@@ -151,7 +151,7 @@ const CampaignRow: React.FC<{
       onClick={() => setExpanded(!expanded)}
       className="clay-card clay-card-hover rounded-3xl overflow-hidden transition-all dark:border-white/10 cursor-pointer text-left"
     >
-      <div className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className={`w-10 h-10 rounded-2xl ${cfg.bg} flex items-center justify-center shrink-0`}>
             <Icon className={`w-5 h-5 ${cfg.color} ${c.status === 'sending' ? 'animate-pulse' : ''}`} />
@@ -181,28 +181,30 @@ const CampaignRow: React.FC<{
           </div>
         </div>
 
-        <div className="flex items-center gap-6 text-sm">
-          <div className="text-center">
-            <div className="font-bold text-slate-900 dark:text-white font-mono">{c.total_recipients.toLocaleString()}</div>
-            <div className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Recipients</div>
-          </div>
-          <div className="text-center">
-            <div className="font-bold text-brand-primary font-mono">{c.sent_count.toLocaleString()}</div>
-            <div className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Sent</div>
-          </div>
-          <div className="text-center">
-            <div className="font-bold text-brand-emerald font-mono">{c.delivered_count.toLocaleString()}</div>
-            <div className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Delivered</div>
-          </div>
-          {c.sent_count > 0 && (
+        <div className="flex flex-wrap items-center justify-between lg:justify-end gap-4 lg:gap-6 text-xs sm:text-sm w-full lg:w-auto">
+          <div className="flex items-center gap-4 sm:gap-6">
             <div className="text-center">
-              <div className="font-bold text-brand-primary font-mono">{deliveryRate}%</div>
-              <div className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Delivery</div>
+              <div className="font-bold text-slate-900 dark:text-white font-mono text-sm sm:text-base">{c.total_recipients.toLocaleString()}</div>
+              <div className="text-[9px] sm:text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Recipients</div>
             </div>
-          )}
+            <div className="text-center">
+              <div className="font-bold text-brand-primary font-mono text-sm sm:text-base">{c.sent_count.toLocaleString()}</div>
+              <div className="text-[9px] sm:text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Sent</div>
+            </div>
+            <div className="text-center">
+              <div className="font-bold text-brand-emerald font-mono text-sm sm:text-base">{c.delivered_count.toLocaleString()}</div>
+              <div className="text-[9px] sm:text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Delivered</div>
+            </div>
+            {c.sent_count > 0 && (
+              <div className="text-center">
+                <div className="font-bold text-brand-primary font-mono text-sm sm:text-base">{deliveryRate}%</div>
+                <div className="text-[9px] sm:text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Delivery</div>
+              </div>
+            )}
+          </div>
 
           {/* Action buttons */}
-          <div className="flex items-center gap-1 border-l border-slate-200/20 dark:border-white/5 pl-4 shrink-0">
+          <div className="flex items-center gap-1 border-t sm:border-t-0 sm:border-l border-slate-200/20 dark:border-white/5 pt-2 sm:pt-0 sm:pl-4 w-full sm:w-auto justify-end shrink-0">
             {/* Pause/Resume for active campaigns */}
             {c.status === 'sending' && (
               <button 
