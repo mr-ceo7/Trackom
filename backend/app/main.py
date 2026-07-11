@@ -34,8 +34,9 @@ settings = get_settings()
 async def lifespan(app: FastAPI):
     """Startup and shutdown events."""
     # Startup: create tables (dev only; use Alembic migrations in production)
-    await init_db()
-    await seed_demo_user()
+    if settings.ENVIRONMENT != "production":
+        await init_db()
+        await seed_demo_user()
     
     # Start background scheduled campaigns monitor
     monitor_task = asyncio.create_task(scheduled_campaign_monitor_loop())

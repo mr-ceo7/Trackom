@@ -40,9 +40,6 @@ class Settings(BaseSettings):
     ADVANTA_BASE_URL: str = "https://quicksms.advantasms.com"
     ADVANTA_DEFAULT_SHORTCODE: str = "ARVOCAP"
 
-    # Google Auth
-    GOOGLE_CLIENT_ID: str = "REDACTED_GOOGLE_CLIENT_ID"
-
     # M-Pesa Integration
     MPESA_CONSUMER_KEY: str = "REDACTED_MPESA_CONSUMER_KEY"
     MPESA_CONSUMER_SECRET: str = "REDACTED_MPESA_CONSUMER_SECRET"

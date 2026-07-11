@@ -277,10 +277,7 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
                         "compiled_message": personalized_msg
                     }
 
-                gateway_results = []
-                for c in batch_contacts:
-                    res = await send_to_one(c)
-                    gateway_results.append(res)
+                gateway_results = await asyncio.gather(*(send_to_one(c) for c in batch_contacts))
 
                 # Map response metrics back to models
                 for res in gateway_results:
@@ -421,41 +418,55 @@ async def scheduled_campaign_monitor_loop():
                 if scheduled_messages:
                     logger.info(f"Found {len(scheduled_messages)} scheduled individual messages ready to send.")
                     gateway = get_sms_gateway()
-                    for m in scheduled_messages:
-                        try:
-                            # Update status to queued first to prevent race condition
-                            m.status = "queued"
-                            await db.commit()
+                    async def send_single_message(message_id):
+                        async with async_session() as local_db:
+                            q_m = select(SmsMessage).where(SmsMessage.id == message_id)
+                            res_m = await local_db.execute(q_m)
+                            m = res_m.scalar_one_or_none()
+                            if not m:
+                                return
+                            try:
+                                # Update status to queued first to prevent race condition
+                                m.status = "queued"
+                                await local_db.commit()
 
-                            use_sandbox = m.sandbox_mode
-                            
-                            # Check for gateway pool underfunding on live scheduled messages
-                            if not use_sandbox:
-                                from app.services.email import check_and_enforce_gateway_liquidity
-                                is_held = await check_and_enforce_gateway_liquidity(db)
-                                if is_held:
-                                    m.status = "scheduled"  # Keep scheduled
-                                    m.error_message = "Live dispatch temporarily held due to gateway pool underfunding."
-                                    await db.commit()
-                                    continue
+                                use_sandbox = m.sandbox_mode
+                                
+                                # Check for gateway pool underfunding on live scheduled messages
+                                if not use_sandbox:
+                                    from app.services.email import check_and_enforce_gateway_liquidity
+                                    is_held = await check_and_enforce_gateway_liquidity(local_db)
+                                    if is_held:
+                                        m.status = "scheduled"  # Keep scheduled
+                                        m.error_message = "Live dispatch temporarily held due to gateway pool underfunding."
+                                        await local_db.commit()
+                                        return
 
-                            
-                            res_list = await gateway.send_messages(
-                                sender_id=m.sender_id,
-                                recipients=[m.recipient],
-                                message=m.content,
-                                db=db,
-                                sandbox_mode=use_sandbox
-                            )
-                            if res_list:
-                                r = res_list[0]
-                                m.status = "delivered" if r["status"] == "success" else "failed"
-                                m.gateway_message_id = r["message_id"]
-                                m.error_message = r["error_message"]
-                                m.sent_at = datetime.utcnow()
-                            await db.commit()
-                        except Exception as sms_err:
-                            logger.error(f"Failed to send scheduled message {m.id}: {sms_err}")
+                                res_list = await gateway.send_messages(
+                                    sender_id=m.sender_id,
+                                    recipients=[m.recipient],
+                                    message=m.content,
+                                    db=local_db,
+                                    sandbox_mode=use_sandbox
+                                )
+                                if res_list:
+                                    r = res_list[0]
+                                    m.status = "delivered" if r["status"] == "success" else "failed"
+                                    m.gateway_message_id = r["message_id"]
+                                    m.error_message = r["error_message"]
+                                    m.sent_at = datetime.utcnow()
+                                await local_db.commit()
+                            except Exception as sms_err:
+                                logger.error(f"Failed to send scheduled message {message_id}: {sms_err}")
+                                try:
+                                    await local_db.rollback()
+                                    m.status = "failed"
+                                    m.error_message = str(sms_err)
+                                    await local_db.commit()
+                                except Exception:
+                                    pass
+
+                    await asyncio.gather(*(send_single_message(msg.id) for msg in scheduled_messages))
                             
         except asyncio.CancelledError:
             logger.info("Scheduled campaign monitor cancelled.")
