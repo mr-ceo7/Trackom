@@ -16,8 +16,6 @@ def validate_password_complexity(value: str) -> str:
         raise ValueError("Password must contain at least one lowercase letter")
     if not re.search(r"\d", value):
         raise ValueError("Password must contain at least one digit")
-    if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", value):
-        raise ValueError("Password must contain at least one special character")
     return value
 
 
@@ -70,6 +68,7 @@ class TokenResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
+    onboarding_required: bool = False
 
 
 # ── User ──
@@ -116,6 +115,7 @@ class UserUpdateRequest(BaseModel):
     company: Optional[str] = Field(None, max_length=255)
     avatar_url: Optional[str] = None
     webhook_url: Optional[str] = None
+    account_type: Optional[str] = Field(None, pattern="^(business|reseller)$")
 
 
 class ChangePasswordRequest(BaseModel):

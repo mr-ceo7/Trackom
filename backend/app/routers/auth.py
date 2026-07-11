@@ -104,7 +104,16 @@ async def login(request: Request, data: LoginRequest, db: AsyncSession = Depends
     result = await db.execute(select(User).where(User.email == email_clean))
     user = result.scalar_one_or_none()
 
-    if not user or not user.hashed_password or not verify_password(password_clean, user.hashed_password):
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
+
+    if not user.hashed_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This account is registered via Google. Please log in using the 'Sign in with Google' button."
+        )
+
+    if not verify_password(password_clean, user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
 
     if not user.is_active:
@@ -222,8 +231,13 @@ async def google_auth(data: GoogleAuthRequest, db: AsyncSession = Depends(get_db
 
     access_token = create_access_token({"sub": str(user.id)})
     refresh_token = create_refresh_token({"sub": str(user.id)})
+    onboarding_required = not bool(user.phone)
 
-    return TokenResponse(access_token=access_token, refresh_token=refresh_token)
+    return TokenResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        onboarding_required=onboarding_required
+    )
 
 
 @router.post("/refresh", response_model=TokenResponse)

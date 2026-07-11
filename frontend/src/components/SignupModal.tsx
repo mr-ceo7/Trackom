@@ -27,9 +27,13 @@ export default function SignupModal({ isOpen, onClose }: SignupModalProps) {
     setIsSubmitting(true);
     setError('');
     try {
-      await googleAuth(credentialResponse.credential);
+      const data = await googleAuth(credentialResponse.credential);
       onClose();
-      navigate('/dashboard', { replace: true });
+      if (data?.onboarding_required) {
+        navigate('/onboarding', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Google Authentication failed.');
     } finally {

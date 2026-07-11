@@ -32,7 +32,7 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<{ require_2fa?: boolean; temp_token?: string; method?: 'totp' | 'sms' | 'email' } | void>;
   login2Fa: (tempToken: string, code: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
-  googleAuth: (credential: string) => Promise<void>;
+  googleAuth: (credential: string) => Promise<any>;
   logout: () => void;
   refreshUser: () => Promise<void>;
   toggleSandboxMode: () => Promise<void>;
@@ -112,6 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const resp = await api.post('/auth/google', { credential });
     saveTokens(resp.data.access_token, resp.data.refresh_token);
     await fetchUser();
+    return resp.data;
   };
 
   const logout = () => {

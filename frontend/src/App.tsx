@@ -13,6 +13,7 @@ import LandingPage from './pages/LandingPage';
 // Lazy loaded pages
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/auth/RegisterPage'));
+const OnboardingPage = lazy(() => import('./pages/auth/OnboardingPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/auth/ForgotPasswordPage'));
 const BlogPage = lazy(() => import('./pages/BlogPage'));
 const ApiDocsPage = lazy(() => import('./pages/ApiDocsPage'));
@@ -99,6 +100,16 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <AdminPanelPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Standalone Onboarding Route */}
+            <Route
+              path="/onboarding"
+              element={
+                <ProtectedRoute>
+                  <OnboardingPage />
                 </ProtectedRoute>
               }
             />

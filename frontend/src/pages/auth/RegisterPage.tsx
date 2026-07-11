@@ -2,29 +2,54 @@
  * RegisterPage - multi-step registration form.
  */
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowRight, ArrowLeft, Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
 import { useAuth } from '../../contexts/AuthContext';
 import TrackomLogo from '../../components/TrackomLogo';
 import Loader from '../../components/Loader';
 
 export default function RegisterPage() {
-  const { register } = useAuth();
+  const { register, googleAuth } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [step, setStep] = useState(1);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [company, setCompany] = useState('');
-  const [accountType, setAccountType] = useState<'business' | 'reseller'>('business');
+  const initialType = searchParams.get('type') === 'reseller' ? 'reseller' : 'business';
+  const [accountType, setAccountType] = useState<'business' | 'reseller'>(initialType);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const steps = ['Personal Info', 'Company', 'Security'];
+
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+    if (!credentialResponse.credential) {
+      setError('Google signup failed: no credential received.');
+      return;
+    }
+    setIsSubmitting(true);
+    setError('');
+    try {
+      const data = await googleAuth(credentialResponse.credential);
+      if (data?.onboarding_required) {
+        const typeParam = searchParams.get('type') ? `?type=${searchParams.get('type')}` : '';
+        navigate(`/onboarding${typeParam}`, { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Google Authentication failed.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,6 +137,20 @@ export default function RegisterPage() {
               <AnimatePresence mode="wait">
                 {step === 1 && (
                   <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
+                    {/* Google OAuth */}
+                    <div className="w-full flex justify-center">
+                      <GoogleLogin
+                        onSuccess={handleGoogleSuccess}
+                        onError={() => setError('Google Authentication Failed')}
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-3 py-1">
+                      <div className="flex-1 h-px bg-slate-200 dark:bg-white/6" />
+                      <span className="text-[10px] text-slate-400 dark:text-gray-500 font-bold uppercase tracking-wider">or sign up with email</span>
+                      <div className="flex-1 h-px bg-slate-200 dark:bg-white/6" />
+                    </div>
+
                     <div className="space-y-1.5">
                       <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Full Name</label>
                       <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" placeholder="John Doe" />

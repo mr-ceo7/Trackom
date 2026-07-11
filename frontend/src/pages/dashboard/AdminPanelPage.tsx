@@ -1401,6 +1401,9 @@ export default function AdminPanelPage() {
                                 {u.is_superuser && (
                                   <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 font-mono uppercase">Admin</span>
                                 )}
+                                {u.account_type === 'reseller' && (
+                                  <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 font-mono uppercase">Reseller</span>
+                                )}
                               </div>
                               <div className="text-[10px] text-slate-400 dark:text-gray-500 flex items-center gap-1 mt-0.5 font-mono">
                                 <span>{u.email}</span>

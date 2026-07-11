@@ -36,7 +36,7 @@ export default function ResellerPage() {
           </p>
           <div className="pt-2">
             <Link 
-              to="/login"
+              to="/register?type=reseller"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white bg-brand-primary hover:bg-brand-primary-hover shadow-lg shadow-brand-primary/20 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
             >
               Start Reselling Today <ArrowRight className="w-4 h-4" />

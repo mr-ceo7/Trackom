@@ -30,8 +30,12 @@ export default function LoginPage() {
     setIsSubmitting(true);
     setError('');
     try {
-      await googleAuth(credentialResponse.credential);
-      navigate(from, { replace: true });
+      const data = await googleAuth(credentialResponse.credential);
+      if (data?.onboarding_required) {
+        navigate('/onboarding', { replace: true });
+      } else {
+        navigate(from, { replace: true });
+      }
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Google Authentication failed.');
     } finally {
