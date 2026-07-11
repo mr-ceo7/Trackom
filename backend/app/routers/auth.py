@@ -136,8 +136,28 @@ async def login(request: Request, data: LoginRequest, db: AsyncSession = Depends
             
             if user.two_factor_method == "sms":
                 print(f"[SMS 2FA LOGIN] Code: {code} sent to phone: {user.phone}")
+                if user.phone:
+                    from app.services.sms_gateway import get_sms_gateway
+                    import asyncio
+                    gateway = get_sms_gateway()
+                    asyncio.create_task(
+                        gateway.send_messages(
+                            sender_id="TRACKOM",
+                            recipients=[user.phone],
+                            message=f"Your Trackom 2FA verification code is: {code}. Expires in 5 minutes.",
+                            db=db,
+                            sandbox_mode=user.sandbox_mode
+                        )
+                    )
             else:
                 print(f"[EMAIL 2FA LOGIN] Code: {code} sent to email: {user.email}")
+                if user.email:
+                    from app.services.email import send_email
+                    send_email(
+                        to_email=user.email,
+                        subject="Trackom 2FA Verification Code",
+                        body_html=f"<p>Hello,</p><p>Your Trackom 2FA verification code is: <b>{code}</b>.</p><p>This code expires in 5 minutes.</p>"
+                    )
 
         return LoginResponse(require_2fa=True, temp_token=temp_token, method=user.two_factor_method)
 
@@ -243,11 +263,15 @@ async def google_auth(data: GoogleAuthRequest, db: AsyncSession = Depends(get_db
 
 @router.post("/refresh", response_model=TokenResponse)
 async def refresh_token(data: RefreshTokenRequest, db: AsyncSession = Depends(get_db)):
-    """Refresh an access token using a refresh token."""
     payload = decode_token(data.refresh_token)
 
     if not payload or payload.get("type") != "refresh":
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
+
+    from app.utils.token_blacklist import is_token_blacklisted
+    jti = payload.get("jti")
+    if jti and await is_token_blacklisted(jti, db):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or blacklisted refresh token")
 
     user_id = payload.get("sub")
     try:
@@ -277,13 +301,30 @@ async def forgot_password(request: Request, data: ForgotPasswordRequest, db: Asy
 
     if user:
         # In production: generate reset token, send email
-        # For now, create a notification
         db.add(Notification(
             user_id=user.id,
             title="Password Reset Requested",
             message="A password reset was requested for your account. Check your email for instructions.",
             type="info",
         ))
+        
+        # Dispatch real email
+        from app.services.email import send_email
+        from app.config import get_settings
+        config_settings = get_settings()
+        reset_link = f"{config_settings.FRONTEND_URL}/reset-password?email={user.email}"
+        email_body = f"""
+        <p>Hello {user.full_name},</p>
+        <p>We received a request to reset your Trackom password.</p>
+        <p>Please click the link below to reset your password:</p>
+        <p><a href="{reset_link}">{reset_link}</a></p>
+        <p>If you did not request this, you can safely ignore this email.</p>
+        """
+        send_email(
+            to_email=user.email,
+            subject="Trackom Password Reset Request",
+            body_html=email_body
+        )
 
     return {"message": "If an account exists with this email, a reset link has been sent."}
 
@@ -298,6 +339,7 @@ security = HTTPBearer()
 @router.post("/logout", status_code=status.HTTP_200_OK)
 async def logout(
     credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: AsyncSession = Depends(get_db),
 ):
     """Log out the current user by blacklisting their access token."""
     token = credentials.credentials
@@ -307,7 +349,7 @@ async def logout(
         exp = payload.get("exp")
         if jti and exp:
             expire_dt = datetime.fromtimestamp(exp, tz=timezone.utc)
-            blacklist_token(jti, expire_dt)
+            await blacklist_token(jti, expire_dt, db)
     return {"message": "Logged out successfully"}
 
 
@@ -321,6 +363,11 @@ async def login_2fa(data: Login2FaRequest, db: AsyncSession = Depends(get_db)):
     payload = decode_token(data.temp_token)
     if not payload or payload.get("scope") != "2fa_login":
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired temporary token")
+
+    from app.utils.token_blacklist import is_token_blacklisted
+    jti = payload.get("jti")
+    if jti and await is_token_blacklisted(jti, db):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Temporary token is blacklisted")
 
     user_id = payload.get("sub")
     if not user_id:
@@ -390,9 +437,27 @@ async def setup_2fa(
         if not current_user.phone:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Please configure a phone number in your profile before enabling SMS 2FA.")
         print(f"[SMS 2FA SETUP] Code: {code} sent to phone: {current_user.phone}")
+        from app.services.sms_gateway import get_sms_gateway
+        import asyncio
+        gateway = get_sms_gateway()
+        asyncio.create_task(
+            gateway.send_messages(
+                sender_id="TRACKOM",
+                recipients=[current_user.phone],
+                message=f"Your Trackom 2FA setup verification code is: {code}. Expires in 5 minutes.",
+                db=db,
+                sandbox_mode=current_user.sandbox_mode
+            )
+        )
         return TwoFactorSetupResponse(phone=current_user.phone)
     else:
         print(f"[EMAIL 2FA SETUP] Code: {code} sent to email: {current_user.email}")
+        from app.services.email import send_email
+        send_email(
+            to_email=current_user.email,
+            subject="Trackom 2FA Setup Code",
+            body_html=f"<p>Hello,</p><p>Your Trackom 2FA setup verification code is: <b>{code}</b>.</p><p>This code expires in 5 minutes.</p>"
+        )
         return TwoFactorSetupResponse(email=current_user.email)
 
 
@@ -452,8 +517,28 @@ async def disable_2fa_request(
 
     if db_user.two_factor_method == "sms":
         print(f"[SMS 2FA DISABLE] Code: {code} sent to phone: {db_user.phone}")
+        if db_user.phone:
+            from app.services.sms_gateway import get_sms_gateway
+            import asyncio
+            gateway = get_sms_gateway()
+            asyncio.create_task(
+                gateway.send_messages(
+                    sender_id="TRACKOM",
+                    recipients=[db_user.phone],
+                    message=f"Your Trackom 2FA disable verification code is: {code}. Expires in 5 minutes.",
+                    db=db,
+                    sandbox_mode=db_user.sandbox_mode
+                )
+            )
     else:
         print(f"[EMAIL 2FA DISABLE] Code: {code} sent to email: {db_user.email}")
+        if db_user.email:
+            from app.services.email import send_email
+            send_email(
+                to_email=db_user.email,
+                subject="Trackom 2FA Disable Code",
+                body_html=f"<p>Hello,</p><p>Your Trackom 2FA disable verification code is: <b>{code}</b>.</p><p>This code expires in 5 minutes.</p>"
+            )
 
     return {"message": "Verification code sent successfully."}
 

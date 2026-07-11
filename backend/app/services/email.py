@@ -15,6 +15,39 @@ logger = logging.getLogger("trackom.email")
 # Cache to prevent duplicate email alerts in quick succession (throttle to once per hour)
 _last_alert_sent = {}
 
+def send_email(to_email: str, subject: str, body_html: str) -> bool:
+    """Sends an email using configured SMTP settings, fallback to console logging."""
+    settings = get_settings()
+    logger.info(f"[EMAIL] Sending to {to_email}: {subject}")
+    print(f"========================================================================\n"
+          f"[EMAIL SENDING]\n"
+          f"To: {to_email}\n"
+          f"Subject: {subject}\n"
+          f"Body: {body_html}\n"
+          f"========================================================================")
+    
+    if not settings.SMTP_USER or not settings.SMTP_PASSWORD:
+        logger.warning("SMTP credentials are not configured. Email dispatch skipped.")
+        return False
+        
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = settings.SMTP_USER
+        msg['To'] = to_email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(body_html, 'html'))
+        
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
+            server.starttls()
+            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            server.sendmail(settings.SMTP_USER, [to_email], msg.as_string())
+            
+        logger.info(f"Email sent successfully to {to_email}.")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send email to {to_email}: {str(e)}")
+        return False
+
 def send_admin_underfunded_alert(admin_emails: list, total_client_credits: int, system_balance: int):
     """Sends an SMTP email or prints a critical alert to logs if SMTP credentials are not set."""
     now = time.time()

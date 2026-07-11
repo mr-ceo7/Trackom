@@ -13,6 +13,7 @@ from app.models.sender_id import SenderIdRequest, AdvantaSenderId
 from app.models.gateway import SmsGateway
 from app.models.template import SmsTemplate
 from app.models.incoming import IncomingSms
+from app.models.token_blacklist import BlacklistedToken
 
 __all__ = [
     "User",
@@ -32,4 +33,5 @@ __all__ = [
     "SmsGateway",
     "SmsTemplate",
     "IncomingSms",
+    "BlacklistedToken",
 ]

@@ -30,6 +30,15 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    from app.utils.token_blacklist import is_token_blacklisted
+    jti = payload.get("jti")
+    if jti and await is_token_blacklisted(jti, db):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has been blacklisted / logged out",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     user_id = payload.get("sub")
     if user_id is None:
         raise HTTPException(

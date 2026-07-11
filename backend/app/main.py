@@ -33,6 +33,15 @@ settings = get_settings()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup and shutdown events."""
+    # Guard against weak JWT secret keys in production
+    if settings.ENVIRONMENT == "production" and settings.SECRET_KEY in (
+        "change-me-in-production-use-openssl-rand-hex-32",
+        "your-secret-key-change-in-production",
+        ""
+    ):
+        logger.critical("FATAL: Weak or default SECRET_KEY detected in production!")
+        raise RuntimeError("Production deployment requires a unique, secure SECRET_KEY.")
+
     # Startup: create tables (dev only; use Alembic migrations in production)
     if settings.ENVIRONMENT != "production":
         await init_db()

@@ -1,29 +1,33 @@
 from datetime import datetime, timezone
-from typing import Dict
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.models.token_blacklist import BlacklistedToken
 
-# Dictionary mapping jti (str) to expiration timestamp (datetime in UTC)
-_blacklist: Dict[str, datetime] = {}
+async def blacklist_token(jti: str, expire: datetime, db: AsyncSession):
+    """Blacklist a token by its JWT ID (jti) until it expires in the database."""
+    db_expire = expire.replace(tzinfo=None) if expire.tzinfo else expire
+    blacklisted = BlacklistedToken(jti=jti, expires_at=db_expire)
+    db.add(blacklisted)
+    await db.commit()
+    # Cleanup expired tokens asynchronously
+    await _cleanup_blacklist(db)
 
-def blacklist_token(jti: str, expire: datetime):
-    """Blacklist a token by its JWT ID (jti) until it expires."""
-    _blacklist[jti] = expire
-    _cleanup_blacklist()
-
-def is_token_blacklisted(jti: str) -> bool:
-    """Check if a JWT ID (jti) is in the blacklist and not yet expired."""
+async def is_token_blacklisted(jti: str, db: AsyncSession) -> bool:
+    """Check if a JWT ID (jti) is in the database blacklist and not yet expired."""
     if not jti:
         return False
-    expire = _blacklist.get(jti)
-    if expire:
-        if datetime.now(timezone.utc) < expire:
-            return True
-        else:
-            _blacklist.pop(jti, None)
-    return False
+    now = datetime.utcnow()
+    q = select(BlacklistedToken).where(
+        BlacklistedToken.jti == jti,
+        BlacklistedToken.expires_at > now
+    )
+    res = await db.execute(q)
+    return res.scalar_one_or_none() is not None
 
-def _cleanup_blacklist():
-    """Remove expired tokens from the blacklist dictionary."""
-    now = datetime.now(timezone.utc)
-    expired_keys = [k for k, v in _blacklist.items() if v <= now]
-    for k in expired_keys:
-        _blacklist.pop(k, None)
+async def _cleanup_blacklist(db: AsyncSession):
+    """Remove expired tokens from the database blacklist."""
+    from sqlalchemy import delete
+    now = datetime.utcnow()
+    q = delete(BlacklistedToken).where(BlacklistedToken.expires_at <= now)
+    await db.execute(q)
+    await db.commit()

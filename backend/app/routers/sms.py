@@ -40,14 +40,19 @@ async def send_sms(
     per_message_cost = float(sms_parts)
     total_cost = int(math.ceil(len(data.recipients) * per_message_cost))
 
-    if current_user.active_balance < total_cost:
+    # Lock the user row to prevent concurrent race condition exploits
+    user_q = select(User).where(User.id == current_user.id).with_for_update()
+    user_res = await db.execute(user_q)
+    db_user = user_res.scalar_one()
+
+    if db_user.active_balance < total_cost:
         raise HTTPException(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
-            detail=f"Insufficient balance. Need {total_cost} credits, have {current_user.active_balance}."
+            detail=f"Insufficient balance. Need {total_cost} credits, have {db_user.active_balance}."
         )
 
     # Check for gateway pool underfunding on live mode
-    if not current_user.sandbox_mode:
+    if not db_user.sandbox_mode:
         from app.services.email import check_and_enforce_gateway_liquidity
         is_held = await check_and_enforce_gateway_liquidity(db)
         if is_held:
@@ -70,7 +75,7 @@ async def send_sms(
     messages_to_send = []
     for phone in data.recipients:
         msg = SmsMessage(
-            user_id=current_user.id,
+            user_id=db_user.id,
             recipient=phone.strip(),
             content=full_message,
             sender_id=data.sender_id,
@@ -79,12 +84,12 @@ async def send_sms(
             batch_number=data.batch_number,
             scheduled_at=db_scheduled_at,
             sent_at=None if is_scheduled else now,
-            sandbox_mode=current_user.sandbox_mode,
+            sandbox_mode=db_user.sandbox_mode,
         )
         db.add(msg)
         messages_to_send.append(msg)
 
-    current_user.active_balance -= total_cost
+    db_user.active_balance -= total_cost
     await db.flush()
 
     # Dispatch immediately via load-balanced gateway if not scheduled
@@ -96,7 +101,7 @@ async def send_sms(
                 recipients=[m.recipient for m in messages_to_send],
                 message=full_message,
                 db=db,
-                sandbox_mode=current_user.sandbox_mode
+                sandbox_mode=db_user.sandbox_mode
             )
             for msg, res in zip(messages_to_send, results):
                 msg.status = "delivered" if res["status"] == "success" else "failed"
@@ -302,6 +307,8 @@ async def export_pdf(
     res = await db.execute(q)
     messages = res.scalars().all()
     
+    import html as html_lib
+    
     html = f"""
     <html>
     <head>
@@ -316,7 +323,7 @@ async def export_pdf(
     </head>
     <body>
         <h1>Trackom SMS Dispatch Report</h1>
-        <p><strong>User:</strong> {current_user.full_name} ({current_user.email})</p>
+        <p><strong>User:</strong> {html_lib.escape(current_user.full_name)} ({html_lib.escape(current_user.email)})</p>
         <p><strong>Date:</strong> {datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")} UTC</p>
         <table>
             <thead>
@@ -335,12 +342,12 @@ async def export_pdf(
     for m in messages:
         html += f"""
                 <tr>
-                    <td>{m.recipient}</td>
-                    <td>{m.sender_id}</td>
-                    <td>{m.content}</td>
-                    <td>{m.status}</td>
+                    <td>{html_lib.escape(m.recipient)}</td>
+                    <td>{html_lib.escape(m.sender_id or '')}</td>
+                    <td>{html_lib.escape(m.content)}</td>
+                    <td>{html_lib.escape(m.status)}</td>
                     <td>{m.cost} cr</td>
-                    <td>{m.batch_number or '-'}</td>
+                    <td>{html_lib.escape(m.batch_number or '-')}</td>
                     <td>{m.sent_at.strftime("%Y-%m-%d %H:%M") if m.sent_at else '-'}</td>
                 </tr>
         """
@@ -439,16 +446,20 @@ async def incoming_sms_webhook(
         token = auth_header.split(" ", 1)[1]
         payload = decode_token(token)
         if payload and payload.get("type") == "access":
-            sub = payload.get("sub")
-            if sub:
-                try:
-                    user_uuid = uuid_mod.UUID(sub)
-                    user_q = select(User).where(User.id == user_uuid)
-                    user_res = await db.execute(user_q)
-                    if user_res.scalar_one_or_none():
-                        user_id = user_uuid
-                except ValueError:
-                    pass
+            from app.utils.token_blacklist import is_token_blacklisted
+            jti = payload.get("jti")
+            is_blacklisted = jti and await is_token_blacklisted(jti, db)
+            if not is_blacklisted:
+                sub = payload.get("sub")
+                if sub:
+                    try:
+                        user_uuid = uuid_mod.UUID(sub)
+                        user_q = select(User).where(User.id == user_uuid)
+                        user_res = await db.execute(user_q)
+                        if user_res.scalar_one_or_none():
+                            user_id = user_uuid
+                    except ValueError:
+                        pass
 
     # Check sender_id_requests where sender_id = to_val (case-insensitive) and status = 'approved'
     if not user_id and to_val:
