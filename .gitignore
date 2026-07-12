@@ -28,3 +28,4 @@ Thumbs.db
 
 # Videos (large files)
 *.mp4
+ssh_key.pub
