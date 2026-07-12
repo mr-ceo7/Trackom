@@ -246,6 +246,7 @@ export default function AdminPanelPage() {
   const [editCompany, setEditCompany] = useState('');
   const [editAccountType, setEditAccountType] = useState<'business' | 'reseller'>('business');
   const [editPlan, setEditPlan] = useState<'starter' | 'growth' | 'enterprise'>('starter');
+  const [editIsSuperuser, setEditIsSuperuser] = useState(false);
   const [submittingEditUser, setSubmittingEditUser] = useState(false);
 
   // Gateway Modal state
@@ -480,6 +481,7 @@ export default function AdminPanelPage() {
     setEditCompany(u.company || '');
     setEditAccountType(u.account_type);
     setEditPlan(u.plan);
+    setEditIsSuperuser(u.is_superuser);
   };
 
   const handleEditProfileSubmit = async (e: React.FormEvent) => {
@@ -493,7 +495,8 @@ export default function AdminPanelPage() {
         phone: editUserPhone.trim() || null,
         company: editCompany.trim() || null,
         account_type: editAccountType,
-        plan: editPlan
+        plan: editPlan,
+        is_superuser: editIsSuperuser
       });
       setSelectedEditUser(null);
       await fetchUsers();
@@ -1747,7 +1750,17 @@ export default function AdminPanelPage() {
                     <option value="reseller">Reseller</option>
                   </select>
                 </div>
-
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">System Role</label>
+                  <select 
+                    value={editIsSuperuser ? 'admin' : 'user'} 
+                    onChange={e => setEditIsSuperuser(e.target.value === 'admin')} 
+                    className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none cursor-pointer"
+                  >
+                    <option value="user">Standard User</option>
+                    <option value="admin">Administrator</option>
+                  </select>
+                </div>
               </div>
 
               <button type="submit" disabled={submittingEditUser} className="clay-button-primary w-full py-3 mt-2 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2">

@@ -109,6 +109,7 @@ class AdminUpdateUserRequest(BaseModel):
     company: Optional[str] = None
     account_type: Optional[str] = None
     plan: Optional[str] = None
+    is_superuser: Optional[bool] = None
 
 class AdminGatewayResponse(BaseModel):
     id: uuid.UUID
@@ -545,6 +546,8 @@ async def admin_update_user(
         user.company = data.company
     if data.account_type is not None:
         user.account_type = data.account_type
+    if data.is_superuser is not None:
+        user.is_superuser = data.is_superuser
 
     await db.flush()
     return {"message": "User profile updated successfully."}

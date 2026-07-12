@@ -46,62 +46,26 @@ async def init_db():
 
 
 async def seed_demo_user():
-    """Seed a default demo user account for testing purposes."""
+    """Seed system administrator account and required records."""
     from app.models.user import User
     from app.models.sender_id import SenderIdRequest
     from app.utils.security import hash_password
-    from sqlalchemy import select
+    from sqlalchemy import select, delete
 
     async with async_session() as session:
-        result = await session.execute(select(User).where(User.email == "demo@trackomgroup.com"))
-        existing_user = result.scalar_one_or_none()
-        
-        if not existing_user:
-            demo = User(
-                email="demo@trackomgroup.com",
-                hashed_password=hash_password("Password123!"),
-                full_name="Demo User",
-                phone="+254712345678",
-                company="Trackom Demo Ltd",
-                account_type="business",
-                plan="starter",
-                sms_balance=25000,
-                is_active=True,
-                is_verified=True
-            )
-            session.add(demo)
-            await session.commit()
-            
-            # Fetch again to get the saved user with ID
-            result = await session.execute(select(User).where(User.email == "demo@trackomgroup.com"))
-            existing_user = result.scalar_one()
+        # Delete old dummy accounts
+        await session.execute(delete(User).where(User.email.in_(["demo@trackomgroup.com", "admin@trackomgroup.com"])))
+        await session.commit()
 
-        # Seed TRACKOM sender ID for demo user
-        result_sender = await session.execute(
-            select(SenderIdRequest).where(
-                SenderIdRequest.user_id == existing_user.id,
-                SenderIdRequest.sender_id == "TRACKOM"
-            )
-        )
-        if not result_sender.scalar_one_or_none():
-            demo_sender = SenderIdRequest(
-                user_id=existing_user.id,
-                sender_id="TRACKOM",
-                purpose="System Default Sender ID",
-                status="approved"
-            )
-            session.add(demo_sender)
-            await session.commit()
-
-        # Seed default admin user
-        result_admin = await session.execute(select(User).where(User.email == "admin@trackomgroup.com"))
+        # Seed new admin user
+        result_admin = await session.execute(select(User).where(User.email == "kassimmusa322@gmail.com"))
         existing_admin = result_admin.scalar_one_or_none()
         if not existing_admin:
             admin_user = User(
-                email="admin@trackomgroup.com",
-                hashed_password=hash_password("Password123!"),
-                full_name="Trackom Admin",
-                phone="+254788888888",
+                email="kassimmusa322@gmail.com",
+                hashed_password=hash_password("TrackoM23#321D"),
+                full_name="Kassim Musa",
+                phone="+254712345678",
                 company="Trackom Global",
                 account_type="business",
                 plan="enterprise",
@@ -114,8 +78,14 @@ async def seed_demo_user():
             await session.commit()
             
             # Fetch again to get the saved admin with ID
-            result_admin = await session.execute(select(User).where(User.email == "admin@trackomgroup.com"))
+            result_admin = await session.execute(select(User).where(User.email == "kassimmusa322@gmail.com"))
             existing_admin = result_admin.scalar_one()
+        else:
+            existing_admin.is_superuser = True
+            existing_admin.plan = "enterprise"
+            existing_admin.is_active = True
+            existing_admin.is_verified = True
+            await session.commit()
 
         # Seed TRACKOM sender ID for admin user
         result_admin_sender = await session.execute(
