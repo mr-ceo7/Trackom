@@ -1470,11 +1470,11 @@ export default function AdminPanelPage() {
                 <table className="w-full text-left">
                   <thead>
                     <tr className="border-b border-slate-200/20 dark:border-white/6 clay-inset">
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Tenant</th>
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">SMS Rate</th>
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Wallet Balance</th>
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Created At</th>
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider text-right">Actions</th>
+                      <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Tenant</th>
+                      <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">SMS Rate</th>
+                      <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Wallet Balance</th>
+                      <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Created At</th>
+                      <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1485,56 +1485,56 @@ export default function AdminPanelPage() {
                           !u.is_active ? 'opacity-60 bg-slate-100/30 dark:bg-white/[0.005]' : ''
                         }`}
                       >
-                        <td className="px-5 py-3">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
+                        <td className="px-2 sm:px-5 py-2 sm:py-3">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <div className={`w-7 sm:w-8 h-7 sm:h-8 rounded-lg flex items-center justify-center text-[10px] sm:text-xs font-bold shrink-0 ${
                               u.is_superuser 
                                 ? 'bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30' 
                                 : 'bg-brand-primary/20 text-brand-primary'
                             }`}>
                               {u.is_superuser ? 'AD' : u.full_name.slice(0,2).toUpperCase()}
                             </div>
-                            <div className="text-left">
-                              <div className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
-                                <span>{u.full_name}</span>
+                            <div className="text-left min-w-0">
+                              <div className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white flex flex-wrap items-center gap-1">
+                                <span className="truncate max-w-[80px] sm:max-w-none">{u.full_name}</span>
                                 {u.is_superuser && (
-                                  <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 font-mono uppercase">Admin</span>
+                                  <span className="px-1 py-0.2 rounded-md text-[8px] sm:text-[9px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 font-mono uppercase">Admin</span>
                                 )}
                                 {u.account_type === 'reseller' && (
-                                  <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 font-mono uppercase">Reseller</span>
+                                  <span className="px-1 py-0.2 rounded-md text-[8px] sm:text-[9px] font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 font-mono uppercase">Reseller</span>
                                 )}
                               </div>
-                              <div className="text-[10px] text-slate-400 dark:text-gray-500 flex items-center gap-1 mt-0.5 font-mono">
-                                <span>{u.email}</span>
-                                {u.phone && <span>· {u.phone}</span>}
+                              <div className="text-[9px] sm:text-[10px] text-slate-400 dark:text-gray-500 flex flex-wrap items-center gap-1 mt-0.5 font-mono">
+                                <span className="truncate max-w-[100px] sm:max-w-none">{u.email}</span>
+                                {u.phone && <span className="truncate max-w-[90px] sm:max-w-none">· {u.phone}</span>}
                               </div>
                             </div>
                           </div>
                         </td>
                         
-                        <td className="px-5 py-3">
-                          <div className="flex flex-wrap gap-1.5 items-center">
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/10 font-mono">
+                        <td className="px-2 sm:px-5 py-2 sm:py-3">
+                          <div className="flex flex-wrap gap-1 items-center">
+                            <span className="px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/10 font-mono">
                               KES {u.credit_rate.toFixed(2)}/SMS
                             </span>
                           </div>
                         </td>
                         
-                        <td className="px-5 py-3">
-                          <div className="flex items-center gap-1.5 text-sm font-bold font-mono text-slate-900 dark:text-white">
-                            <Coins className="w-3.5 h-3.5 text-amber-500" />
+                        <td className="px-2 sm:px-5 py-2 sm:py-3">
+                          <div className="flex items-center gap-1 text-xs sm:text-sm font-bold font-mono text-slate-900 dark:text-white">
+                            <Coins className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-amber-500" />
                             <span>{u.sms_balance.toLocaleString()} cr</span>
                           </div>
                         </td>
 
-                        <td className="px-5 py-3 text-xs text-slate-500 dark:text-gray-400 font-mono">
+                        <td className="px-2 sm:px-5 py-2 sm:py-3 text-[10px] sm:text-xs text-slate-500 dark:text-gray-400 font-mono">
                           <div className="flex items-center gap-1">
-                            <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                            <Calendar className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-slate-400" />
                             <span>{new Date(u.created_at).toLocaleDateString()}</span>
                           </div>
                         </td>
 
-                        <td className="px-5 py-3 text-right">
+                        <td className="px-2 sm:px-5 py-2 sm:py-3 text-right">
                           <div className="inline-flex gap-2">
                             {/* Edit Profile Details Button */}
                             <button
@@ -2230,13 +2230,13 @@ export default function AdminPanelPage() {
                 <table className="w-full text-left">
                   <thead>
                     <tr className="border-b border-slate-200/20 dark:border-white/6 clay-inset">
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Client</th>
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Campaign</th>
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Sender ID</th>
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Status</th>
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Recipients</th>
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Success Rate</th>
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Date</th>
+                      <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Client</th>
+                      <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Campaign</th>
+                      <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Sender ID</th>
+                      <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Status</th>
+                      <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Recipients</th>
+                      <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Success Rate</th>
+                      <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Date</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -2244,20 +2244,20 @@ export default function AdminPanelPage() {
                       const successRate = c.total_recipients > 0 ? Math.round((c.sent_count / c.total_recipients) * 100) : 0;
                       return (
                         <tr key={c.id} className="border-b border-slate-100 dark:border-white/[0.03] last:border-0 hover:bg-slate-50 dark:hover:bg-white/[0.01] transition-colors">
-                          <td className="px-5 py-3 text-sm text-slate-900 dark:text-white">
+                          <td className="px-2 sm:px-5 py-2 sm:py-3 text-xs sm:text-sm text-slate-900 dark:text-white">
                             <div className="font-semibold">{c.user_name}</div>
-                            <div className="text-[10px] text-slate-400 dark:text-gray-500 font-mono mt-0.5">{c.user_email}</div>
+                            <div className="text-[9px] sm:text-[10px] text-slate-400 dark:text-gray-500 font-mono mt-0.5">{c.user_email}</div>
                           </td>
-                          <td className="px-5 py-3 text-sm text-slate-900 dark:text-white font-medium">
+                          <td className="px-2 sm:px-5 py-2 sm:py-3 text-xs sm:text-sm text-slate-900 dark:text-white font-medium">
                             {c.name}
                           </td>
-                          <td className="px-5 py-3">
-                            <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-gray-300 font-mono font-bold text-xs uppercase">
+                          <td className="px-2 sm:px-5 py-2 sm:py-3">
+                            <span className="px-1.5 sm:px-2 py-0.5 rounded bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-gray-300 font-mono font-bold text-[10px] sm:text-xs uppercase">
                               {c.sender_id}
                             </span>
                           </td>
-                          <td className="px-5 py-3">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold capitalize ${
+                          <td className="px-2 sm:px-5 py-2 sm:py-3">
+                            <span className={`inline-flex items-center px-1.5 sm:px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold capitalize ${
                               c.status === 'completed' 
                                 ? 'bg-brand-emerald/10 text-brand-emerald' 
                                 : c.status === 'sending' 
@@ -2269,14 +2269,14 @@ export default function AdminPanelPage() {
                               {c.status}
                             </span>
                           </td>
-                          <td className="px-5 py-3 text-sm font-semibold font-mono text-slate-800 dark:text-white">
+                          <td className="px-2 sm:px-5 py-2 sm:py-3 text-xs sm:text-sm font-semibold font-mono text-slate-800 dark:text-white">
                             {c.total_recipients}
                           </td>
-                          <td className="px-5 py-3 text-sm">
+                          <td className="px-2 sm:px-5 py-2 sm:py-3 text-xs sm:text-sm">
                             <div className="font-bold text-slate-800 dark:text-white font-mono">{successRate}%</div>
-                            <div className="text-[10px] text-slate-400 font-mono">{c.sent_count} sent, {c.failed_count} failed</div>
+                            <div className="text-[9px] sm:text-[10px] text-slate-400 font-mono">{c.sent_count} sent, {c.failed_count} failed</div>
                           </td>
-                          <td className="px-5 py-3 text-xs text-slate-500 dark:text-gray-400 font-mono">
+                          <td className="px-2 sm:px-5 py-2 sm:py-3 text-[10px] sm:text-xs text-slate-500 dark:text-gray-400 font-mono">
                             {new Date(c.created_at).toLocaleDateString()}
                           </td>
                         </tr>
@@ -2623,36 +2623,36 @@ export default function AdminPanelPage() {
                   <table className="w-full text-left">
                     <thead>
                       <tr className="border-b border-slate-200/20 dark:border-white/6 clay-inset">
-                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Date</th>
-                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">User</th>
-                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Amount</th>
-                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Method</th>
-                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Type</th>
-                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Status</th>
-                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Reference</th>
+                        <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Date</th>
+                        <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">User</th>
+                        <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Amount</th>
+                        <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Method</th>
+                        <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Type</th>
+                        <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Status</th>
+                        <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Reference</th>
                       </tr>
                     </thead>
                     <tbody>
                       {transactions.map((t) => (
                         <tr key={t.id} className="border-b border-slate-100 dark:border-white/[0.03] last:border-0 hover:bg-slate-50 dark:hover:bg-white/[0.01] transition-colors">
-                          <td className="px-5 py-3 text-xs text-slate-500 dark:text-gray-400 font-mono">
+                          <td className="px-2 sm:px-5 py-2 sm:py-3 text-[10px] sm:text-xs text-slate-500 dark:text-gray-400 font-mono">
                             {new Date(t.created_at).toLocaleString()}
                           </td>
-                          <td className="px-5 py-3 text-sm text-slate-900 dark:text-white">
+                          <td className="px-2 sm:px-5 py-2 sm:py-3 text-xs sm:text-sm text-slate-900 dark:text-white">
                             <div className="font-semibold">{t.user_name}</div>
-                            <div className="text-[10px] text-slate-400 dark:text-gray-500 font-mono mt-0.5">{t.user_email}</div>
+                            <div className="text-[9px] sm:text-[10px] text-slate-400 dark:text-gray-500 font-mono mt-0.5">{t.user_email}</div>
                           </td>
-                          <td className="px-5 py-3 text-sm font-bold text-slate-800 dark:text-white font-mono">
+                          <td className="px-2 sm:px-5 py-2 sm:py-3 text-xs sm:text-sm font-bold text-slate-800 dark:text-white font-mono">
                             KES {t.amount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                           </td>
-                          <td className="px-5 py-3 text-xs font-mono font-bold text-brand-emerald">
+                          <td className="px-2 sm:px-5 py-2 sm:py-3 text-[10px] sm:text-xs font-mono font-bold text-brand-emerald">
                             {t.payment_method}
                           </td>
-                          <td className="px-5 py-3 text-xs font-mono uppercase text-slate-500 dark:text-gray-400">
+                          <td className="px-2 sm:px-5 py-2 sm:py-3 text-[10px] sm:text-xs font-mono uppercase text-slate-500 dark:text-gray-400">
                             {t.type}
                           </td>
-                          <td className="px-5 py-3">
-                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                          <td className="px-2 sm:px-5 py-2 sm:py-3">
+                            <span className={`inline-flex items-center gap-1 px-1.5 sm:px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase ${
                               t.status === 'completed' 
                                 ? 'bg-brand-emerald/10 text-brand-emerald' 
                                 : t.status === 'failed' 
