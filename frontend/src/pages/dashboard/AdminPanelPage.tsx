@@ -905,7 +905,7 @@ export default function AdminPanelPage() {
                       <div className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider">Online Users</div>
                     </div>
                     {stats && stats.online_users > 0 && (
-                      <span className="flex items-center gap-1 text-[9px] font-black text-brand-emerald bg-brand-emerald/10 px-2 py-0.5 rounded-full font-mono">
+                      <span className="flex items-center gap-1 text-[9px] font-black text-brand-emerald bg-brand-emerald/10 px-2 py-0.5 rounded-full font-mono whitespace-nowrap shrink-0">
                         <span className="w-1.5 h-1.5 rounded-full bg-brand-emerald animate-ping" />
                         LIVE
                       </span>
@@ -939,7 +939,7 @@ export default function AdminPanelPage() {
                         </div>
                         <div className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider">SMS Gateways</div>
                       </div>
-                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${gateways.some(g => g.is_active) ? 'bg-brand-emerald/10 text-brand-emerald' : 'bg-slate-100 dark:bg-white/5 text-slate-500'}`}>
+                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap shrink-0 ${gateways.some(g => g.is_active) ? 'bg-brand-emerald/10 text-brand-emerald' : 'bg-slate-100 dark:bg-white/5 text-slate-500'}`}>
                         {gateways.filter(g => g.is_active).length}/{gateways.length} ONLINE
                       </span>
                     </div>
@@ -1002,7 +1002,7 @@ export default function AdminPanelPage() {
                       </div>
                       <div className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider">All Time Revenue</div>
                     </div>
-                    <span className="text-[9px] text-amber-400 font-bold font-mono">
+                    <span className="text-[9px] text-amber-400 font-bold font-mono whitespace-nowrap shrink-0">
                       KES {(() => { const v = stats?.this_year_revenue || 0; return v >= 1000000 ? `${(v/1000000).toFixed(1)}M` : v >= 1000 ? `${(v/1000).toFixed(1)}K` : v.toLocaleString(); })()} this yr
                     </span>
                   </div>
@@ -1054,7 +1054,7 @@ export default function AdminPanelPage() {
                       </div>
                       <div className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider">Monthly Revenue</div>
                     </div>
-                    <span className="text-[9px] text-brand-emerald font-bold font-mono">
+                    <span className="text-[9px] text-brand-emerald font-bold font-mono whitespace-nowrap shrink-0">
                       ↗ KES {(() => { const v = stats?.today_revenue || 0; return v >= 1000000 ? `${(v/1000000).toFixed(1)}M` : v >= 1000 ? `${(v/1000).toFixed(1)}K` : v.toLocaleString(); })()} today
                     </span>
                   </div>
@@ -1096,7 +1096,7 @@ export default function AdminPanelPage() {
                         </div>
                         <div className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider">SMS Delivery Rate</div>
                       </div>
-                      <span className="text-[9px] text-brand-emerald font-bold font-mono bg-brand-emerald/10 px-2 py-0.5 rounded-full">
+                      <span className="text-[9px] text-brand-emerald font-bold font-mono bg-brand-emerald/10 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0">
                         ↑ {(stats?.total_sms_sent || 0).toLocaleString()} total
                       </span>
                     </div>
