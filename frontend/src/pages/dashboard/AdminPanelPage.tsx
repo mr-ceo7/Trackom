@@ -813,7 +813,7 @@ export default function AdminPanelPage() {
                 
                 {/* CARD 1: TOTAL CLIENTS */}
                 <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
                     <div className="flex items-center gap-3">
                       <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-brand-primary">
                         <Users className="w-5 h-5 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
@@ -897,7 +897,7 @@ export default function AdminPanelPage() {
 
                 {/* CARD 4: ONLINE USERS */}
                 <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
                     <div className="flex items-center gap-3">
                       <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-brand-emerald">
                         <UserCheck className="w-5 h-5 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
@@ -932,7 +932,7 @@ export default function AdminPanelPage() {
                 {/* CARD 5: GATEWAYS & ROUTING */}
                 <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
                       <div className="flex items-center gap-3">
                         <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-cyan-500">
                           <Activity className="w-5 h-5 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]" />
@@ -995,7 +995,7 @@ export default function AdminPanelPage() {
 
                 {/* CARD 6: ALL TIME REVENUE */}
                 <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
                     <div className="flex items-center gap-3">
                       <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-emerald-500">
                         <TrendingUp className="w-5 h-5 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
@@ -1047,7 +1047,7 @@ export default function AdminPanelPage() {
 
                 {/* CARD 7: MONTHLY REVENUE */}
                 <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
                     <div className="flex items-center gap-3">
                       <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-emerald-500">
                         <Coins className="w-5 h-5 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
@@ -1089,7 +1089,7 @@ export default function AdminPanelPage() {
                 {/* CARD 8: SMS DISPATCH ANALYTICS */}
                 <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
                       <div className="flex items-center gap-3">
                         <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-teal-500">
                           <Send className="w-5 h-5 drop-shadow-[0_0_8px_rgba(20,184,166,0.5)]" />
