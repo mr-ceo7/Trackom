@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  Users, Megaphone, Send, ShieldAlert, Search, Plus, Minus, 
+  Users, Megaphone, Send, ShieldAlert, Search, Plus, Minus, Menu, 
   Check, X, Ban, UserCheck, Coins, Calendar, Sliders, DollarSign,
   Cpu, Key, Link as LinkIcon, Edit, Trash2, ToggleLeft, ToggleRight, Smartphone, Activity, TrendingUp, Settings, Save, ChevronLeft, ChevronRight
 } from 'lucide-react';
@@ -103,6 +103,7 @@ export default function AdminPanelPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'gateways' | 'sender_ids' | 'campaigns' | 'revenue' | 'settings'>('dashboard');
   const [clickedItem, setClickedItem] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [events, setEvents] = useState<AdminEvent[]>([]);
   const [showAllEvents, setShowAllEvents] = useState(false);
@@ -693,6 +694,98 @@ export default function AdminPanelPage() {
 
   return (
     <div className="min-h-screen flex overflow-hidden light-dashboard-bg dark:bg-surface-dark font-sans text-left w-full">
+      {/* MOBILE SIDEBAR OVERLAY */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              className="fixed inset-0 bg-black/50 z-40 md:hidden" 
+              onClick={() => setSidebarOpen(false)} 
+            />
+            <motion.aside 
+              initial={{ x: -280 }} 
+              animate={{ x: 0 }} 
+              exit={{ x: -280 }} 
+              transition={{ type: 'spring', damping: 25 }} 
+              className="fixed left-0 top-0 bottom-0 w-72 clay-sidebar z-50 md:hidden flex flex-col justify-between bg-white dark:bg-slate-900"
+            >
+              <div className="p-6 space-y-6">
+                {/* Logo & Close Button */}
+                <div className="flex items-center justify-between">
+                  <NavLink to="/" onClick={() => setSidebarOpen(false)}>
+                    <TrackomLogo size={24} />
+                  </NavLink>
+                  <button 
+                    onClick={() => setSidebarOpen(false)} 
+                    className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-200/40 dark:hover:bg-white/5 cursor-pointer transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Navigation Links */}
+                <nav className="space-y-1.5 pt-4">
+                  {[
+                    { id: 'dashboard', label: 'Dashboard', icon: TrendingUp },
+                    { id: 'users', label: 'Tenant Users', icon: Users },
+                    { id: 'gateways', label: 'SMS Gateways', icon: Cpu },
+                    { id: 'sender_ids', label: 'Sender IDs', icon: Smartphone },
+                    { id: 'campaigns', label: 'All Campaigns', icon: Megaphone },
+                    { id: 'revenue', label: 'Revenue', icon: DollarSign },
+                    { id: 'settings', label: 'System Settings', icon: Settings },
+                  ].map(item => {
+                    const Icon = item.icon;
+                    const isSelected = activeTab === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => { 
+                          setActiveTab(item.id as any); 
+                          setPage(1); 
+                          setSidebarOpen(false); 
+                          setClickedItem(item.id); 
+                        }}
+                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-2xl text-sm font-medium transition-all duration-200 group cursor-pointer ${
+                          isSelected 
+                            ? 'clay-nav-active text-brand-primary dark:text-brand-primary-light font-semibold' 
+                            : 'text-slate-600 dark:text-gray-400 hover:bg-slate-200/40 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white'
+                        }`}
+                      >
+                        <motion.div 
+                          className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all ${
+                            isSelected 
+                              ? 'bg-brand-primary/10 text-brand-primary dark:text-brand-primary-light' 
+                              : 'clay-icon-raised text-slate-500'
+                          }`}
+                          animate={clickedItem === item.id ? { rotate: 360 } : { rotate: 0 }}
+                          transition={{ duration: 0.6, ease: "backOut" }}
+                        >
+                          <Icon className="w-4 h-4" />
+                        </motion.div>
+                        <span>{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </nav>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="p-4 border-t border-slate-200/10 dark:border-white/5">
+                <button
+                  onClick={() => { setSidebarOpen(false); navigate('/dashboard'); }}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl border border-slate-200/40 dark:border-white/10 text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white text-xs font-bold cursor-pointer transition-all bg-slate-200/20 dark:bg-white/5 hover:bg-slate-200/40 dark:hover:bg-white/10"
+                >
+                  <span>← Back to Client App</span>
+                </button>
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
       {/* Sidebar Panel for Admin Console */}
       <aside className="w-64 h-screen clay-sidebar flex flex-col justify-between shrink-0 border-r border-slate-200/10 dark:border-white/5 bg-white dark:bg-slate-900 hidden md:flex">
         <div className="p-6 space-y-6">
@@ -767,9 +860,12 @@ export default function AdminPanelPage() {
         <div className="flex items-center justify-between border-b border-slate-200/10 dark:border-white/5 pb-4 mb-2">
           {/* Mobile indicator / Left Title */}
           <div className="flex items-center gap-2 md:gap-0">
-            <header className="flex md:hidden items-center gap-2 bg-white dark:bg-slate-900 text-slate-800 dark:text-white rounded-xl py-1 px-3 border border-slate-200/10 dark:border-white/5">
-              <ShieldAlert className="w-4 h-4 text-brand-primary" />
-            </header>
+            <button 
+              onClick={() => setSidebarOpen(true)}
+              className="flex md:hidden items-center justify-center p-2 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-white border border-slate-200/10 dark:border-white/5 hover:bg-slate-200/40 dark:hover:bg-white/5 cursor-pointer transition-all"
+            >
+              <Menu className="w-4.5 h-4.5 text-brand-primary" />
+            </button>
             <div className="text-left hidden md:block">
               <h1 className="text-2xl font-display font-black text-slate-900 dark:text-white capitalize">{activeTab}</h1>
               <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">Platform overview & real-time analytics</p>
