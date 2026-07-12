@@ -61,11 +61,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const saveTokens = (access_token: string, refresh_token: string) => {
     localStorage.setItem('trackom_access_token', access_token);
     localStorage.setItem('trackom_refresh_token', refresh_token);
+    
+    // Set domain-wide cookie to share login session state with landing page
+    const domain = window.location.hostname.includes('trackomgroup.com') ? '.trackomgroup.com' : '';
+    document.cookie = `trackom_session=active; path=/; domain=${domain}; max-age=31536000; SameSite=Lax; Secure`;
   };
 
   const clearTokens = () => {
     localStorage.removeItem('trackom_access_token');
     localStorage.removeItem('trackom_refresh_token');
+    
+    // Clear domain-wide session cookie
+    const domain = window.location.hostname.includes('trackomgroup.com') ? '.trackomgroup.com' : '';
+    document.cookie = `trackom_session=; path=/; domain=${domain}; max-age=0; SameSite=Lax; Secure`;
   };
 
   const fetchUser = useCallback(async () => {

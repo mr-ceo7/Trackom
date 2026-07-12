@@ -28,6 +28,18 @@ export default function Header() {
   const isHome = location.pathname === '/';
 
   const [activeSection, setActiveSection] = useState<string>('');
+  const [hasSession, setHasSession] = useState(false);
+
+  useEffect(() => {
+    const cookies = document.cookie.split(';');
+    const sessionActive = cookies.some(c => c.trim().startsWith('trackom_session=active'));
+    const localToken = localStorage.getItem('trackom_access_token');
+    setHasSession(sessionActive || !!localToken);
+  }, []);
+
+  const dashboardUrl = window.location.hostname.includes('trackomgroup.com')
+    ? 'https://app.trackomgroup.com/dashboard'
+    : '/dashboard';
 
   useEffect(() => {
     if (!isHome) {
@@ -376,13 +388,23 @@ export default function Header() {
             className="border border-slate-200 dark:border-white/10 text-slate-500 dark:text-gray-400 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 dark:hover:text-white"
           />
 
-          <Link
-            to="/login"
-            className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-brand-primary hover:bg-brand-primary-hover text-white cursor-pointer shadow-lg shadow-brand-primary/20 hover:shadow-brand-primary/30 hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none"
-          >
-            <span>Sign In</span>
-            <Rocket className="w-4 h-4" />
-          </Link>
+          {hasSession ? (
+            <a
+              href={dashboardUrl}
+              className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-brand-primary hover:bg-brand-primary-hover text-white cursor-pointer shadow-lg shadow-brand-primary/20 hover:shadow-brand-primary/30 hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none"
+            >
+              <span>Dashboard</span>
+              <Rocket className="w-4 h-4" />
+            </a>
+          ) : (
+            <Link
+              to="/login"
+              className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-brand-primary hover:bg-brand-primary-hover text-white cursor-pointer shadow-lg shadow-brand-primary/20 hover:shadow-brand-primary/30 hover:scale-[1.02] active:scale-95 transition-all duration-300 focus:outline-none"
+            >
+              <span>Sign In</span>
+              <Rocket className="w-4 h-4" />
+            </Link>
+          )}
 
           {/* HAMBURGER */}
           <button
@@ -488,14 +510,25 @@ export default function Header() {
 
               <hr className="border-slate-200 dark:border-white/5" />
 
-              <Link
-                to="/login"
-                onClick={() => setIsOpen(false)}
-                className="w-full flex items-center justify-center gap-2.5 py-3 rounded-lg text-white font-semibold bg-brand-primary hover:bg-brand-primary-hover active:scale-98 transition-all duration-200 shadow-md cursor-pointer text-sm"
-              >
-                <span>Sign In</span>
-                <Rocket className="w-4 h-4" />
-              </Link>
+              {hasSession ? (
+                <a
+                  href={dashboardUrl}
+                  onClick={() => setIsOpen(false)}
+                  className="w-full flex items-center justify-center gap-2.5 py-3 rounded-lg text-white font-semibold bg-brand-primary hover:bg-brand-primary-hover active:scale-98 transition-all duration-200 shadow-md cursor-pointer text-sm"
+                >
+                  <span>Dashboard</span>
+                  <Rocket className="w-4 h-4" />
+                </a>
+              ) : (
+                <Link
+                  to="/login"
+                  onClick={() => setIsOpen(false)}
+                  className="w-full flex items-center justify-center gap-2.5 py-3 rounded-lg text-white font-semibold bg-brand-primary hover:bg-brand-primary-hover active:scale-98 transition-all duration-200 shadow-md cursor-pointer text-sm"
+                >
+                  <span>Sign In</span>
+                  <Rocket className="w-4 h-4" />
+                </Link>
+              )}
             </div>
           </motion.div>
         )}

@@ -76,6 +76,61 @@ export default function DashboardLayout() {
   const [notiOpen, setNotiOpen] = useState(false);
   const [publicSettings, setPublicSettings] = useState<any>(null);
 
+  // PWA Install Prompt State
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showPwaBanner, setShowPwaBanner] = useState(false);
+
+  // 2FA Suggestion Banner State
+  const [show2FaBanner, setShow2FaBanner] = useState(false);
+
+  // Check 2FA status when user state is loaded
+  useEffect(() => {
+    if (user && !user.is_2fa_enabled && !localStorage.getItem('trackom_dismiss_2fa_banner')) {
+      setShow2FaBanner(true);
+    } else {
+      setShow2FaBanner(false);
+    }
+  }, [user]);
+
+  // Listen to PWA beforeinstallprompt event
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      
+      const hostname = window.location.hostname;
+      // ONLY prompt on the app subdomain (app.trackomgroup.com) or localhost/127.0.0.1 for development
+      const isAppSubdomain = hostname === 'app.trackomgroup.com' || hostname === 'localhost' || hostname === '127.0.0.1';
+      
+      if (isAppSubdomain && !localStorage.getItem('trackom_dismiss_pwa_banner')) {
+        setShowPwaBanner(true);
+      }
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
+
+  const handleInstallPwa = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+      setShowPwaBanner(false);
+    }
+  };
+
+  const handleDismissPwa = () => {
+    localStorage.setItem('trackom_dismiss_pwa_banner', 'true');
+    setShowPwaBanner(false);
+  };
+
+  const handleDismiss2Fa = () => {
+    localStorage.setItem('trackom_dismiss_2fa_banner', 'true');
+    setShow2FaBanner(false);
+  };
+
   const fetchNotifications = useCallback(async () => {
     try {
       const resp = await api.get('/notifications');
@@ -313,6 +368,69 @@ export default function DashboardLayout() {
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
               </span>
               <span><strong>Notice:</strong> Platform is currently in scheduled maintenance. Outbound broadcasts might experience minor dispatch delays.</span>
+            </div>
+          )}
+
+          {/* 2FA Suggestion Banner */}
+          {show2FaBanner && (
+            <div className="relative overflow-hidden bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 rounded-2xl px-4 py-3 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
+              <div className="flex items-start gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0 mt-0.5 animate-pulse">
+                  <Shield className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-amber-300">Enable Two-Factor Authentication</h4>
+                  <p className="text-[11px] text-slate-600 dark:text-gray-400 mt-0.5 leading-relaxed">
+                    Your account is currently protected by password only. Turn on 2FA to secure your SMS wallet balance, active sender IDs, and developer API credentials.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                <NavLink 
+                  to="/dashboard/settings" 
+                  onClick={() => setShow2FaBanner(false)}
+                  className="px-3.5 py-1.5 rounded-xl text-[11px] font-semibold text-white bg-amber-500 hover:bg-amber-600 active:scale-95 transition-all shadow-md shadow-amber-500/20"
+                >
+                  Secure Account
+                </NavLink>
+                <button 
+                  onClick={handleDismiss2Fa}
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-gray-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* PWA Install Prompt Banner */}
+          {showPwaBanner && (
+            <div className="relative overflow-hidden bg-gradient-to-r from-indigo-500/10 via-indigo-500/5 to-transparent border border-indigo-500/20 rounded-2xl px-4 py-3 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
+              <div className="flex items-start gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 shrink-0 mt-0.5">
+                  <Smartphone className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-indigo-300">Install Trackom Desktop App</h4>
+                  <p className="text-[11px] text-slate-600 dark:text-gray-400 mt-0.5 leading-relaxed">
+                    Access the dashboard directly from your dock/desktop taskbar, get native desktop notifications, and enjoy faster loading speeds.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                <button 
+                  onClick={handleInstallPwa}
+                  className="px-3.5 py-1.5 rounded-xl text-[11px] font-semibold text-white bg-indigo-500 hover:bg-indigo-600 active:scale-95 transition-all shadow-md shadow-indigo-500/20 cursor-pointer"
+                >
+                  Install App
+                </button>
+                <button 
+                  onClick={handleDismissPwa}
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-gray-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           )}
 
