@@ -818,7 +818,7 @@ export default function ContactsPage() {
                 <table className="w-full text-left">
                   <thead>
                     <tr className="border-b border-slate-200/20 dark:border-white/6 clay-inset">
-                      <th className="px-5 py-3.5 w-10">
+                      <th className="px-2 sm:px-5 py-2 sm:py-3.5 w-10">
                         <input
                           type="checkbox"
                           className="rounded border-slate-300 dark:border-white/10 text-brand-primary focus:ring-brand-primary cursor-pointer w-4 h-4"
@@ -832,10 +832,10 @@ export default function ContactsPage() {
                           }}
                         />
                       </th>
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Name</th>
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Phone</th>
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider hidden sm:table-cell">Email</th>
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider text-right">Actions</th>
+                      <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Name</th>
+                      <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Phone</th>
+                      <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider hidden sm:table-cell">Email</th>
+                      <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -847,7 +847,7 @@ export default function ContactsPage() {
                         transition={{ delay: Math.min(i * 0.015, 0.5) }} 
                         className="clay-row-hover border-b border-slate-100 dark:border-white/[0.03] last:border-0 hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors"
                       >
-                        <td className="px-5 py-3 w-10">
+                        <td className="px-2 sm:px-5 py-2 sm:py-3 w-10">
                           <input
                             type="checkbox"
                             className="rounded border-slate-300 dark:border-white/10 text-brand-primary focus:ring-brand-primary cursor-pointer w-4 h-4"
@@ -861,23 +861,23 @@ export default function ContactsPage() {
                             }}
                           />
                         </td>
-                        <td className="px-5 py-3">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-8 h-8 rounded-lg ${c.is_blacklisted ? 'bg-rose-500/15 text-rose-500 font-bold' : 'bg-gradient-to-br from-brand-primary/20 to-brand-accent/20 text-brand-primary font-bold'} flex items-center justify-center text-xs shrink-0`}>
+                        <td className="px-2 sm:px-5 py-2 sm:py-3">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <div className={`w-7 sm:w-8 h-7 sm:h-8 rounded-lg ${c.is_blacklisted ? 'bg-rose-500/15 text-rose-500 font-bold' : 'bg-gradient-to-br from-brand-primary/20 to-brand-accent/20 text-brand-primary font-bold'} flex items-center justify-center text-[10px] sm:text-xs shrink-0`}>
                               {c.name.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase()}
                             </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium text-slate-900 dark:text-white">{c.name}</span>
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className="text-xs sm:text-sm font-medium text-slate-900 dark:text-white truncate max-w-[90px] sm:max-w-none">{c.name}</span>
                               {c.is_blacklisted && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20">
+                                <span className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[8px] sm:text-[9px] font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20">
                                   Blacklisted
                                 </span>
                               )}
                             </div>
                           </div>
                         </td>
-                        <td className="px-5 py-3 text-sm text-slate-600 dark:text-gray-400 font-mono">{c.phone}</td>
-                        <td className="px-5 py-3 text-sm text-slate-500 hidden sm:table-cell">
+                        <td className="px-2 sm:px-5 py-2 sm:py-3 text-xs sm:text-sm text-slate-600 dark:text-gray-400 font-mono">{c.phone}</td>
+                        <td className="px-2 sm:px-5 py-2 sm:py-3 text-xs sm:text-sm text-slate-500 hidden sm:table-cell">
                           <div>{c.email || ' - '}</div>
                           {c.custom_attributes && Object.keys(c.custom_attributes).length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1">
@@ -889,7 +889,7 @@ export default function ContactsPage() {
                             </div>
                           )}
                         </td>
-                        <td className="px-5 py-3 text-right">
+                        <td className="px-2 sm:px-5 py-2 sm:py-3 text-right">
                           <button 
                             onClick={() => handleToggleBlacklist(c)} 
                             className={`p-1.5 rounded-lg mr-1.5 cursor-pointer transition-all ${

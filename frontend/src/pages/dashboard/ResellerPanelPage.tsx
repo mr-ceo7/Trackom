@@ -322,40 +322,40 @@ export default function ResellerPanelPage() {
                   <table className="w-full text-left">
                     <thead>
                       <tr className="border-b border-slate-200/20 dark:border-white/6 clay-inset">
-                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Client User</th>
-                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Company</th>
-                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">SMS Rate</th>
-                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">SMS Balance</th>
-                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Status</th>
-                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider text-right">Actions</th>
+                        <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Client User</th>
+                        <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Company</th>
+                        <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">SMS Rate</th>
+                        <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">SMS Balance</th>
+                        <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Status</th>
+                        <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {users.map(u => (
                         <tr key={u.id} className="border-b border-slate-100 dark:border-white/[0.03] last:border-0 hover:bg-slate-50 dark:hover:bg-white/[0.01]">
-                          <td className="px-5 py-3">
+                          <td className="px-2 sm:px-5 py-2 sm:py-3">
                             <div>
-                              <div className="text-sm font-semibold text-slate-900 dark:text-white">{u.full_name}</div>
-                              <div className="text-[10px] text-slate-400 font-mono mt-0.5">{u.email}</div>
+                              <div className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white truncate max-w-[80px] sm:max-w-none">{u.full_name}</div>
+                              <div className="text-[9px] sm:text-[10px] text-slate-400 font-mono mt-0.5 truncate max-w-[100px] sm:max-w-none">{u.email}</div>
                             </div>
                           </td>
-                          <td className="px-5 py-3 text-xs text-slate-600 dark:text-gray-400">{u.company || ' - '}</td>
-                          <td className="px-5 py-3">
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/10 font-mono">
+                          <td className="px-2 sm:px-5 py-2 sm:py-3 text-[10px] sm:text-xs text-slate-600 dark:text-gray-400 truncate max-w-[80px] sm:max-w-none">{u.company || ' - '}</td>
+                          <td className="px-2 sm:px-5 py-2 sm:py-3">
+                            <span className="px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/10 font-mono">
                               KES {u.credit_rate.toFixed(2)}/SMS
                             </span>
                           </td>
-                          <td className="px-5 py-3 font-bold font-mono text-slate-900 dark:text-white">
+                          <td className="px-2 sm:px-5 py-2 sm:py-3 text-xs sm:text-sm font-bold font-mono text-slate-900 dark:text-white">
                             {u.sms_balance.toLocaleString()} cr
                           </td>
-                          <td className="px-5 py-3">
-                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${
+                          <td className="px-2 sm:px-5 py-2 sm:py-3">
+                            <span className={`px-1.5 sm:px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase ${
                               u.is_active ? 'bg-brand-emerald/10 text-brand-emerald' : 'bg-red-500/10 text-red-500'
                             }`}>
                               {u.is_active ? 'Active' : 'Suspended'}
                             </span>
                           </td>
-                          <td className="px-5 py-3 text-right">
+                          <td className="px-2 sm:px-5 py-2 sm:py-3 text-right">
                             <div className="flex items-center justify-end gap-2">
                               <button
                                 onClick={() => { setSelectedUser(u); setIsTransferOpen(true); }}
@@ -410,29 +410,29 @@ export default function ResellerPanelPage() {
                   <table className="w-full text-left">
                     <thead>
                       <tr className="border-b border-slate-200/20 dark:border-white/6 clay-inset">
-                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Sub-User Account</th>
-                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Recipient</th>
-                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Message</th>
-                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Status</th>
-                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Cost</th>
-                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Time</th>
+                        <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Sub-User Account</th>
+                        <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Recipient</th>
+                        <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Message</th>
+                        <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Status</th>
+                        <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Cost</th>
+                        <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Time</th>
                       </tr>
                     </thead>
                     <tbody>
                       {logs.map(log => (
                         <tr key={log.id} className="border-b border-slate-100 dark:border-white/[0.03] last:border-0 hover:bg-slate-50 dark:hover:bg-white/[0.01]">
-                          <td className="px-5 py-3 text-xs font-semibold text-slate-900 dark:text-white">{log.user_name}</td>
-                          <td className="px-5 py-3 text-xs font-mono font-bold text-slate-900 dark:text-white">{log.recipient}</td>
-                          <td className="px-5 py-3 text-xs text-slate-600 dark:text-gray-400 max-w-xs truncate">{log.content}</td>
-                          <td className="px-5 py-3">
-                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${
+                          <td className="px-2 sm:px-5 py-2 sm:py-3 text-[10px] sm:text-xs font-semibold text-slate-900 dark:text-white truncate max-w-[80px] sm:max-w-none">{log.user_name}</td>
+                          <td className="px-2 sm:px-5 py-2 sm:py-3 text-[10px] sm:text-xs font-mono font-bold text-slate-900 dark:text-white">{log.recipient}</td>
+                          <td className="px-2 sm:px-5 py-2 sm:py-3 text-[10px] sm:text-xs text-slate-600 dark:text-gray-400 max-w-[120px] sm:max-w-xs truncate">{log.content}</td>
+                          <td className="px-2 sm:px-5 py-2 sm:py-3">
+                            <span className={`px-1.5 sm:px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase ${
                               log.status === 'delivered' ? 'bg-brand-emerald/10 text-brand-emerald' : 'bg-red-500/10 text-red-500'
                             }`}>
                               {log.status}
                             </span>
                           </td>
-                          <td className="px-5 py-3 text-xs font-mono text-slate-900 dark:text-white">{log.cost.toFixed(2)} cr</td>
-                          <td className="px-5 py-3 text-xs text-slate-400 font-mono">{new Date(log.created_at).toLocaleTimeString()}</td>
+                          <td className="px-2 sm:px-5 py-2 sm:py-3 text-[10px] sm:text-xs font-mono text-slate-900 dark:text-white">{log.cost.toFixed(2)} cr</td>
+                          <td className="px-2 sm:px-5 py-2 sm:py-3 text-[10px] sm:text-xs text-slate-400 font-mono">{new Date(log.created_at).toLocaleTimeString()}</td>
                         </tr>
                       ))}
                       {logs.length === 0 && (

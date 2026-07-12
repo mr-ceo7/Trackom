@@ -300,12 +300,12 @@ export default function ReportsPage() {
                   <table className="w-full text-left">
                     <thead>
                       <tr className="border-b border-slate-200/20 dark:border-white/6 clay-inset">
-                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Recipient</th>
-                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Message Content</th>
-                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider hidden sm:table-cell">Sender & Batch</th>
-                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Status</th>
-                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider hidden sm:table-cell">Cost</th>
-                        <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider hidden md:table-cell">Time</th>
+                        <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Recipient</th>
+                        <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Message Content</th>
+                        <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider hidden sm:table-cell">Sender & Batch</th>
+                        <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Status</th>
+                        <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider hidden sm:table-cell">Cost</th>
+                        <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider hidden md:table-cell">Time</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -317,14 +317,14 @@ export default function ReportsPage() {
                             onClick={() => setExpandedMessageId(isRowExpanded ? null : m.id)}
                             className="border-b border-slate-100 dark:border-white/[0.03] last:border-0 clay-row-hover hover:bg-slate-50 dark:hover:bg-white/[0.01] transition-colors cursor-pointer"
                           >
-                            <td className="px-5 py-3 text-xs font-mono font-bold text-slate-900 dark:text-white">
+                            <td className="px-2 sm:px-5 py-2 sm:py-3 text-[10px] sm:text-xs font-mono font-bold text-slate-900 dark:text-white">
                               {m.recipient}
                             </td>
-                            <td className="px-5 py-3 text-xs text-slate-600 dark:text-gray-300 max-w-xs">
+                            <td className="px-2 sm:px-5 py-2 sm:py-3 text-[10px] sm:text-xs text-slate-600 dark:text-gray-300 max-w-xs">
                               {isRowExpanded ? (
                                 <div className="space-y-2.5 font-sans bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200/30 dark:border-white/5 shadow-inner leading-relaxed text-left">
                                   <div>{m.content}</div>
-                                  <div className="flex flex-col gap-1.5 pt-2.5 border-t border-slate-200/20 dark:border-white/5 text-[10px] text-slate-500 dark:text-gray-400">
+                                  <div className="flex flex-col gap-1.5 pt-2.5 border-t border-slate-200/20 dark:border-white/5 text-[9px] sm:text-[10px] text-slate-500 dark:text-gray-400">
                                     <div className="sm:hidden flex justify-between gap-4">
                                       <span>Sender ID:</span>
                                       <span className="font-mono font-semibold text-slate-700 dark:text-gray-200">{m.sender_id} {m.batch_number ? `(${m.batch_number})` : ''}</span>
@@ -345,15 +345,15 @@ export default function ReportsPage() {
                                 <div className="truncate">{m.content}</div>
                               )}
                             </td>
-                            <td className="px-5 py-3 text-left hidden sm:table-cell">
-                              <div className="text-xs font-semibold text-slate-900 dark:text-white font-mono">{m.sender_id}</div>
+                            <td className="px-2 sm:px-5 py-2 sm:py-3 text-left hidden sm:table-cell">
+                              <div className="text-[10px] sm:text-xs font-semibold text-slate-900 dark:text-white font-mono">{m.sender_id}</div>
                               {m.batch_number && (
-                                <div className="text-[10px] text-brand-primary font-mono mt-0.5">{m.batch_number}</div>
+                                <div className="text-[9px] sm:text-[10px] text-brand-primary font-mono mt-0.5">{m.batch_number}</div>
                               )}
                             </td>
-                             <td className="px-5 py-3">
+                             <td className="px-2 sm:px-5 py-2 sm:py-3">
                                <div className="flex items-center gap-2">
-                                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${getStatusBadge(m.status)}`}>
+                                 <span className={`px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase ${getStatusBadge(m.status)}`}>
                                    {m.status}
                                  </span>
                                  {m.status === 'failed' && (
@@ -370,10 +370,10 @@ export default function ReportsPage() {
                                  )}
                                </div>
                              </td>
-                            <td className="px-5 py-3 text-xs font-mono text-slate-900 dark:text-white hidden sm:table-cell">
+                            <td className="px-2 sm:px-5 py-2 sm:py-3 text-[10px] sm:text-xs font-mono text-slate-900 dark:text-white hidden sm:table-cell">
                               {m.cost.toFixed(2)} cr
                             </td>
-                            <td className="px-5 py-3 text-xs text-slate-500 dark:text-gray-400 font-mono hidden md:table-cell">
+                            <td className="px-2 sm:px-5 py-2 sm:py-3 text-[10px] sm:text-xs text-slate-500 dark:text-gray-400 font-mono hidden md:table-cell">
                               {m.sent_at ? new Date(m.sent_at).toLocaleTimeString() : ' - '}
                             </td>
                           </tr>
@@ -421,11 +421,11 @@ export default function ReportsPage() {
                 <table className="w-full text-left">
                   <thead>
                     <tr className="border-b border-slate-200/20 dark:border-white/6 clay-inset">
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Recipient</th>
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Message Content</th>
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider hidden sm:table-cell">Sender & Batch</th>
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider hidden sm:table-cell">Scheduled Time</th>
-                      <th className="px-5 py-3.5 text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Actions</th>
+                      <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Recipient</th>
+                      <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Message Content</th>
+                      <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider hidden sm:table-cell">Sender & Batch</th>
+                      <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider hidden sm:table-cell">Scheduled Time</th>
+                      <th className="px-2 sm:px-5 py-2 sm:py-3.5 text-[9px] sm:text-[11px] font-semibold uppercase text-slate-500 dark:text-gray-400 tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -437,14 +437,14 @@ export default function ReportsPage() {
                           onClick={() => setExpandedMessageId(isRowExpanded ? null : m.id)}
                           className="border-b border-slate-100 dark:border-white/[0.03] last:border-0 clay-row-hover hover:bg-slate-50 dark:hover:bg-white/[0.01] transition-colors cursor-pointer"
                         >
-                          <td className="px-5 py-3 text-xs font-mono font-bold text-slate-900 dark:text-white">
+                          <td className="px-2 sm:px-5 py-2 sm:py-3 text-[10px] sm:text-xs font-mono font-bold text-slate-900 dark:text-white">
                             {m.recipient}
                           </td>
-                          <td className="px-5 py-3 text-xs text-slate-600 dark:text-gray-300 max-w-xs">
+                          <td className="px-2 sm:px-5 py-2 sm:py-3 text-[10px] sm:text-xs text-slate-600 dark:text-gray-300 max-w-xs">
                             {isRowExpanded ? (
                               <div className="space-y-2.5 font-sans bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200/30 dark:border-white/5 shadow-inner leading-relaxed text-left">
                                 <div>{m.content}</div>
-                                <div className="flex flex-col gap-1.5 pt-2.5 border-t border-slate-200/20 dark:border-white/5 text-[10px] text-slate-500 dark:text-gray-400">
+                                <div className="flex flex-col gap-1.5 pt-2.5 border-t border-slate-200/20 dark:border-white/5 text-[9px] sm:text-[10px] text-slate-500 dark:text-gray-400">
                                   <div className="sm:hidden flex justify-between gap-4">
                                     <span>Sender ID:</span>
                                     <span className="font-mono font-semibold text-slate-700 dark:text-gray-200">{m.sender_id} {m.batch_number ? `(${m.batch_number})` : ''}</span>
@@ -459,19 +459,19 @@ export default function ReportsPage() {
                               <div className="truncate">{m.content}</div>
                             )}
                           </td>
-                          <td className="px-5 py-3 text-left hidden sm:table-cell">
-                            <div className="text-xs font-semibold text-slate-900 dark:text-white font-mono">{m.sender_id}</div>
+                          <td className="px-2 sm:px-5 py-2 sm:py-3 text-left hidden sm:table-cell">
+                            <div className="text-[10px] sm:text-xs font-semibold text-slate-900 dark:text-white font-mono">{m.sender_id}</div>
                             {m.batch_number && (
-                              <div className="text-[10px] text-brand-primary font-mono mt-0.5">{m.batch_number}</div>
+                              <div className="text-[9px] sm:text-[10px] text-brand-primary font-mono mt-0.5">{m.batch_number}</div>
                             )}
                           </td>
-                          <td className="px-5 py-3 text-xs font-semibold text-amber-600 dark:text-amber-400 font-mono hidden sm:table-cell">
+                          <td className="px-2 sm:px-5 py-2 sm:py-3 text-[10px] sm:text-xs font-semibold text-amber-600 dark:text-amber-400 font-mono hidden sm:table-cell">
                             {m.scheduled_at ? new Date(m.scheduled_at).toLocaleString() : ' - '}
                           </td>
-                          <td className="px-5 py-3">
+                          <td className="px-2 sm:px-5 py-2 sm:py-3">
                             <button
                               onClick={(e) => { e.stopPropagation(); handleCancelScheduled(m.id); }}
-                              className="px-3 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/25 text-red-500 text-xs font-bold transition-all cursor-pointer"
+                              className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/25 text-red-500 text-[10px] sm:text-xs font-bold transition-all cursor-pointer"
                             >
                               Cancel
                             </button>
