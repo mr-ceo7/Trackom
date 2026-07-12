@@ -809,7 +809,7 @@ export default function AdminPanelPage() {
             {loading ? (
               <div className="flex justify-center py-12"><Loader size="md" /></div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 
                 {/* CARD 1: TOTAL CLIENTS */}
                 <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
