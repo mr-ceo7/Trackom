@@ -42,6 +42,14 @@ export default function WalletPage() {
   const [stkError, setStkError] = useState('');
   const [publicSettings, setPublicSettings] = useState<any>(null);
 
+  // Live Payment Blocking States
+  const [isWaitingLive, setIsWaitingLive] = useState(false);
+  const [liveStep, setLiveStep] = useState<'waiting' | 'success' | 'failed' | 'timeout'>('waiting');
+  const [liveTransactionId, setLiveTransactionId] = useState<string | null>(null);
+  const [liveAmount, setLiveAmount] = useState<number>(0);
+  const [livePhone, setLivePhone] = useState<string>('');
+  const [liveError, setLiveError] = useState<string>('');
+
   const presets = [500, 1000, 2500, 5000, 10000];
 
   const fetchTransactions = useCallback(async () => {
@@ -69,6 +77,58 @@ export default function WalletPage() {
     fetchPublicSettings();
   }, [fetchTransactions, fetchPublicSettings]);
 
+  // Poll for status updates if there are any pending transactions in the general list
+  useEffect(() => {
+    const hasPending = transactions.some(tx => tx.status === 'pending');
+    if (!hasPending) return;
+
+    const interval = setInterval(() => {
+      fetchTransactions();
+      refreshUser();
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [transactions, fetchTransactions, refreshUser]);
+
+  // Poll specifically for the current live transaction confirmation
+  useEffect(() => {
+    if (!isWaitingLive || liveStep !== 'waiting' || !liveTransactionId) return;
+
+    let pollCount = 0;
+    const interval = setInterval(async () => {
+      try {
+        pollCount++;
+        const resp = await api.get('/wallet/transactions', {
+          params: { page: 1, limit: 10 }
+        });
+        const matchedTx = resp.data.find((tx: any) => tx.id === liveTransactionId);
+
+        if (matchedTx) {
+          if (matchedTx.status === 'completed') {
+            clearInterval(interval);
+            await refreshUser();
+            setLiveStep('success');
+            fetchTransactions();
+          } else if (matchedTx.status === 'failed') {
+            clearInterval(interval);
+            setLiveError(matchedTx.description || 'Transaction failed.');
+            setLiveStep('failed');
+            fetchTransactions();
+          }
+        }
+
+        if (pollCount > 50) { // ~2.5 minutes timeout
+          clearInterval(interval);
+          setLiveStep('timeout');
+        }
+      } catch (err) {
+        console.error('Polling error', err);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [isWaitingLive, liveStep, liveTransactionId, refreshUser, fetchTransactions]);
+
   const isSandbox = user?.sandbox_mode !== false;
 
   const handleOpenStk = async () => {
@@ -84,14 +144,22 @@ export default function WalletPage() {
     } else {
       setLoading(true);
       try {
+        const amountNum = Number(topupAmount);
+        const phoneVal = phone;
         const resp = await api.post('/wallet/topup', {
-          amount: Number(topupAmount),
-          phone_number: phone,
+          amount: amountNum,
+          phone_number: phoneVal,
         });
-        setSuccessMsg(resp.data.response_description || 'STK Push request accepted successfully! Please check your mobile phone.');
+        
+        // Activate blocking waiting overlay
+        setLiveTransactionId(resp.data.transaction_id);
+        setLiveAmount(amountNum);
+        setLivePhone(phoneVal);
+        setLiveStep('waiting');
+        setIsWaitingLive(true);
+
         setTopupAmount('');
         setPhone('');
-        await fetchTransactions();
       } catch (err: any) {
         setErrorMsg(err.response?.data?.detail || 'Failed to initiate M-Pesa STK push payment.');
       } finally {
@@ -212,7 +280,19 @@ export default function WalletPage() {
                     {tx.type === 'topup' ? <ArrowDownRight className="w-4 h-4 text-brand-emerald drop-shadow-[0_0_6px_rgba(16,185,129,0.5)]" /> : tx.type === 'bonus' ? <Wallet className="w-4 h-4 text-amber-500 drop-shadow-[0_0_6px_rgba(245,158,11,0.5)]" /> : <ArrowUpRight className="w-4 h-4 text-red-400 drop-shadow-[0_0_6px_rgba(248,113,113,0.5)]" />}
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-slate-900 dark:text-white">{tx.description || tx.type.replace('_', ' ')}</div>
+                    <div className="text-sm font-medium text-slate-900 dark:text-white flex items-center">
+                      {tx.description || tx.type.replace('_', ' ')}
+                      {tx.status === 'pending' && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 ml-2 animate-pulse">
+                          Pending
+                        </span>
+                      )}
+                      {tx.status === 'failed' && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-red-500/10 text-red-500 border border-red-500/20 ml-2">
+                          Failed
+                        </span>
+                      )}
+                    </div>
                     <div className="text-[11px] text-slate-400 dark:text-gray-500 font-mono">{tx.reference || ' - '} · {new Date(tx.created_at).toLocaleDateString()}</div>
                   </div>
                 </div>
@@ -378,6 +458,93 @@ export default function WalletPage() {
                   className="px-6 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all cursor-pointer"
                 >
                   Retry
+                </button>
+              </div>
+            )}
+          </GenieModal>
+        )}
+      </AnimatePresence>
+
+      {/* Live Payment Waiting Overlay Modal */}
+      <AnimatePresence>
+        {isWaitingLive && (
+          <GenieModal onClose={() => setIsWaitingLive(false)} className="max-w-sm rounded-[32px] border-4 border-slate-700 bg-[#0d0f19] text-white p-6 relative z-10 shadow-2xl overflow-hidden font-sans">
+            {/* Phone Speaker & Camera Notch */}
+            <div className="w-32 h-4 rounded-full bg-slate-800 mx-auto mb-6 flex items-center justify-center border border-slate-700/50" />
+
+            {liveStep === 'waiting' && (
+              <div className="flex flex-col items-center justify-center py-10 space-y-6 text-center">
+                <div className="relative py-2">
+                  <Loader size="md" color="var(--color-brand-emerald)" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-bold text-sm text-gray-200">Waiting for M-Pesa PIN...</h4>
+                  <p className="text-[11px] text-gray-400 px-4 leading-relaxed">
+                    An STK push payment request of <span className="font-bold text-white">KES {liveAmount.toLocaleString()}</span> has been sent to your phone <span className="font-mono text-brand-emerald">{livePhone}</span>.
+                  </p>
+                  <p className="text-[10px] text-slate-500 pt-2">
+                    Please check your phone, enter your PIN, and do not close this window.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {liveStep === 'success' && (
+              <div className="flex flex-col items-center justify-center py-10 space-y-6 text-center">
+                <div className="w-16 h-16 rounded-full clay-icon-raised flex items-center justify-center text-brand-emerald animate-bounce">
+                  <CheckCircle2 className="w-10 h-10 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-bold text-base text-white">Payment Confirmed! 🎉</h4>
+                  <p className="text-xs text-gray-400 px-4 leading-relaxed">
+                    KES {liveAmount.toLocaleString()} has been successfully received. We have credited your wallet balance.
+                  </p>
+                </div>
+                <button 
+                  onClick={() => setIsWaitingLive(false)}
+                  className="px-6 py-2 rounded-xl bg-brand-emerald hover:bg-brand-emerald/90 text-slate-950 text-xs font-bold transition-all cursor-pointer"
+                >
+                  Done
+                </button>
+              </div>
+            )}
+
+            {liveStep === 'failed' && (
+              <div className="flex flex-col items-center justify-center py-10 space-y-6 text-center">
+                <div className="w-16 h-16 rounded-full clay-icon-raised flex items-center justify-center text-red-500">
+                  <ShieldAlert className="w-10 h-10 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-bold text-base text-white">Payment Failed</h4>
+                  <p className="text-xs text-red-400 px-4 leading-relaxed font-mono">
+                    {liveError}
+                  </p>
+                </div>
+                <button 
+                  onClick={() => setIsWaitingLive(false)}
+                  className="px-6 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            )}
+
+            {liveStep === 'timeout' && (
+              <div className="flex flex-col items-center justify-center py-10 space-y-6 text-center">
+                <div className="w-16 h-16 rounded-full clay-icon-raised flex items-center justify-center text-amber-500">
+                  <ShieldAlert className="w-10 h-10 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-bold text-base text-white">Verification Timeout</h4>
+                  <p className="text-xs text-gray-400 px-4 leading-relaxed font-mono">
+                    We didn't receive your M-Pesa status confirmation in time. If you authorized on your phone, your wallet will credit shortly.
+                  </p>
+                </div>
+                <button 
+                  onClick={() => setIsWaitingLive(false)}
+                  className="px-6 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all cursor-pointer"
+                >
+                  Close
                 </button>
               </div>
             )}

@@ -37,6 +37,7 @@ class TopupResponse(BaseModel):
     response_code: str
     response_description: str
     status: str
+    transaction_id: Optional[uuid.UUID] = None
 
 
 class TransactionResponse(BaseModel):

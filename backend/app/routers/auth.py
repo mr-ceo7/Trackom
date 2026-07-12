@@ -88,6 +88,16 @@ async def register(request: Request, data: RegisterRequest, db: AsyncSession = D
     )
     db.add(notification)
 
+    # Log audit
+    from app.services.audit import log_audit_action
+    await log_audit_action(
+        db,
+        action="user_registered",
+        user_id=user.id,
+        details={"email": data.email, "account_type": data.account_type},
+        request=request
+    )
+
     # Generate tokens
     access_token = create_access_token({"sub": str(user.id)})
     refresh_token = create_refresh_token({"sub": str(user.id)})
@@ -106,18 +116,49 @@ async def login(request: Request, data: LoginRequest, db: AsyncSession = Depends
     user = result.scalar_one_or_none()
 
     if not user:
+        from app.services.audit import log_audit_action
+        await log_audit_action(
+            db,
+            action="login_failed",
+            details={"email": email_clean, "reason": "user_not_found"},
+            request=request
+        )
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
 
     if not user.hashed_password:
+        from app.services.audit import log_audit_action
+        await log_audit_action(
+            db,
+            action="login_failed",
+            user_id=user.id,
+            details={"email": email_clean, "reason": "google_only_account"},
+            request=request
+        )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="This account is registered via Google. Please log in using the 'Sign in with Google' button."
         )
 
     if not verify_password(password_clean, user.hashed_password):
+        from app.services.audit import log_audit_action
+        await log_audit_action(
+            db,
+            action="login_failed",
+            user_id=user.id,
+            details={"email": email_clean, "reason": "invalid_password"},
+            request=request
+        )
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
 
     if not user.is_active:
+        from app.services.audit import log_audit_action
+        await log_audit_action(
+            db,
+            action="login_failed",
+            user_id=user.id,
+            details={"email": email_clean, "reason": "inactive_account"},
+            request=request
+        )
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account is deactivated")
 
     # If user has 2FA enabled, return a temporary token instead
@@ -125,6 +166,16 @@ async def login(request: Request, data: LoginRequest, db: AsyncSession = Depends
         from app.utils.security import create_temp_2fa_token
         temp_token = create_temp_2fa_token(str(user.id))
         
+        # Log successful step-1 of 2FA login
+        from app.services.audit import log_audit_action
+        await log_audit_action(
+            db,
+            action="login_2fa_initiated",
+            user_id=user.id,
+            details={"method": user.two_factor_method},
+            request=request
+        )
+
         # If method is SMS or Email, generate and send code
         if user.two_factor_method in ("sms", "email"):
             import secrets
@@ -166,6 +217,16 @@ async def login(request: Request, data: LoginRequest, db: AsyncSession = Depends
                     )
 
         return LoginResponse(require_2fa=True, temp_token=temp_token, method=user.two_factor_method)
+
+    # Log successful direct login
+    from app.services.audit import log_audit_action
+    await log_audit_action(
+        db,
+        action="login_success",
+        user_id=user.id,
+        details={"require_2fa": False},
+        request=request
+    )
 
     access_token = create_access_token({"sub": str(user.id)})
     refresh_token = create_refresh_token({"sub": str(user.id)})
@@ -332,6 +393,15 @@ async def forgot_password(request: Request, data: ForgotPasswordRequest, db: Asy
             body_html=email_body
         )
 
+        from app.services.audit import log_audit_action
+        await log_audit_action(
+            db,
+            action="password_reset_requested",
+            user_id=user.id,
+            details={"email": data.email},
+            request=request
+        )
+
     return {"message": "If an account exists with this email, a reset link has been sent."}
 
 
@@ -344,23 +414,41 @@ security = HTTPBearer()
 
 @router.post("/logout", status_code=status.HTTP_200_OK)
 async def logout(
+    request: Request,
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: AsyncSession = Depends(get_db),
 ):
     """Log out the current user by blacklisting their access token."""
     token = credentials.credentials
     payload = decode_token(token)
+    user_id = None
     if payload:
         jti = payload.get("jti")
         exp = payload.get("exp")
+        user_id_str = payload.get("sub")
+        if user_id_str:
+            try:
+                import uuid
+                user_id = uuid.UUID(user_id_str)
+            except ValueError:
+                pass
         if jti and exp:
-            expire_dt = datetime.fromtimestamp(exp, tz=timezone.utc)
+            expire_dt = datetime.utcfromtimestamp(exp)
             await blacklist_token(jti, expire_dt, db)
+            
+    from app.services.audit import log_audit_action
+    await log_audit_action(
+        db,
+        action="logout",
+        user_id=user_id,
+        request=request
+    )
     return {"message": "Logged out successfully"}
 
 
 @router.post("/login/2fa", response_model=TokenResponse)
-async def login_2fa(data: Login2FaRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit("5/minute")
+async def login_2fa(request: Request, data: Login2FaRequest, db: AsyncSession = Depends(get_db)):
     """Verify 2FA login code and issue access token."""
     from app.utils.security import decode_token
     import pyotp
@@ -384,6 +472,14 @@ async def login_2fa(data: Login2FaRequest, db: AsyncSession = Depends(get_db)):
     user = result.scalar_one_or_none()
 
     if not user or not user.is_active or not user.is_2fa_enabled:
+        from app.services.audit import log_audit_action
+        await log_audit_action(
+            db,
+            action="login_2fa_failed",
+            user_id=user.id if user else None,
+            details={"reason": "user_not_found_or_disabled"},
+            request=request
+        )
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found or 2FA not enabled")
 
     # Verify code
@@ -392,17 +488,49 @@ async def login_2fa(data: Login2FaRequest, db: AsyncSession = Depends(get_db)):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="TOTP secret not configured")
         totp = pyotp.TOTP(user.totp_secret)
         if not totp.verify(data.code):
+            from app.services.audit import log_audit_action
+            await log_audit_action(
+                db,
+                action="login_2fa_failed",
+                user_id=user.id,
+                details={"reason": "invalid_totp_code"},
+                request=request
+            )
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid 2FA verification code")
     else:
         from datetime import datetime
         if not user.otp_code or not user.otp_expires_at or datetime.utcnow() > user.otp_expires_at:
+            from app.services.audit import log_audit_action
+            await log_audit_action(
+                db,
+                action="login_2fa_failed",
+                user_id=user.id,
+                details={"reason": "code_expired_or_not_sent"},
+                request=request
+            )
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Code expired or not sent")
         if user.otp_code != data.code:
+            from app.services.audit import log_audit_action
+            await log_audit_action(
+                db,
+                action="login_2fa_failed",
+                user_id=user.id,
+                details={"reason": "invalid_otp_code"},
+                request=request
+            )
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid 2FA verification code")
         # Clear code
         user.otp_code = None
         user.otp_expires_at = None
         await db.commit()
+
+    from app.services.audit import log_audit_action
+    await log_audit_action(
+        db,
+        action="login_2fa_success",
+        user_id=user.id,
+        request=request
+    )
 
     access_token = create_access_token({"sub": str(user.id)})
     refresh_token = create_refresh_token({"sub": str(user.id)})
@@ -411,7 +539,9 @@ async def login_2fa(data: Login2FaRequest, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/2fa/setup", response_model=TwoFactorSetupResponse)
+@limiter.limit("5/minute")
 async def setup_2fa(
+    request: Request,
     method: str = Query("totp", pattern="^(totp|sms|email)$"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
@@ -431,6 +561,15 @@ async def setup_2fa(
         otpauth_url = totp.provisioning_uri(name=current_user.email, issuer_name="Trackom")
         db_user.totp_secret = secret
         await db.commit()
+        
+        from app.services.audit import log_audit_action
+        await log_audit_action(
+            db,
+            action="2fa_setup_initiated",
+            user_id=current_user.id,
+            details={"method": method},
+            request=request
+        )
         return TwoFactorSetupResponse(secret=secret, otpauth_url=otpauth_url)
     
     # SMS or Email setup code
@@ -438,6 +577,15 @@ async def setup_2fa(
     db_user.otp_code = code
     db_user.otp_expires_at = datetime.utcnow() + timedelta(minutes=5)
     await db.commit()
+
+    from app.services.audit import log_audit_action
+    await log_audit_action(
+        db,
+        action="2fa_setup_initiated",
+        user_id=current_user.id,
+        details={"method": method},
+        request=request
+    )
 
     if method == "sms":
         if not current_user.phone:
@@ -474,7 +622,9 @@ async def setup_2fa(
 
 
 @router.post("/2fa/enable")
+@limiter.limit("5/minute")
 async def enable_2fa(
+    request: Request,
     data: TwoFactorCodeRequest,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
@@ -504,11 +654,22 @@ async def enable_2fa(
     db_user.is_2fa_enabled = True
     await db.commit()
 
+    from app.services.audit import log_audit_action
+    await log_audit_action(
+        db,
+        action="2fa_enabled",
+        user_id=current_user.id,
+        details={"method": db_user.two_factor_method},
+        request=request
+    )
+
     return {"message": "Two-factor authentication enabled successfully."}
 
 
 @router.post("/2fa/disable/request")
+@limiter.limit("5/minute")
 async def disable_2fa_request(
+    request: Request,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -562,7 +723,9 @@ async def disable_2fa_request(
 
 
 @router.post("/2fa/disable")
+@limiter.limit("5/minute")
 async def disable_2fa(
+    request: Request,
     data: TwoFactorCodeRequest,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
@@ -593,11 +756,27 @@ async def disable_2fa(
         db_user.otp_code = None
         db_user.otp_expires_at = None
         await db.commit()
+        
+        from app.services.audit import log_audit_action
+        await log_audit_action(
+            db,
+            action="2fa_disabled",
+            user_id=current_user.id,
+            request=request
+        )
         return {"message": "Two-factor authentication disabled successfully."}
 
     db_user.is_2fa_enabled = False
     db_user.totp_secret = None
     await db.commit()
+
+    from app.services.audit import log_audit_action
+    await log_audit_action(
+        db,
+        action="2fa_disabled",
+        user_id=current_user.id,
+        request=request
+    )
 
     return {"message": "Two-factor authentication disabled successfully."}
 

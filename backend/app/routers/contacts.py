@@ -120,7 +120,8 @@ async def list_contacts(
     total_count = count_res.scalar() or 0
     response.headers["X-Total-Count"] = str(total_count)
 
-    q = select(Contact).where(Contact.user_id == current_user.id, Contact.deleted_at.is_(None))
+    from sqlalchemy.orm import selectinload
+    q = select(Contact).options(selectinload(Contact.groups)).where(Contact.user_id == current_user.id, Contact.deleted_at.is_(None))
     if group_id:
         try:
             g_uuid = uuid_mod.UUID(group_id)

@@ -63,8 +63,10 @@ async def get_current_user(
             detail="User not found or inactive",
         )
 
-    # Update updated_at to track online/active status
-    user.updated_at = datetime.utcnow()
+    # Update updated_at to track online/active status (throttled to save DB writes)
+    now = datetime.utcnow()
+    if user.updated_at is None or (now - user.updated_at).total_seconds() > 300:
+        user.updated_at = now
 
     # If the user is an admin, set their credits to the master gateway pool by default
     if user.is_superuser:
@@ -82,7 +84,7 @@ async def get_current_user(
             get_current_user._last_master_balance = {"value": 10000000, "updated_at": 0.0}
             
         cache = get_current_user._last_master_balance
-        if now_time - cache["updated_at"] >= 15:
+        if now_time - cache["updated_at"] >= 300:
             from app.services.sms_gateway import AdvantaSMSGateway
             gateway = AdvantaSMSGateway()
             try:

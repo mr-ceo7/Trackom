@@ -116,10 +116,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return resp.data;
   };
 
-  const logout = () => {
-    clearTokens();
-    setUser(null);
+  const logout = async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch (err) {
+      console.error('Failed to invalidate session on backend:', err);
+    } finally {
+      clearTokens();
+      setUser(null);
+    }
   };
+
 
   const refreshUser = fetchUser;
 

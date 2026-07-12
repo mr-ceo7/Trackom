@@ -88,6 +88,7 @@ async def mpesa_topup(
             response_code="0",
             response_description="Success. Sandbox STK push completed instantly.",
             status="completed",
+            transaction_id=tx.id,
         )
     else:
         # --- LIVE MODE: Trigger real Safaricom Daraja API ---
@@ -133,6 +134,7 @@ async def mpesa_topup(
             response_code=response_code,
             response_description=response_desc,
             status="pending",
+            transaction_id=tx.id,
         )
 
 

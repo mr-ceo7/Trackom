@@ -14,6 +14,7 @@ from app.models.gateway import SmsGateway
 from app.models.template import SmsTemplate
 from app.models.incoming import IncomingSms
 from app.models.token_blacklist import BlacklistedToken
+from app.models.audit_log import AuditLog
 
 __all__ = [
     "User",
@@ -34,4 +35,5 @@ __all__ = [
     "SmsTemplate",
     "IncomingSms",
     "BlacklistedToken",
+    "AuditLog",
 ]
