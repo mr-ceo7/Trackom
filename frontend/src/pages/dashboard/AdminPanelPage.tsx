@@ -854,7 +854,7 @@ export default function AdminPanelPage() {
       </aside>
 
       {/* Main Content Pane */}
-      <main className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 max-h-screen custom-scrollbar bg-transparent">
+      <main className="flex-1 overflow-y-auto p-6 md:p-8 pb-24 md:pb-8 space-y-6 max-h-screen custom-scrollbar bg-transparent">
         
         {/* Top Header Bar with user info */}
         <div className="flex items-center justify-between border-b border-slate-200/10 dark:border-white/5 pb-4 mb-2">
@@ -2784,6 +2784,51 @@ export default function AdminPanelPage() {
         )}
       </AnimatePresence>
       </main>
+
+      {/* MOBILE BOTTOM NAVIGATION */}
+      <nav className="fixed bottom-0 left-0 right-0 h-16 clay-sidebar z-40 md:hidden flex items-center justify-around px-2 pb-safe border-t border-slate-200/10 dark:border-white/5 shadow-lg bg-white dark:bg-slate-900">
+        {[
+          { id: 'dashboard', icon: TrendingUp, label: 'Dashboard' },
+          { id: 'users', icon: Users, label: 'Tenants' },
+          { id: 'gateways', icon: Cpu, label: 'Gateways' },
+          { id: 'sender_ids', icon: Smartphone, label: 'Senders' },
+          { id: 'revenue', icon: DollarSign, label: 'Revenue' },
+        ].map((item) => {
+          const Icon = item.icon;
+          const isSelected = activeTab === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => {
+                setActiveTab(item.id as any);
+                setPage(1);
+                setClickedItem(item.id);
+              }}
+              className={`flex flex-col items-center justify-center flex-1 py-1 transition-all duration-200 bg-transparent border-0 cursor-pointer ${
+                isSelected
+                  ? 'text-brand-primary dark:text-brand-primary-light font-semibold'
+                  : 'text-slate-500 dark:text-gray-400 hover:text-slate-800 dark:hover:text-white'
+              }`}
+            >
+              <motion.div 
+                className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all ${
+                  isSelected ? 'clay-icon-raised' : 'hover:bg-slate-200/20'
+                }`}
+                animate={clickedItem === item.id ? { rotate: 360 } : { rotate: 0 }}
+                transition={{ duration: 0.6, ease: "backOut" }}
+                onAnimationComplete={() => {
+                  if (clickedItem === item.id) {
+                    setClickedItem(null);
+                  }
+                }}
+              >
+                <Icon className="w-4 h-4 transition-all duration-200" />
+              </motion.div>
+              <span className="text-[9px] mt-0.5 tracking-wide">{item.label}</span>
+            </button>
+          );
+        })}
+      </nav>
     </div>
   );
 }
