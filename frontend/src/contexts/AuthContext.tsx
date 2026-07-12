@@ -23,6 +23,10 @@ export interface User {
   two_factor_method: 'totp' | 'sms' | 'email';
   sandbox_mode: boolean;
   created_at: string;
+  branding?: { logo_url?: string; brand_name?: string } | null;
+  custom_brand_name?: string | null;
+  custom_logo_url?: string | null;
+  custom_primary_color?: string | null;
 }
 
 interface AuthContextValue {
