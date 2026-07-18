@@ -1,16 +1,26 @@
 /**
  * SettingsPage - profile, notifications, and plan settings.
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Settings, User, Bell, Shield, Eye, EyeOff, CheckCircle2, AlertCircle, Smartphone, MessageSquare, Mail, Send, AlertTriangle, BarChart2, Terminal, Lock } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import api from '../../services/api';
 import Loader from '../../components/Loader';
 import { QRCodeSVG } from 'qrcode.react';
 
 export default function SettingsPage() {
   const { user, refreshUser } = useAuth();
+  const location = useLocation();
   const [tab, setTab] = useState('profile');
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const targetTab = searchParams.get('tab') || (location.hash === '#security' ? 'security' : 'profile');
+    if (['profile', 'security', 'notifications'].includes(targetTab)) {
+      setTab(targetTab);
+    }
+  }, [location]);
   const [fullName, setFullName] = useState(user?.full_name || '');
   const [phone, setPhone] = useState(user?.phone || '');
   const [company, setCompany] = useState(user?.company || '');

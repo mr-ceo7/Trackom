@@ -387,7 +387,7 @@ export default function DashboardLayout() {
               </div>
               <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
                 <NavLink 
-                  to="/dashboard/settings" 
+                  to="/dashboard/settings?tab=security" 
                   onClick={() => setShow2FaBanner(false)}
                   className="px-3.5 py-1.5 rounded-xl text-[11px] font-semibold text-white bg-amber-500 hover:bg-amber-600 active:scale-95 transition-all shadow-md shadow-amber-500/20"
                 >
