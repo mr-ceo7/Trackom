@@ -15,7 +15,7 @@ const endpoints = [
     desc: 'Send standard SMS. Accepts JSON or URL-encoded form data. Supports phone normalization and scheduling via timeToSend.', 
     auth: false,
     body: '{\n  "apikey": "trk_your_api_key",\n  "partnerID": "your_partner_id",\n  "message": "Hello from Trackom!",\n  "shortcode": "TRACKOM",\n  "mobile": "254712345678,254723456789",\n  "timeToSend": "1783726765" // Optional unix timestamp or date string\n}', 
-    response: '{\n  "responses": [\n    {\n      "response-code": 200,\n      "response-description": "Success",\n      "mobile": "254712345678",\n      "messageid": "batch_uuid_..."\n    }\n  ]\n}' 
+    response: '[\n  {\n    "response-code": 200,\n    "response-description": "Success",\n    "mobile": "254712345678",\n    "messageid": "batch_uuid_..."\n  }\n]' 
   },
   { 
     method: 'POST', 
@@ -31,7 +31,7 @@ const endpoints = [
     desc: 'Send time-critical OTP (One-Time Password) verification messages.', 
     auth: false,
     body: '{\n  "apikey": "trk_your_api_key",\n  "partnerID": "your_partner_id",\n  "message": "Your OTP code is 123456",\n  "shortcode": "TRACKOM",\n  "mobile": "254712345678"\n}', 
-    response: '{\n  "responses": [\n    {\n      "response-code": 200,\n      "response-description": "Success",\n      "mobile": "254712345678",\n      "messageid": "batch_uuid_..."\n    }\n  ]\n}' 
+    response: '[\n  {\n    "response-code": 200,\n    "response-description": "Success",\n    "mobile": "254712345678",\n    "messageid": "batch_uuid_..."\n  }\n]' 
   },
   { 
     method: 'GET', 
