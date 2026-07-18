@@ -11,6 +11,7 @@ import Loader from '../../components/Loader';
 import GenieModal from '../../components/GenieModal';
 
 import { calculateSmsParts } from '../../utils';
+import DateTimePicker from '../../components/DateTimePicker';
 
 const formatErrorDetail = (detail: any): string => {
   if (!detail) return '';
@@ -1235,12 +1236,9 @@ export default function ComposeSMS() {
                 <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300">
                   Scheduled Date & Time *
                 </label>
-                <input
-                  type="datetime-local"
+                <DateTimePicker
                   value={localScheduledAt}
-                  onChange={(e) => setLocalScheduledAt(e.target.value)}
-                  required
-                  className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm font-mono"
+                  onChange={setLocalScheduledAt}
                 />
               </div>
             </div>

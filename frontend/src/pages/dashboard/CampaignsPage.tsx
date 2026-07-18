@@ -10,6 +10,7 @@ import Loader from '../../components/Loader';
 import GenieModal from '../../components/GenieModal';
 
 import { useAuth } from '../../contexts/AuthContext';
+import DateTimePicker from '../../components/DateTimePicker';
 
 interface CampaignData {
   id: string;
@@ -837,12 +838,9 @@ export default function CampaignsPage() {
                 {isScheduled && (
                   <div className="space-y-1">
                     <label className="block text-[10px] uppercase font-bold text-slate-400">Scheduled Date & Time</label>
-                    <input 
-                      type="datetime-local" 
+                    <DateTimePicker 
                       value={scheduledAt} 
-                      onChange={e => setScheduledAt(e.target.value)}
-                      required={isScheduled}
-                      className="clay-input w-full px-3 py-2 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-xs"
+                      onChange={setScheduledAt}
                     />
                   </div>
                 )}
@@ -967,12 +965,9 @@ export default function CampaignsPage() {
                 {editIsScheduled && (
                   <div className="space-y-1">
                     <label className="block text-[10px] uppercase font-bold text-slate-400">Scheduled Date & Time</label>
-                    <input 
-                      type="datetime-local" 
+                    <DateTimePicker 
                       value={editScheduledAt} 
-                      onChange={e => setEditScheduledAt(e.target.value)}
-                      required={editIsScheduled}
-                      className="clay-input w-full px-3 py-2 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-xs"
+                      onChange={setEditScheduledAt}
                     />
                   </div>
                 )}
