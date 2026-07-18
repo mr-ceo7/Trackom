@@ -262,9 +262,7 @@ export default function ApiKeysPage() {
                   <button onClick={(e) => { e.stopPropagation(); handleCopy(`${k.key_prefix}....................`, k.id); }} className="p-2 rounded-lg text-slate-400 hover:text-brand-primary hover:bg-brand-primary/10 cursor-pointer transition-all" title="Copy Prefix">
                     {copied === k.id ? <CheckCircle2 className="w-4 h-4 text-brand-emerald" /> : <Copy className="w-4 h-4" />}
                   </button>
-                  {k.is_active && (
-                    <button onClick={(e) => { e.stopPropagation(); handleRevoke(k.id); }} className="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 cursor-pointer transition-all" title="Revoke"><Trash2 className="w-4 h-4" /></button>
-                  )}
+                  <button onClick={(e) => { e.stopPropagation(); handleRevoke(k.id); }} className="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 cursor-pointer transition-all" title="Delete Key"><Trash2 className="w-4 h-4" /></button>
                 </div>
               </div>
               <div className="flex items-center gap-2 text-xs flex-wrap">

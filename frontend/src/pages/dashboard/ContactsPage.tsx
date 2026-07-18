@@ -293,6 +293,27 @@ export default function ContactsPage() {
     }
   };
 
+  const handleExportAll = async () => {
+    try {
+      const resp = await api.post(
+        '/contacts/export',
+        { contact_ids: [], select_all: true, search: null },
+        { responseType: 'blob' }
+      );
+      const blob = new Blob([resp.data], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'trackom_all_contacts.csv';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error('Failed to export all contacts', err);
+    }
+  };
+
   const handleBulkDelete = async () => {
     const countToDelete = selectAllTotal ? totalContactsCount : selectedIds.length;
     if (!confirm(`Are you sure you want to delete the ${countToDelete.toLocaleString()} selected contacts?`)) return;
@@ -677,6 +698,14 @@ export default function ContactsPage() {
           >
             <Upload className="w-3.5 h-3.5" />
             Import CSV
+          </button>
+          <button 
+            onClick={handleExportAll}
+            className="clay-button-secondary flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-semibold text-slate-600 dark:text-gray-300 cursor-pointer transition-all"
+            title="Export all contacts to CSV"
+          >
+            <Download className="w-3.5 h-3.5" />
+            Export CSV
           </button>
           <button 
             onClick={() => setShowAddGroup(true)}

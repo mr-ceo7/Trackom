@@ -88,7 +88,7 @@ async def revoke_key(
     key = result.scalar_one_or_none()
     if not key:
         raise HTTPException(status_code=404, detail="API key not found")
-    key.is_active = False
+    await db.delete(key)
 
 
 @router.get("/{key_id}/stats")
