@@ -198,8 +198,8 @@ async def check_and_enforce_gateway_liquidity(db) -> bool:
     If yes, triggers an admin alert email and returns True (should block dispatch).
     Otherwise returns False.
     """
-    # 1. Calculate outstanding client credits (sum of live sms_balance of all active users)
-    res_client_credits = await db.execute(select(func.sum(User.sms_balance)))
+    # 1. Calculate outstanding client credits (sum of live sms_balance of all active non-admin users)
+    res_client_credits = await db.execute(select(func.sum(User.sms_balance)).where(User.is_superuser == False))
     total_client_credits = int(res_client_credits.scalar() or 0)
     
     # 2. Retrieve AdvantaSMS master gateway balance

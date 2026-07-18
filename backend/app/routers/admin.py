@@ -169,7 +169,7 @@ async def get_admin_stats(
     online_users = res_online.scalar() or 0
 
     # 1.2 Total client credits
-    res_client_credits = await db.execute(select(func.sum(User.sms_balance)))
+    res_client_credits = await db.execute(select(func.sum(User.sms_balance)).where(User.is_superuser == False))
     total_client_credits = int(res_client_credits.scalar() or 0)
 
     # 1.25 Client credit distributions
