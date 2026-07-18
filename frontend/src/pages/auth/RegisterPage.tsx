@@ -25,6 +25,8 @@ export default function RegisterPage() {
   const [accountType, setAccountType] = useState<'business' | 'reseller'>(initialType);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -159,6 +161,7 @@ export default function RegisterPage() {
     { label: 'At least 8 characters', pass: password.length >= 8 },
     { label: 'Contains a number', pass: /\d/.test(password) },
     { label: 'Contains uppercase', pass: /[A-Z]/.test(password) },
+    { label: 'Passwords match', pass: password === confirmPassword && confirmPassword.length > 0 },
   ];
   const isPasswordValid = passwordChecks.every((c) => c.pass);
 
@@ -343,6 +346,17 @@ export default function RegisterPage() {
                         </button>
                       </div>
                     </div>
+                    
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Confirm Password</label>
+                      <div className="relative">
+                        <input type={showConfirmPassword ? 'text' : 'password'} name="confirm_password" id="confirm_password" autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required className="clay-input w-full px-4 py-3 pr-11 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" placeholder="Confirm your password" />
+                        <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-gray-300 cursor-pointer transition-colors">
+                          {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+
                     <div className="space-y-2">
                       {passwordChecks.map((check) => (
                         <div key={check.label} className="flex items-center gap-2 text-xs">
