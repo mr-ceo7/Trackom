@@ -27,6 +27,7 @@ export interface User {
   custom_brand_name?: string | null;
   custom_logo_url?: string | null;
   custom_primary_color?: string | null;
+  notification_preferences?: Record<string, boolean>;
 }
 
 interface AuthContextValue {

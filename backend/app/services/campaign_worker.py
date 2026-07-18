@@ -127,13 +127,14 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
             if not contacts:
                 campaign.status = "failed"
                 campaign.completed_at = datetime.utcnow()
-                db.add(Notification(
-                    user_id=user.id,
-                    title=f"Campaign '{campaign.name}' Failed ❌",
-                    message="No contacts found to send campaign to.",
-                    type="error",
-                    action_url="/dashboard/campaigns"
-                ))
+                if user.notification_preferences.get("campaign", True):
+                    db.add(Notification(
+                        user_id=user.id,
+                        title=f"Campaign '{campaign.name}' Failed ❌",
+                        message="No contacts found to send campaign to.",
+                        type="error",
+                        action_url="/dashboard/campaigns"
+                    ))
                 await db.commit()
                 logger.warning(f"Campaign {campaign_id} failed: No contacts found.")
                 return
@@ -149,14 +150,15 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
             if user_balance < total_cost:
                 campaign.status = "failed"
                 campaign.completed_at = datetime.utcnow()
-                db.add(Notification(
-                    user_id=user.id,
-                    title=f"Campaign '{campaign.name}' Failed ❌",
-                    message=f"Insufficient balance. Required: {total_cost} credits, Current: {user_balance} credits.",
-                    type="error",
-                    action_url="/dashboard/wallet",
-                    sandbox_mode=campaign.sandbox_mode,
-                ))
+                if user.notification_preferences.get("campaign", True):
+                    db.add(Notification(
+                        user_id=user.id,
+                        title=f"Campaign '{campaign.name}' Failed ❌",
+                        message=f"Insufficient balance. Required: {total_cost} credits, Current: {user_balance} credits.",
+                        type="error",
+                        action_url="/dashboard/wallet",
+                        sandbox_mode=campaign.sandbox_mode,
+                    ))
                 await db.commit()
                 logger.warning(f"Campaign {campaign_id} failed: Insufficient balance. Need {total_cost}, have {user_balance}.")
                 return
@@ -217,14 +219,15 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
                             else:
                                 user_refund.sms_balance += refund
                         campaign.completed_at = datetime.utcnow()
-                        db.add(Notification(
-                            user_id=user.id,
-                            title=f"Campaign '{campaign.name}' Cancelled ⛔",
-                            message=f"Campaign was cancelled. {sent_count} of {total_recipients} messages were sent. {refund} credits refunded.",
-                            type="warning",
-                            action_url="/dashboard/campaigns",
-                            sandbox_mode=campaign.sandbox_mode,
-                        ))
+                        if user.notification_preferences.get("campaign", True):
+                            db.add(Notification(
+                                user_id=user.id,
+                                title=f"Campaign '{campaign.name}' Cancelled ⛔",
+                                message=f"Campaign was cancelled. {sent_count} of {total_recipients} messages were sent. {refund} credits refunded.",
+                                type="warning",
+                                action_url="/dashboard/campaigns",
+                                sandbox_mode=campaign.sandbox_mode,
+                            ))
                         await db.commit()
 
                         logger.info(f"Campaign {campaign_id} cancelled after {sent_count} sends. Refunded {refund} credits.")
@@ -355,14 +358,15 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
             campaign.status = "completed"
             campaign.completed_at = datetime.utcnow()
             
-            db.add(Notification(
-                user_id=user.id,
-                title=f"Campaign '{campaign.name}' Sent! 🚀",
-                message=f"Completed campaign. Delivered: {delivered_count}, Failed: {failed_count}. " + (f"{int(total_refund)} blacklist credits refunded." if total_refund > 0 else ""),
-                type="success",
-                action_url="/dashboard/campaigns",
-                sandbox_mode=campaign.sandbox_mode,
-            ))
+            if user.notification_preferences.get("campaign", True):
+                db.add(Notification(
+                    user_id=user.id,
+                    title=f"Campaign '{campaign.name}' Sent! 🚀",
+                    message=f"Completed campaign. Delivered: {delivered_count}, Failed: {failed_count}. " + (f"{int(total_refund)} blacklist credits refunded." if total_refund > 0 else ""),
+                    type="success",
+                    action_url="/dashboard/campaigns",
+                    sandbox_mode=campaign.sandbox_mode,
+                ))
 
             await db.commit()
             logger.info(f"Campaign {campaign_id} finished processing successfully.")

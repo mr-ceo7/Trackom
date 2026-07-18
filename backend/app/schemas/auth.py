@@ -96,6 +96,7 @@ class UserResponse(BaseModel):
     custom_brand_name: Optional[str] = None
     custom_primary_color: Optional[str] = None
     branding: Optional[dict] = None
+    notification_preferences: Optional[dict] = None
 
     model_config = {"from_attributes": True}
 
@@ -121,6 +122,7 @@ class UserUpdateRequest(BaseModel):
     avatar_url: Optional[str] = None
     webhook_url: Optional[str] = None
     account_type: Optional[str] = Field(None, pattern="^(business|reseller)$")
+    notification_preferences: Optional[dict] = None
 
 
 class ChangePasswordRequest(BaseModel):

@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 
 import sqlalchemy as sa
-from sqlalchemy import String, Boolean, DateTime, Enum as SAEnum, Text, Numeric, ForeignKey
+from sqlalchemy import String, Boolean, DateTime, Enum as SAEnum, Text, Numeric, ForeignKey, JSON
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -75,6 +75,20 @@ class User(Base):
     two_factor_method: Mapped[str] = mapped_column(String(20), default="totp", nullable=False)
     otp_code: Mapped[str] = mapped_column(String(10), nullable=True)
     otp_expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+
+    # Notification preferences
+    notification_preferences: Mapped[dict] = mapped_column(
+        JSON,
+        default=lambda: {
+            "campaign": True,
+            "balance": True,
+            "reports": True,
+            "api": True,
+            "security": True,
+        },
+        nullable=False,
+        server_default=sa.text('\'{"campaign": true, "balance": true, "reports": true, "api": true, "security": true}\''),
+    )
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)

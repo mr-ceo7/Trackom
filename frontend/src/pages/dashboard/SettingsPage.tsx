@@ -28,6 +28,22 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  // Notification Preferences State
+  const [notifPrefs, setNotifPrefs] = useState<Record<string, boolean>>({
+    campaign: true,
+    balance: true,
+    reports: true,
+    api: true,
+    security: true,
+    ...(user?.notification_preferences || {})
+  });
+
+  useEffect(() => {
+    if (user?.notification_preferences) {
+      setNotifPrefs(user.notification_preferences);
+    }
+  }, [user]);
+
   // Change Password state
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -132,6 +148,23 @@ export default function SettingsPage() {
     } catch (err: any) {
       setMsg({ type: 'error', text: err.response?.data?.detail || 'Update failed.' });
     } finally { setSaving(false); }
+  };
+
+  const handleTogglePref = async (prefId: string) => {
+    const updated = {
+      ...notifPrefs,
+      [prefId]: !notifPrefs[prefId]
+    };
+    setNotifPrefs(updated);
+    try {
+      await api.put('/users/me', {
+        notification_preferences: updated
+      });
+      await refreshUser();
+    } catch (err: any) {
+      setNotifPrefs(notifPrefs);
+      alert(err.response?.data?.detail || 'Failed to update notification preference.');
+    }
   };
 
   const tabs = [
@@ -382,7 +415,7 @@ export default function SettingsPage() {
       )}
 
       {tab === 'notifications' && (
-        <div className="clay-card rounded-3xl p-6 space-y-4 max-w-2xl">
+        <div className="clay-card rounded-3xl p-6 space-y-4 max-w-2xl text-left">
           <h3 className="font-display font-semibold text-sm text-slate-900 dark:text-white">Notification Preferences</h3>
           {[
             { id: 'campaign', label: 'Campaign completion alerts', icon: Send },
@@ -391,13 +424,25 @@ export default function SettingsPage() {
             { id: 'api', label: 'API usage alerts', icon: Terminal },
             { id: 'security', label: 'Security notifications', icon: Lock }
           ].map(n => (
-            <label key={n.id} className="flex items-center justify-between py-2.5 cursor-pointer border-b border-slate-100 dark:border-white/5 last:border-0">
+            <div key={n.id} className="flex items-center justify-between py-2.5 border-b border-slate-100 dark:border-white/5 last:border-0">
               <div className="flex items-center gap-3">
                 <n.icon className="w-4 h-4 text-slate-400 dark:text-gray-500" />
                 <span className="text-sm text-slate-700 dark:text-gray-300">{n.label}</span>
               </div>
-              <div className="relative w-10 h-6 bg-brand-primary/20 rounded-full"><div className="absolute left-1 top-1 w-4 h-4 bg-brand-primary rounded-full transition-transform" /></div>
-            </label>
+              <button
+                type="button"
+                onClick={() => handleTogglePref(n.id)}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  notifPrefs[n.id] ? 'bg-brand-primary' : 'bg-slate-200 dark:bg-white/10'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    notifPrefs[n.id] ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
           ))}
         </div>
       )}
