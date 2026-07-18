@@ -1,14 +1,15 @@
 /**
- * RegisterPage - multi-step registration form.
+ * RegisterPage - multi-step registration form with email verification.
  */
 import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowRight, ArrowLeft, Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Eye, EyeOff, AlertCircle, CheckCircle2, Mail } from 'lucide-react';
 import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
 import { useAuth } from '../../contexts/AuthContext';
 import TrackomLogo from '../../components/TrackomLogo';
 import Loader from '../../components/Loader';
+import api from '../../services/api';
 
 export default function RegisterPage() {
   const { register, googleAuth } = useAuth();
@@ -27,7 +28,19 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const steps = ['Personal Info', 'Company', 'Security'];
+  // Email check state
+  const [emailStatus, setEmailStatus] = useState<{ exists: boolean; has_google: boolean } | null>(null);
+  const [checkingEmail, setCheckingEmail] = useState(false);
+
+  // Email verification state
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [sendingCode, setSendingCode] = useState(false);
+  const [verifyingCode, setVerifyingCode] = useState(false);
+  const [codeSent, setCodeSent] = useState(false);
+  const [verifyMsg, setVerifyMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const steps = ['Personal Info', 'Verify Email', 'Company', 'Security'];
 
   const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
     if (!credentialResponse.credential) {
@@ -51,12 +64,75 @@ export default function RegisterPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (step < 3) {
-      setStep(step + 1);
+  const handleEmailBlur = async () => {
+    const trimmed = email.trim();
+    if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      setEmailStatus(null);
       return;
     }
+    setCheckingEmail(true);
+    try {
+      const resp = await api.get('/auth/check-email', { params: { email: trimmed } });
+      setEmailStatus(resp.data);
+    } catch {
+      setEmailStatus(null);
+    } finally {
+      setCheckingEmail(false);
+    }
+  };
+
+  const handleSendVerification = async () => {
+    setSendingCode(true);
+    setVerifyMsg(null);
+    try {
+      await api.post('/auth/send-verification', null, { params: { email: email.trim() } });
+      setCodeSent(true);
+      setVerifyMsg({ type: 'success', text: `Verification code sent to ${email.trim()}` });
+    } catch (err: any) {
+      setVerifyMsg({ type: 'error', text: err.response?.data?.detail || 'Failed to send verification code.' });
+    } finally {
+      setSendingCode(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    setVerifyingCode(true);
+    setVerifyMsg(null);
+    try {
+      await api.post('/auth/verify-email', null, { params: { email: email.trim(), code: verificationCode } });
+      setEmailVerified(true);
+      setVerifyMsg({ type: 'success', text: 'Email verified successfully!' });
+    } catch (err: any) {
+      setVerifyMsg({ type: 'error', text: err.response?.data?.detail || 'Invalid verification code.' });
+    } finally {
+      setVerifyingCode(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (step === 1) {
+      if (emailStatus?.exists) {
+        setError('This email is already registered. Please sign in instead.');
+        return;
+      }
+      setError('');
+      setStep(2);
+      return;
+    }
+    if (step === 2) {
+      if (!emailVerified) {
+        setVerifyMsg({ type: 'error', text: 'Please verify your email to continue.' });
+        return;
+      }
+      setStep(3);
+      return;
+    }
+    if (step === 3) {
+      setStep(4);
+      return;
+    }
+    // Step 4: final submit
     setError('');
     setIsSubmitting(true);
     try {
@@ -126,12 +202,12 @@ export default function RegisterPage() {
           <div className="clay-card rounded-3xl p-6 sm:p-8 space-y-6">
             <div>
               <h2 className="text-2xl font-display font-bold text-slate-900 dark:text-white">Create your account</h2>
-              <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">Step {step} of 3 - {steps[step - 1]}</p>
+              <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">Step {step} of 4 - {steps[step - 1]}</p>
             </div>
 
             {/* Progress bar */}
             <div className="h-3.5 w-full rounded-full clay-inset p-0.5 flex gap-1">
-              {[1, 2, 3].map((s) => (
+              {[1, 2, 3, 4].map((s) => (
                 <div key={s} className={`h-full flex-1 rounded-full transition-all duration-500 ${s <= step ? 'bg-gradient-to-r from-brand-primary to-brand-accent shadow-[inset_1px_1px_2px_rgba(255,255,255,0.4)]' : 'bg-transparent'}`} />
               ))}
             </div>
@@ -166,7 +242,21 @@ export default function RegisterPage() {
                     </div>
                     <div className="space-y-1.5">
                       <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Email Address</label>
-                      <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" placeholder="john@company.co.ke" />
+                      <div className="relative">
+                        <input type="email" value={email} onChange={(e) => { setEmail(e.target.value); setEmailStatus(null); setEmailVerified(false); setCodeSent(false); }} onBlur={handleEmailBlur} required className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" placeholder="john@company.co.ke" />
+                        {checkingEmail && <div className="absolute right-3 top-1/2 -translate-y-1/2"><Loader size="sm" /></div>}
+                      </div>
+                      {emailStatus?.exists && (
+                        <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-700 dark:text-amber-400 text-xs">
+                          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                          <span>This email is already registered. {emailStatus.has_google ? 'Try signing in with Google.' : ''} <Link to="/login" className="text-brand-primary font-semibold underline">Sign in instead</Link></span>
+                        </motion.div>
+                      )}
+                      {emailStatus && !emailStatus.exists && email.trim() && (
+                        <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
+                          <CheckCircle2 className="w-3.5 h-3.5" /><span>Email is available</span>
+                        </motion.div>
+                      )}
                     </div>
                     <div className="space-y-1.5">
                       <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Phone Number</label>
@@ -179,7 +269,51 @@ export default function RegisterPage() {
                 )}
 
                 {step === 2 && (
-                  <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
+                  <motion.div key="step2-verify" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
+                    <div className="text-center space-y-3">
+                      <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-brand-primary/10 to-brand-accent/10 flex items-center justify-center">
+                        <Mail className="w-7 h-7 text-brand-primary" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-display font-bold text-slate-900 dark:text-white">Verify Your Email</h3>
+                        <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">We'll send a 6-digit code to <span className="font-semibold text-slate-700 dark:text-gray-300">{email}</span></p>
+                      </div>
+                    </div>
+
+                    {verifyMsg && (
+                      <div className={`flex items-center gap-2 p-2.5 rounded-xl text-xs ${verifyMsg.type === 'success' ? 'bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400' : 'bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400'}`}>
+                        {verifyMsg.type === 'success' ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> : <AlertCircle className="w-3.5 h-3.5 shrink-0" />}
+                        <span>{verifyMsg.text}</span>
+                      </div>
+                    )}
+
+                    {!codeSent ? (
+                      <button type="button" onClick={handleSendVerification} disabled={sendingCode} className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-semibold text-white clay-button-primary cursor-pointer transition-all disabled:opacity-60">
+                        {sendingCode ? <Loader size="sm" /> : <><Mail className="w-4 h-4" /><span>Send Verification Code</span></>}
+                      </button>
+                    ) : !emailVerified ? (
+                      <div className="space-y-3">
+                        <div className="space-y-1.5">
+                          <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Enter 6-digit code</label>
+                          <input type="text" value={verificationCode} onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))} className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm text-center tracking-[0.5em] font-mono font-bold transition-all" placeholder="000000" maxLength={6} />
+                        </div>
+                        <button type="button" onClick={handleVerifyCode} disabled={verifyingCode || verificationCode.length !== 6} className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-semibold text-white clay-button-primary cursor-pointer transition-all disabled:opacity-60">
+                          {verifyingCode ? <Loader size="sm" /> : <><CheckCircle2 className="w-4 h-4" /><span>Verify Code</span></>}
+                        </button>
+                        <button type="button" onClick={handleSendVerification} disabled={sendingCode} className="w-full text-center text-xs text-slate-500 dark:text-gray-400 hover:text-brand-primary transition-colors cursor-pointer">
+                          {sendingCode ? 'Sending...' : 'Resend code'}
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center gap-2 py-4 text-brand-emerald font-bold text-sm">
+                        <CheckCircle2 className="w-5 h-5" /><span>Email Verified!</span>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+
+                {step === 3 && (
+                  <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
                     <div className="space-y-1.5">
                       <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Company Name</label>
                       <input type="text" value={company} onChange={(e) => setCompany(e.target.value)} className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" placeholder="Your Company Ltd (optional)" />
@@ -198,8 +332,8 @@ export default function RegisterPage() {
                   </motion.div>
                 )}
 
-                {step === 3 && (
-                  <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
+                {step === 4 && (
+                  <motion.div key="step4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
                     <div className="space-y-1.5">
                       <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Password</label>
                       <div className="relative">
@@ -227,11 +361,11 @@ export default function RegisterPage() {
                     <ArrowLeft className="w-4 h-4" /><span>Back</span>
                   </button>
                 )}
-                <button type="submit" disabled={isSubmitting || (step === 3 && !isPasswordValid)} className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-semibold text-white clay-button-primary cursor-pointer transition-all duration-300 disabled:opacity-60 active:scale-[0.98]">
+                <button type="submit" disabled={isSubmitting || (step === 4 && !isPasswordValid) || (step === 1 && !!emailStatus?.exists)} className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-semibold text-white clay-button-primary cursor-pointer transition-all duration-300 disabled:opacity-60 active:scale-[0.98]">
                   {isSubmitting ? (
                     <Loader size="sm" />
-                  ) : step < 3 ? (
-                    <><span>Continue</span><ArrowRight className="w-4 h-4" /></>
+                  ) : step < 4 ? (
+                    <><span>{step === 2 && emailVerified ? 'Continue' : step === 2 ? 'Verify to Continue' : 'Continue'}</span><ArrowRight className="w-4 h-4" /></>
                   ) : (
                     <><span>Create Free Account</span><ArrowRight className="w-4 h-4" /></>
                   )}

@@ -39,6 +39,72 @@ from app.config import get_settings
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 settings = get_settings()
+_email_verification_codes: dict = {}  # In-memory email verification code store
+
+
+@router.get("/check-email")
+@limiter.limit("10/minute")
+async def check_email(request: Request, email: str = Query(...), db: AsyncSession = Depends(get_db)):
+    """Check if an email is already registered."""
+    result = await db.execute(select(User).where(User.email == email.strip().lower()))
+    user = result.scalar_one_or_none()
+    exists = user is not None
+    has_google = bool(user and user.google_id) if exists else False
+    return {"exists": exists, "has_google": has_google}
+
+
+@router.post("/send-verification")
+@limiter.limit("3/minute")
+async def send_verification(request: Request, email: str = Query(...), db: AsyncSession = Depends(get_db)):
+    """Send an email verification code for registration."""
+    import secrets
+    from datetime import datetime, timedelta
+
+    email_clean = email.strip().lower()
+
+    # Check if already registered
+    result = await db.execute(select(User).where(User.email == email_clean))
+    if result.scalar_one_or_none():
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
+
+    code = f"{secrets.randbelow(1000000):06d}"
+    _email_verification_codes[email_clean] = {
+        "code": code,
+        "expires_at": datetime.utcnow() + timedelta(minutes=10)
+    }
+
+    from app.services.email import send_email
+    send_email(
+        to_email=email_clean,
+        subject="Trackom - Verify Your Email",
+        body_html=f"<p>Hello,</p><p>Your Trackom email verification code is: <b style='font-size:24px; letter-spacing:4px;'>{code}</b></p><p>This code expires in 10 minutes.</p><p>If you did not request this, please ignore this email.</p>"
+    )
+
+    return {"message": "Verification code sent to your email."}
+
+
+@router.post("/verify-email")
+@limiter.limit("5/minute")
+async def verify_email(request: Request, email: str = Query(...), code: str = Query(...)):
+    """Verify an email verification code."""
+    from datetime import datetime
+
+    email_clean = email.strip().lower()
+    stored = _email_verification_codes.get(email_clean)
+
+    if not stored:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No verification code found. Please request a new one.")
+
+    if datetime.utcnow() > stored["expires_at"]:
+        _email_verification_codes.pop(email_clean, None)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Verification code expired. Please request a new one.")
+
+    if stored["code"] != code.strip():
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid verification code.")
+
+    _email_verification_codes[email_clean]["verified"] = True
+
+    return {"message": "Email verified successfully.", "verified": True}
 
 
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
@@ -49,6 +115,15 @@ async def register(request: Request, data: RegisterRequest, db: AsyncSession = D
     existing = await db.execute(select(User).where(User.email == data.email))
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
+
+    # Verify email was confirmed via OTP
+    email_clean = data.email.strip().lower()
+    verified = _email_verification_codes.get(email_clean)
+    if not verified or not verified.get("verified"):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Please verify your email address first.")
+
+    # Clean up verification entry
+    _email_verification_codes.pop(email_clean, None)
 
     from app.routers.admin import load_system_settings
     settings = load_system_settings()
