@@ -444,6 +444,14 @@ export default function CampaignsPage() {
       await refreshUser();
     } catch (err: any) {
       setEditErrorMsg(err.response?.data?.detail || 'Failed to save or resend campaign.');
+      
+      // Scroll error banner into view smoothly
+      setTimeout(() => {
+        const errorBanner = document.getElementById('campaign-edit-error-banner');
+        if (errorBanner) {
+          errorBanner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }, 50);
     } finally {
       setEditSaving(false);
     }
@@ -582,6 +590,14 @@ export default function CampaignsPage() {
     } catch (err: any) {
       const errMsg = err.response?.data?.detail || 'Failed to create campaign. Do you have contacts in the target segment?';
       setErrorMsg(errMsg);
+
+      // Scroll error banner into view smoothly
+      setTimeout(() => {
+        const errorBanner = document.getElementById('campaign-create-error-banner');
+        if (errorBanner) {
+          errorBanner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }, 50);
 
       // Present custom alert modal with action buttons
       if (err.response?.status === 402 || errMsg.toLowerCase().includes('balance') || errMsg.toLowerCase().includes('credit') || errMsg.toLowerCase().includes('insufficient')) {
@@ -737,7 +753,21 @@ export default function CampaignsPage() {
             </div>
 
             {errorMsg && (
-              <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-xs rounded-xl">{errorMsg}</div>
+              <div id="campaign-create-error-banner" className="p-3.5 bg-red-500/10 border border-red-500/20 text-red-500 text-xs rounded-xl flex items-center justify-between gap-3">
+                <span className="font-medium">{errorMsg}</span>
+                {(errorMsg.toLowerCase().includes('balance') || errorMsg.toLowerCase().includes('credit') || errorMsg.toLowerCase().includes('insufficient')) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCreate(false);
+                      navigate('/dashboard/wallet');
+                    }}
+                    className="clay-button-primary shrink-0 py-1.5 px-3 rounded-xl text-[10px] font-bold text-white bg-brand-primary cursor-pointer hover:bg-brand-primary/90"
+                  >
+                    Top Up Wallet
+                  </button>
+                )}
+              </div>
             )}
 
             <div className="space-y-4">
@@ -871,7 +901,21 @@ export default function CampaignsPage() {
             </div>
 
             {editErrorMsg && (
-              <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-xs rounded-xl">{editErrorMsg}</div>
+              <div id="campaign-edit-error-banner" className="p-3.5 bg-red-500/10 border border-red-500/20 text-red-500 text-xs rounded-xl flex items-center justify-between gap-3">
+                <span className="font-medium">{editErrorMsg}</span>
+                {(editErrorMsg.toLowerCase().includes('balance') || editErrorMsg.toLowerCase().includes('credit') || editErrorMsg.toLowerCase().includes('insufficient')) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingCampaign(null);
+                      navigate('/dashboard/wallet');
+                    }}
+                    className="clay-button-primary shrink-0 py-1.5 px-3 rounded-xl text-[10px] font-bold text-white bg-brand-primary cursor-pointer hover:bg-brand-primary/90"
+                  >
+                    Top Up Wallet
+                  </button>
+                )}
+              </div>
             )}
 
             <div className="space-y-4">

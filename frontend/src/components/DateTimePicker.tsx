@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Calendar as CalendarIcon, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from 'lucide-react';
 
 interface DateTimePickerProps {
   value: string; // "YYYY-MM-DDTHH:MM" format
@@ -127,6 +127,70 @@ export default function DateTimePicker({ value, onChange, minDate = new Date() }
     setIsOpen(false);
   };
 
+  const incrementHour = () => {
+    setSelectedHour(prev => (prev === 12 ? 1 : prev + 1));
+  };
+
+  const decrementHour = () => {
+    setSelectedHour(prev => (prev === 1 ? 12 : prev - 1));
+  };
+
+  const incrementMinute = () => {
+    setSelectedMinute(prev => (prev === 59 ? 0 : prev + 1));
+  };
+
+  const decrementMinute = () => {
+    setSelectedMinute(prev => (prev === 0 ? 59 : prev - 1));
+  };
+
+  const handleHourChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/\D/g, '');
+    if (val === '') {
+      setSelectedHour(12);
+      return;
+    }
+    const num = parseInt(val, 10);
+    if (num >= 1 && num <= 12) {
+      setSelectedHour(num);
+    }
+  };
+
+  const handleHourBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/\D/g, '');
+    if (val === '') {
+      setSelectedHour(12);
+      return;
+    }
+    const num = parseInt(val, 10);
+    if (num < 1) setSelectedHour(1);
+    else if (num > 12) setSelectedHour(12);
+    else setSelectedHour(num);
+  };
+
+  const handleMinuteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/\D/g, '');
+    if (val === '') {
+      setSelectedMinute(0);
+      return;
+    }
+    const num = parseInt(val, 10);
+    if (num >= 0 && num <= 59) {
+      setSelectedMinute(num);
+    }
+  };
+
+  const handleMinuteBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/\D/g, '');
+    if (val === '') {
+      setSelectedMinute(0);
+      return;
+    }
+    const num = parseInt(val, 10);
+    if (num < 0) setSelectedMinute(0);
+    else if (num > 59) setSelectedMinute(59);
+    else setSelectedMinute(num);
+  };
+
   const handleSelectToday = () => {
     const today = new Date();
     setCurrentYear(today.getFullYear());
@@ -174,9 +238,9 @@ export default function DateTimePicker({ value, onChange, minDate = new Date() }
 
       {/* Popover Calendar Modal */}
       {isOpen && (
-        <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 z-[90] bg-slate-900 border border-slate-700/50 rounded-2xl shadow-2xl p-4 w-[320px] sm:w-[460px] flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-150">
+        <div className="absolute bottom-full mb-2 left-0 sm:left-auto sm:right-0 z-[90] bg-slate-900 border border-slate-700/50 rounded-2xl shadow-2xl p-3.5 sm:p-4 w-[320px] sm:w-[460px] flex flex-col gap-3 sm:gap-4 animate-in fade-in slide-in-from-bottom-2 duration-150 scale-[0.88] sm:scale-100 origin-bottom-left sm:origin-bottom-right">
           
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col sm:flex-row gap-3.5 sm:gap-4">
             
             {/* Calendar Widget (Left side on desktop) */}
             <div className="flex-1 space-y-2.5">
@@ -221,7 +285,7 @@ export default function DateTimePicker({ value, onChange, minDate = new Date() }
                       key={idx}
                       type="button"
                       onClick={() => handleSelectDay(cell)}
-                      className={`text-xs py-1 rounded-lg transition-all font-mono cursor-pointer ${
+                      className={`text-[11px] sm:text-xs py-0.5 sm:py-1 rounded-lg transition-all font-mono cursor-pointer ${
                         isSelected
                           ? 'bg-brand-primary text-white font-bold'
                           : cell.type === 'current'
@@ -237,62 +301,82 @@ export default function DateTimePicker({ value, onChange, minDate = new Date() }
             </div>
 
             {/* Separator / Time Widget (Right side on desktop) */}
-            <div className="w-full sm:w-px sm:h-auto bg-slate-800" />
+            <div className="w-full sm:w-px sm:h-auto bg-slate-800 my-1.5 sm:my-0" />
 
-            <div className="w-full sm:w-[130px] flex flex-col justify-start gap-3">
-              <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider text-left flex items-center gap-1.5">
+            <div className="w-full sm:w-[130px] flex flex-col justify-start gap-2.5">
+              <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider text-left flex items-center gap-1.5 px-1">
                 <Clock className="w-3.5 h-3.5" /> Time
               </span>
 
-              {/* Time Selection Fields */}
-              <div className="flex sm:flex-col gap-2">
+              {/* Digital Clock Stepper Time Picker */}
+              <div className="flex items-center justify-start gap-1 bg-slate-950/40 p-2 rounded-2xl border border-slate-800/80 w-fit mx-auto sm:mx-0">
                 {/* Hour */}
-                <div className="flex-1 flex flex-col gap-1">
-                  <span className="text-[9px] font-bold text-slate-500 text-left">Hour</span>
-                  <select
-                    value={selectedHour}
-                    onChange={(e) => setSelectedHour(Number(e.target.value))}
-                    className="bg-slate-950 border border-slate-800 rounded-xl px-2 py-1.5 text-xs text-white focus:outline-none cursor-pointer w-full font-mono"
+                <div className="flex flex-col items-center">
+                  <button
+                    type="button"
+                    onClick={incrementHour}
+                    className="p-1 rounded hover:bg-white/5 text-slate-400 hover:text-white cursor-pointer"
                   >
-                    {Array.from({ length: 12 }, (_, i) => i + 1).map(h => (
-                      <option key={h} value={h}>{String(h).padStart(2, '0')}</option>
-                    ))}
-                  </select>
+                    <ChevronUp className="w-3 h-3" />
+                  </button>
+                  <input
+                    type="text"
+                    value={String(selectedHour).padStart(2, '0')}
+                    onChange={handleHourChange}
+                    onBlur={handleHourBlur}
+                    className="w-8 text-center bg-slate-950/80 border border-slate-800 rounded-lg py-1 text-[11px] font-mono font-bold text-white focus:outline-none focus:border-brand-primary"
+                  />
+                  <button
+                    type="button"
+                    onClick={decrementHour}
+                    className="p-1 rounded hover:bg-white/5 text-slate-400 hover:text-white cursor-pointer"
+                  >
+                    <ChevronDown className="w-3 h-3" />
+                  </button>
                 </div>
+
+                <span className="text-slate-600 font-bold self-center text-xs pb-0.5">:</span>
 
                 {/* Minute */}
-                <div className="flex-1 flex flex-col gap-1">
-                  <span className="text-[9px] font-bold text-slate-500 text-left">Minute</span>
-                  <select
-                    value={selectedMinute}
-                    onChange={(e) => setSelectedMinute(Number(e.target.value))}
-                    className="bg-slate-950 border border-slate-800 rounded-xl px-2 py-1.5 text-xs text-white focus:outline-none cursor-pointer w-full font-mono"
+                <div className="flex flex-col items-center">
+                  <button
+                    type="button"
+                    onClick={incrementMinute}
+                    className="p-1 rounded hover:bg-white/5 text-slate-400 hover:text-white cursor-pointer"
                   >
-                    {Array.from({ length: 60 }, (_, i) => i).map(m => (
-                      <option key={m} value={m}>{String(m).padStart(2, '0')}</option>
-                    ))}
-                  </select>
+                    <ChevronUp className="w-3 h-3" />
+                  </button>
+                  <input
+                    type="text"
+                    value={String(selectedMinute).padStart(2, '0')}
+                    onChange={handleMinuteChange}
+                    onBlur={handleMinuteBlur}
+                    className="w-8 text-center bg-slate-950/80 border border-slate-800 rounded-lg py-1 text-[11px] font-mono font-bold text-white focus:outline-none focus:border-brand-primary"
+                  />
+                  <button
+                    type="button"
+                    onClick={decrementMinute}
+                    className="p-1 rounded hover:bg-white/5 text-slate-400 hover:text-white cursor-pointer"
+                  >
+                    <ChevronDown className="w-3 h-3" />
+                  </button>
                 </div>
 
-                {/* AM/PM */}
-                <div className="flex-1 flex flex-col gap-1">
-                  <span className="text-[9px] font-bold text-slate-500 text-left">AM/PM</span>
-                  <select
-                    value={selectedAmPm}
-                    onChange={(e) => setSelectedAmPm(e.target.value)}
-                    className="bg-slate-950 border border-slate-800 rounded-xl px-2 py-1.5 text-xs text-white focus:outline-none cursor-pointer w-full font-mono font-bold"
-                  >
-                    <option value="AM">AM</option>
-                    <option value="PM">PM</option>
-                  </select>
-                </div>
+                {/* AM/PM Toggle Button */}
+                <button
+                  type="button"
+                  onClick={() => setSelectedAmPm(selectedAmPm === 'AM' ? 'PM' : 'AM')}
+                  className="w-9 py-1 px-1 bg-slate-900 border border-slate-800 hover:border-slate-700 text-[10px] font-mono font-black text-brand-primary rounded-lg cursor-pointer hover:bg-white/5 transition-all text-center self-center"
+                >
+                  {selectedAmPm}
+                </button>
               </div>
             </div>
 
           </div>
 
           {/* Footer Action Buttons */}
-          <div className="flex gap-2 pt-3 border-t border-slate-800 justify-between items-center mt-1">
+          <div className="flex gap-2 pt-2.5 sm:pt-3 border-t border-slate-800 justify-between items-center mt-0.5 sm:mt-1">
             <button
               type="button"
               onClick={handleSelectToday}

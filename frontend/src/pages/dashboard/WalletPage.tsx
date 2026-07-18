@@ -9,6 +9,21 @@ import api from '../../services/api';
 import Loader from '../../components/Loader';
 import GenieModal from '../../components/GenieModal';
 
+const formatErrorDetail = (detail: any): string => {
+  if (!detail) return '';
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail)) {
+    return detail.map(err => {
+      const loc = Array.isArray(err.loc) ? err.loc.join('.') : err.loc;
+      return `${loc}: ${err.msg}`;
+    }).join(', ');
+  }
+  if (typeof detail === 'object') {
+    return JSON.stringify(detail);
+  }
+  return String(detail);
+};
+
 
 interface TransactionData {
   id: string;
@@ -161,7 +176,7 @@ export default function WalletPage() {
         setTopupAmount('');
         setPhone('');
       } catch (err: any) {
-        setErrorMsg(err.response?.data?.detail || 'Failed to initiate M-Pesa STK push payment.');
+        setErrorMsg(formatErrorDetail(err.response?.data?.detail) || 'Failed to initiate M-Pesa STK push payment.');
       } finally {
         setLoading(false);
       }
@@ -201,7 +216,7 @@ export default function WalletPage() {
       await refreshUser();
     } catch (err: any) {
       setStkStep('error');
-      setStkError(err.response?.data?.detail || 'M-Pesa STK transaction failed.');
+      setStkError(formatErrorDetail(err.response?.data?.detail) || 'M-Pesa STK transaction failed.');
     }
   };
 
