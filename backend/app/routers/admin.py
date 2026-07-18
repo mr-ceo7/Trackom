@@ -1073,7 +1073,9 @@ DEFAULT_SETTINGS = {
     "supportEmail": "support@trackomgroup.com",
     "supportPhone": "+254 700 000 000",
     "alertBanner": "",
-    "advantasmsDefaultShortcode": "ARVOCAP"
+    "advantasmsDefaultShortcode": "ARVOCAP",
+    "smtpUser": "",
+    "smtpPassword": ""
 }
 
 def load_system_settings():
@@ -1112,6 +1114,8 @@ class SystemSettingsUpdateRequest(BaseModel):
     supportPhone: str
     alertBanner: str
     advantasmsDefaultShortcode: str
+    smtpUser: str
+    smtpPassword: str
 
 
 @router.get("/settings")

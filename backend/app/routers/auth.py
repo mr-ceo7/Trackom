@@ -14,6 +14,7 @@ from app.models.user import User
 from app.models.notification import Notification
 from app.models.transaction import Transaction
 from app.models.sender_id import SenderIdRequest
+from app.models.email_verification import EmailVerification
 from app.middleware.auth import get_current_user
 from app.schemas.auth import (
     RegisterRequest,
@@ -39,7 +40,6 @@ from app.config import get_settings
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 settings = get_settings()
-_email_verification_codes: dict = {}  # In-memory email verification code store
 
 
 @router.get("/check-email")
@@ -68,13 +68,22 @@ async def send_verification(request: Request, email: str = Query(...), db: Async
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
 
     code = f"{secrets.randbelow(1000000):06d}"
-    _email_verification_codes[email_clean] = {
-        "code": code,
-        "expires_at": datetime.utcnow() + timedelta(minutes=10)
-    }
+
+    # Clean up any existing verification records for this email
+    from sqlalchemy import delete
+    await db.execute(delete(EmailVerification).where(EmailVerification.email == email_clean))
+
+    # Persist the new verification code
+    verification = EmailVerification(
+        email=email_clean,
+        code=code,
+        expires_at=datetime.utcnow() + timedelta(minutes=10),
+    )
+    db.add(verification)
+    await db.flush()
 
     from app.services.email import send_email
-    send_email(
+    await send_email(
         to_email=email_clean,
         subject="Trackom - Verify Your Email",
         body_html=f"<p>Hello,</p><p>Your Trackom email verification code is: <b style='font-size:24px; letter-spacing:4px;'>{code}</b></p><p>This code expires in 10 minutes.</p><p>If you did not request this, please ignore this email.</p>"
@@ -85,24 +94,29 @@ async def send_verification(request: Request, email: str = Query(...), db: Async
 
 @router.post("/verify-email")
 @limiter.limit("5/minute")
-async def verify_email(request: Request, email: str = Query(...), code: str = Query(...)):
+async def verify_email(request: Request, email: str = Query(...), code: str = Query(...), db: AsyncSession = Depends(get_db)):
     """Verify an email verification code."""
     from datetime import datetime
 
     email_clean = email.strip().lower()
-    stored = _email_verification_codes.get(email_clean)
+    result = await db.execute(
+        select(EmailVerification).where(EmailVerification.email == email_clean)
+    )
+    stored = result.scalar_one_or_none()
 
     if not stored:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No verification code found. Please request a new one.")
 
-    if datetime.utcnow() > stored["expires_at"]:
-        _email_verification_codes.pop(email_clean, None)
+    if datetime.utcnow() > stored.expires_at:
+        await db.delete(stored)
+        await db.flush()
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Verification code expired. Please request a new one.")
 
-    if stored["code"] != code.strip():
+    if stored.code != code.strip():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid verification code.")
 
-    _email_verification_codes[email_clean]["verified"] = True
+    stored.verified = True
+    await db.flush()
 
     return {"message": "Email verified successfully.", "verified": True}
 
@@ -118,12 +132,19 @@ async def register(request: Request, data: RegisterRequest, db: AsyncSession = D
 
     # Verify email was confirmed via OTP
     email_clean = data.email.strip().lower()
-    verified = _email_verification_codes.get(email_clean)
-    if not verified or not verified.get("verified"):
+    verify_result = await db.execute(
+        select(EmailVerification).where(
+            EmailVerification.email == email_clean,
+            EmailVerification.verified == True,
+        )
+    )
+    verified_record = verify_result.scalar_one_or_none()
+    if not verified_record:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Please verify your email address first.")
 
     # Clean up verification entry
-    _email_verification_codes.pop(email_clean, None)
+    await db.delete(verified_record)
+    await db.flush()
 
     from app.routers.admin import load_system_settings
     settings = load_system_settings()
@@ -172,6 +193,15 @@ async def register(request: Request, data: RegisterRequest, db: AsyncSession = D
         details={"email": data.email, "account_type": data.account_type},
         request=request
     )
+
+    # Dispatch welcome onboarding email
+    try:
+        from app.services.email import send_welcome_email
+        await send_welcome_email(email=user.email, name=user.full_name)
+    except Exception as email_err:
+        import logging
+        logger = logging.getLogger("trackom.auth")
+        logger.error(f"Failed to dispatch welcome email: {email_err}")
 
     # Generate tokens
     access_token = create_access_token({"sub": str(user.id)})
@@ -285,7 +315,7 @@ async def login(request: Request, data: LoginRequest, db: AsyncSession = Depends
                     print(f"[EMAIL 2FA LOGIN] Code sent to email: {user.email}")
                 if user.email:
                     from app.services.email import send_email
-                    send_email(
+                    await send_email(
                         to_email=user.email,
                         subject="Trackom 2FA Verification Code",
                         body_html=f"<p>Hello,</p><p>Your Trackom 2FA verification code is: <b>{code}</b>.</p><p>This code expires in 5 minutes.</p>"
@@ -462,7 +492,7 @@ async def forgot_password(request: Request, data: ForgotPasswordRequest, db: Asy
         <p><a href="{reset_link}">{reset_link}</a></p>
         <p>If you did not request this, you can safely ignore this email.</p>
         """
-        send_email(
+        await send_email(
             to_email=user.email,
             subject="Trackom Password Reset Request",
             body_html=email_body
@@ -688,7 +718,7 @@ async def setup_2fa(
         else:
             print(f"[EMAIL 2FA SETUP] Code sent to email: {current_user.email}")
         from app.services.email import send_email
-        send_email(
+        await send_email(
             to_email=current_user.email,
             subject="Trackom 2FA Setup Code",
             body_html=f"<p>Hello,</p><p>Your Trackom 2FA setup verification code is: <b>{code}</b>.</p><p>This code expires in 5 minutes.</p>"
@@ -788,7 +818,7 @@ async def disable_2fa_request(
             print(f"[EMAIL 2FA DISABLE] Code sent to email: {db_user.email}")
         if db_user.email:
             from app.services.email import send_email
-            send_email(
+            await send_email(
                 to_email=db_user.email,
                 subject="Trackom 2FA Disable Code",
                 body_html=f"<p>Hello,</p><p>Your Trackom 2FA disable verification code is: <b>{code}</b>.</p><p>This code expires in 5 minutes.</p>"

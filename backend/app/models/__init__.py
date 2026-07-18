@@ -16,6 +16,7 @@ from app.models.template import SmsTemplate
 from app.models.incoming import IncomingSms
 from app.models.token_blacklist import BlacklistedToken
 from app.models.audit_log import AuditLog
+from app.models.email_verification import EmailVerification
 
 __all__ = [
     "User",
@@ -38,4 +39,5 @@ __all__ = [
     "IncomingSms",
     "BlacklistedToken",
     "AuditLog",
+    "EmailVerification",
 ]

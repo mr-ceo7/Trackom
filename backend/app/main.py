@@ -85,18 +85,20 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 
 # CORS Configuration
-# WARNING: In production, configure FRONTEND_URL to only allow trusted domain origins.
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        settings.FRONTEND_URL,
+_allowed_origins = [settings.FRONTEND_URL]
+if settings.ENVIRONMENT != "production":
+    _allowed_origins.extend([
         "http://localhost:3000",
         "http://localhost:3001",
         "http://localhost:5173",
-    ],
+    ])
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"],
     expose_headers=["X-Total-Count"],
 )
 

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   Users, Megaphone, Send, ShieldAlert, Search, Plus, Minus, Menu, 
   Check, X, Ban, UserCheck, Coins, Calendar, Sliders, DollarSign,
-  Cpu, Key, Link as LinkIcon, Edit, Trash2, ToggleLeft, ToggleRight, Smartphone, Activity, TrendingUp, Settings, Save, ChevronLeft, ChevronRight
+  Cpu, Key, Link as LinkIcon, Edit, Trash2, ToggleLeft, ToggleRight, Smartphone, Activity, TrendingUp, Settings, Save, ChevronLeft, ChevronRight, Mail, Info
 } from 'lucide-react';
 import { useNavigate, NavLink } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -185,6 +185,8 @@ export default function AdminPanelPage() {
   const [supportPhone, setSupportPhone] = useState('+254 700 000 000');
   const [alertBanner, setAlertBanner] = useState('');
   const [advantasmsDefaultShortcode, setAdvantasmsDefaultShortcode] = useState('ARVOCAP');
+  const [smtpUser, setSmtpUser] = useState('');
+  const [smtpPassword, setSmtpPassword] = useState('');
   const [savingSettings, setSavingSettings] = useState(false);
 
   // Load settings on mount
@@ -207,6 +209,8 @@ export default function AdminPanelPage() {
       if (data.supportPhone) setSupportPhone(data.supportPhone);
       if (data.alertBanner !== undefined) setAlertBanner(data.alertBanner);
       if (data.advantasmsDefaultShortcode) setAdvantasmsDefaultShortcode(data.advantasmsDefaultShortcode);
+      if (data.smtpUser !== undefined) setSmtpUser(data.smtpUser);
+      if (data.smtpPassword !== undefined) setSmtpPassword(data.smtpPassword);
     } catch { /* noop */ }
   }, []);
 
@@ -221,7 +225,8 @@ export default function AdminPanelPage() {
       const payload = {
         mpesaPaybill, mpesaTill, minDeposit, autoCredit, welcomeCredits, baseSmsCost,
         senderIdFee, starterRate, growthRate, enterpriseRate, maintenanceMode,
-        supportEmail, supportPhone, alertBanner, advantasmsDefaultShortcode
+        supportEmail, supportPhone, alertBanner, advantasmsDefaultShortcode,
+        smtpUser, smtpPassword
       };
       await api.put('/admin/settings', payload);
       alert('System Settings saved successfully!');
@@ -2655,6 +2660,51 @@ export default function AdminPanelPage() {
           <form onSubmit={handleSaveSettings} className="space-y-6 text-left">
             <div className="max-w-2xl">
               
+              {/* CARD 1.5: APP EMAIL CONFIGURATION */}
+              <div className="clay-card rounded-3xl p-5 space-y-4 mb-6">
+                <h4 className="text-xs font-bold text-slate-800 dark:text-white border-b border-slate-200/20 dark:border-white/5 pb-2 flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-brand-primary" />
+                  <span>App Email Configuration</span>
+                </h4>
+                <p className="text-[11px] text-slate-500 dark:text-gray-400">Connect a Gmail account to dispatch platform verification codes and automated system emails.</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Email Address</label>
+                    <input 
+                      type="email" 
+                      value={smtpUser} 
+                      onChange={e => setSmtpUser(e.target.value)} 
+                      placeholder="e.g. your-app-email@gmail.com"
+                      className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" 
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">App Password</label>
+                    <input 
+                      type="password" 
+                      value={smtpPassword} 
+                      onChange={e => setSmtpPassword(e.target.value)} 
+                      placeholder="16-character app password"
+                      className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none font-mono" 
+                    />
+                  </div>
+                </div>
+
+                {/* HELP BLOCK */}
+                <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200/10 dark:border-white/5 rounded-2xl p-4 space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-white">
+                    <Info className="w-4 h-4 text-sky-500" />
+                    <span>How to obtain an App Password:</span>
+                  </div>
+                  <ol className="list-decimal list-inside text-[11px] text-slate-500 dark:text-gray-400 space-y-1 pl-1 leading-relaxed">
+                    <li>Go to your Google Account (Manage your Google Account).</li>
+                    <li>Go to <span className="font-bold">Security</span> and ensure <span className="font-bold">2-Step Verification</span> is ON.</li>
+                    <li>Search for "App passwords" in the search bar.</li>
+                    <li>Create a new app (e.g. "Trackom B2B Platform") and copy the 16 digit code here.</li>
+                  </ol>
+                </div>
+              </div>
+
               {/* CARD 2: PLATFORM SUPPORT & BANNER */}
               <div className="clay-card rounded-3xl p-5 space-y-4">
                 <h4 className="text-xs font-bold text-slate-800 dark:text-white border-b border-slate-200/20 dark:border-white/5 pb-2">

@@ -12,5 +12,8 @@
     "maintenanceMode": false,
     "supportEmail": "support@trackomgroup.com",
     "supportPhone": "+254 700 000 000",
-    "alertBanner": ""
+    "alertBanner": "",
+    "advantasmsDefaultShortcode": "ARVOCAP",
+    "smtpUser": "tambuatips01@gmail.com",
+    "smtpPassword": "evwl qsmr abdd ugao"
 }

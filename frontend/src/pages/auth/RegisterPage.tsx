@@ -243,7 +243,7 @@ export default function RegisterPage() {
                     <div className="space-y-1.5">
                       <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Email Address</label>
                       <div className="relative">
-                        <input type="email" value={email} onChange={(e) => { setEmail(e.target.value); setEmailStatus(null); setEmailVerified(false); setCodeSent(false); }} onBlur={handleEmailBlur} required className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" placeholder="john@company.co.ke" />
+                        <input type="email" name="email" id="email" autoComplete="username" value={email} onChange={(e) => { setEmail(e.target.value); setEmailStatus(null); setEmailVerified(false); setCodeSent(false); }} onBlur={handleEmailBlur} required className="clay-input w-full px-4 py-3 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" placeholder="john@company.co.ke" />
                         {checkingEmail && <div className="absolute right-3 top-1/2 -translate-y-1/2"><Loader size="sm" /></div>}
                       </div>
                       {emailStatus?.exists && (
@@ -337,7 +337,7 @@ export default function RegisterPage() {
                     <div className="space-y-1.5">
                       <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Password</label>
                       <div className="relative">
-                        <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required className="clay-input w-full px-4 py-3 pr-11 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" placeholder="Create a strong password" />
+                        <input type={showPassword ? 'text' : 'password'} name="password" id="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} required className="clay-input w-full px-4 py-3 pr-11 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-sm transition-all" placeholder="Create a strong password" />
                         <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-gray-300 cursor-pointer transition-colors">
                           {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>

@@ -1,7 +1,11 @@
 """Auth middleware - FastAPI dependency for extracting current user from JWT."""
 
+import asyncio
+import logging
+import time
 import uuid
 from datetime import datetime
+from typing import Sequence
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -12,9 +16,54 @@ from app.database import get_db
 from app.models.user import User
 from app.utils.security import decode_token
 
+logger = logging.getLogger("trackom.auth")
 security = HTTPBearer()
 
+# ---------------------------------------------------------------------------
+# Master balance cache (replaces old stateful global on get_current_user)
+# ---------------------------------------------------------------------------
+_CACHE_TTL_SECONDS = 300  # 5 minutes
 
+
+class _MasterBalanceCache:
+    """Thread/async-safe TTL cache for the SMS gateway master balance."""
+
+    def __init__(self) -> None:
+        self._value: int = 10_000_000  # sensible default until first fetch
+        self._updated_at: float = 0.0
+        self._lock: asyncio.Lock = asyncio.Lock()
+
+    async def get(self) -> int:
+        """Return the cached balance, refreshing from the gateway if stale."""
+        now = time.time()
+        if now - self._updated_at < _CACHE_TTL_SECONDS:
+            return self._value
+
+        async with self._lock:
+            # Double-check after acquiring the lock
+            if time.time() - self._updated_at < _CACHE_TTL_SECONDS:
+                return self._value
+
+            try:
+                from app.services.sms_gateway import AdvantaSMSGateway
+
+                gateway = AdvantaSMSGateway()
+                balance_data = await gateway.check_balance(timeout=2.0)
+                if balance_data and "credit" in balance_data:
+                    self._value = int(float(balance_data["credit"]))
+                    self._updated_at = time.time()
+            except Exception as exc:
+                logger.warning("Failed to fetch master balance for admin: %s", exc)
+
+        return self._value
+
+
+_master_balance_cache = _MasterBalanceCache()
+
+
+# ---------------------------------------------------------------------------
+# Core authentication dependency
+# ---------------------------------------------------------------------------
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: AsyncSession = Depends(get_db),
@@ -70,36 +119,48 @@ async def get_current_user(
 
     # If the user is an admin, set their credits to the master gateway pool by default
     if user.is_superuser:
-        import time
-        global _last_master_balance
-        if 'logging' not in globals():
-            import logging
-            logger = logging.getLogger("trackom.auth")
-        else:
-            logger = logging.getLogger("trackom.auth")
-            
-        now_time = time.time()
-        # Initialize global cache if not present
-        if not hasattr(get_current_user, "_last_master_balance"):
-            get_current_user._last_master_balance = {"value": 10000000, "updated_at": 0.0}
-            
-        cache = get_current_user._last_master_balance
-        if now_time - cache["updated_at"] >= 300:
-            from app.services.sms_gateway import AdvantaSMSGateway
-            gateway = AdvantaSMSGateway()
-            try:
-                balance_data = await gateway.check_balance(timeout=2.0)
-                if balance_data and "credit" in balance_data:
-                    val = int(float(balance_data["credit"]))
-                    cache["value"] = val
-                    cache["updated_at"] = now_time
-            except Exception as e:
-                logger.warning(f"Failed to fetch master balance for admin: {e}")
-                
-        user.sms_balance = cache["value"]
-        user.sandbox_sms_balance = cache["value"]
+        master_balance = await _master_balance_cache.get()
+        user.sms_balance = master_balance
+        user.sandbox_sms_balance = master_balance
 
     return user
+
+
+# ---------------------------------------------------------------------------
+# Role-Based Access Control (RBAC) dependencies
+# ---------------------------------------------------------------------------
+def require_role(*allowed_roles: str):
+    """Dependency factory that restricts access to users with specific roles.
+
+    Accepted role strings:
+        - ``"admin"``     – matches ``is_superuser == True``
+        - ``"business"``  – matches ``account_type == "business"``
+        - ``"reseller"``  – matches ``account_type == "reseller"``
+
+    Usage::
+
+        @router.get("/reseller/dashboard")
+        async def reseller_dashboard(
+            user: User = Depends(require_role("admin", "reseller")),
+        ):
+            ...
+    """
+    async def _role_checker(
+        current_user: User = Depends(get_current_user),
+    ) -> User:
+        # Superusers always pass when "admin" is an allowed role
+        if current_user.is_superuser and "admin" in allowed_roles:
+            return current_user
+
+        if current_user.account_type in allowed_roles:
+            return current_user
+
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Access restricted to roles: {', '.join(allowed_roles)}",
+        )
+
+    return _role_checker
 
 
 async def require_admin(
@@ -112,4 +173,3 @@ async def require_admin(
             detail="Admin access required",
         )
     return current_user
-

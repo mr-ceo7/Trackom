@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+asyncpg://trackom:trackom_secret@localhost:5432/trackom_db"
 
     # JWT
-    SECRET_KEY: str = "change-me-in-production-use-openssl-rand-hex-32"
+    SECRET_KEY: str = ""
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
@@ -36,19 +36,19 @@ class Settings(BaseSettings):
     SMS_GATEWAY_URL: str = ""
 
     # AdvantaSMS Gateway
-    ADVANTA_API_KEY: str = "REDACTED_ADVANTA_API_KEY"
+    ADVANTA_API_KEY: str = ""
     ADVANTA_PARTNER_ID: str = "2872"
     ADVANTA_BASE_URL: str = "https://quicksms.advantasms.com"
     ADVANTA_DEFAULT_SHORTCODE: str = "ARVOCAP"
 
     # M-Pesa Integration
-    MPESA_CONSUMER_KEY: str = "REDACTED_MPESA_CONSUMER_KEY"
-    MPESA_CONSUMER_SECRET: str = "REDACTED_MPESA_CONSUMER_SECRET"
+    MPESA_CONSUMER_KEY: str = ""
+    MPESA_CONSUMER_SECRET: str = ""
     MPESA_SHORTCODE: str = "174379"
-    MPESA_PASSKEY: str = "REDACTED_MPESA_PASSKEY"
-    MPESA_CALLBACK_URL: str = "REDACTED_MPESA_CALLBACK_URL"
+    MPESA_PASSKEY: str = ""
+    MPESA_CALLBACK_URL: str = ""
     MPESA_ENV: str = "sandbox"
-    MPESA_CALLBACK_SECRET: str = "REDACTED_MPESA_CALLBACK_SECRET"
+    MPESA_CALLBACK_SECRET: str = ""
 
     # Email / SMTP
     SMTP_HOST: str = "smtp.gmail.com"

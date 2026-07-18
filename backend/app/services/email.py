@@ -1,5 +1,6 @@
 """Email utility service for automated admin notifications."""
 
+import asyncio
 import smtplib
 import time
 from email.mime.text import MIMEText
@@ -15,9 +16,15 @@ logger = logging.getLogger("trackom.email")
 # Cache to prevent duplicate email alerts in quick succession (throttle to once per hour)
 _last_alert_sent = {}
 
-def send_email(to_email: str, subject: str, body_html: str) -> bool:
-    """Sends an email using configured SMTP settings, fallback to console logging."""
+
+def _send_email_sync(to_email: str, subject: str, body_html: str) -> bool:
+    """Synchronous email sending via SMTP. Runs in a thread pool — do NOT call directly from async code."""
     settings = get_settings()
+    from app.routers.admin import load_system_settings
+    sys_settings = load_system_settings()
+    smtp_user = sys_settings.get("smtpUser") or settings.SMTP_USER
+    smtp_password = sys_settings.get("smtpPassword") or settings.SMTP_PASSWORD
+
     logger.info(f"[EMAIL] Sending to {to_email}: {subject}")
     print(f"========================================================================\n"
           f"[EMAIL SENDING]\n"
@@ -25,40 +32,74 @@ def send_email(to_email: str, subject: str, body_html: str) -> bool:
           f"Subject: {subject}\n"
           f"Body: {body_html}\n"
           f"========================================================================")
-    
-    if not settings.SMTP_USER or not settings.SMTP_PASSWORD:
+
+    if not smtp_user or not smtp_password:
         logger.warning("SMTP credentials are not configured. Email dispatch skipped.")
         return False
-        
+
     try:
         msg = MIMEMultipart()
-        msg['From'] = settings.SMTP_USER
+        msg['From'] = smtp_user
         msg['To'] = to_email
         msg['Subject'] = subject
         msg.attach(MIMEText(body_html, 'html'))
-        
+
         with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
             server.starttls()
-            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-            server.sendmail(settings.SMTP_USER, [to_email], msg.as_string())
-            
+            server.login(smtp_user, smtp_password)
+            server.sendmail(smtp_user, [to_email], msg.as_string())
+
         logger.info(f"Email sent successfully to {to_email}.")
         return True
     except Exception as e:
         logger.error(f"Failed to send email to {to_email}: {str(e)}")
         return False
 
-def send_admin_underfunded_alert(admin_emails: list, total_client_credits: int, system_balance: int):
+
+async def send_email(to_email: str, subject: str, body_html: str) -> bool:
+    """Sends an email asynchronously using a thread pool to avoid blocking the event loop."""
+    return await asyncio.to_thread(_send_email_sync, to_email, subject, body_html)
+
+
+def _send_bulk_email_sync(admin_emails: list, subject: str, body: str) -> None:
+    """Synchronous bulk email sending via SMTP. Runs in a thread pool."""
+    settings = get_settings()
+    from app.routers.admin import load_system_settings
+    sys_settings = load_system_settings()
+    smtp_user = sys_settings.get("smtpUser") or settings.SMTP_USER
+    smtp_password = sys_settings.get("smtpPassword") or settings.SMTP_PASSWORD
+
+    if not smtp_user or not smtp_password:
+        logger.warning("SMTP credentials are not configured. Email alert skipped.")
+        return
+
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = smtp_user
+        msg['To'] = ", ".join(admin_emails)
+        msg['Subject'] = subject
+        msg.attach(MIMEText(body, 'html'))
+
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_password)
+            server.sendmail(smtp_user, admin_emails, msg.as_string())
+
+        logger.info("Admin email alert sent successfully.")
+    except Exception as e:
+        logger.error(f"Failed to send admin email alert: {str(e)}")
+
+
+async def send_admin_underfunded_alert(admin_emails: list, total_client_credits: int, system_balance: int):
     """Sends an SMTP email or prints a critical alert to logs if SMTP credentials are not set."""
     now = time.time()
     last_sent = _last_alert_sent.get("underfunded", 0)
     if now - last_sent < 3600:
         logger.info("Admin underfunded email alert throttled (sent recently).")
         return
-        
+
     _last_alert_sent["underfunded"] = now
-    
-    settings = get_settings()
+
     subject = "⚠️ CRITICAL ALERT: Trackom Gateway Pool Underfunded"
     body = f"""
     <html>
@@ -89,7 +130,7 @@ def send_admin_underfunded_alert(admin_emails: list, total_client_credits: int, 
     </body>
     </html>
     """
-    
+
     # Log to server console/logs in all environments
     logger.error(f"[EMAIL ALERT] to {admin_emails}: {subject} - Credits Out: {total_client_credits}, Pool: {system_balance}")
     print(f"========================================================================\n"
@@ -98,39 +139,20 @@ def send_admin_underfunded_alert(admin_emails: list, total_client_credits: int, 
           f"Subject: {subject}\n"
           f"Body: {body}\n"
           f"========================================================================")
-          
-    if not settings.SMTP_USER or not settings.SMTP_PASSWORD:
-        logger.warning("SMTP credentials are not configured. Email alert skipped.")
-        return
-        
-    try:
-        msg = MIMEMultipart()
-        msg['From'] = settings.SMTP_USER
-        msg['To'] = ", ".join(admin_emails)
-        msg['Subject'] = subject
-        msg.attach(MIMEText(body, 'html'))
-        
-        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
-            server.starttls()
-            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-            server.sendmail(settings.SMTP_USER, admin_emails, msg.as_string())
-            
-        logger.info("Admin underfunded email alert sent successfully.")
-    except Exception as e:
-        logger.error(f"Failed to send admin email alert: {str(e)}")
+
+    await asyncio.to_thread(_send_bulk_email_sync, admin_emails, subject, body)
 
 
-def send_admin_api_failed_alert(admin_emails: list, total_client_credits: int, error_msg: str):
+async def send_admin_api_failed_alert(admin_emails: list, total_client_credits: int, error_msg: str):
     """Sends an SMTP email or prints a warning to logs if SMTP credentials are not set."""
     now = time.time()
     last_sent = _last_alert_sent.get("api_failed", 0)
     if now - last_sent < 3600:
         logger.info("Admin API failed email alert throttled (sent recently).")
         return
-        
+
     _last_alert_sent["api_failed"] = now
-    
-    settings = get_settings()
+
     subject = "⚠️ WARNING: Trackom Gateway Pool Check Failed"
     body = f"""
     <html>
@@ -162,7 +184,7 @@ def send_admin_api_failed_alert(admin_emails: list, total_client_credits: int, e
     </body>
     </html>
     """
-    
+
     logger.warning(f"[EMAIL WARNING] to {admin_emails}: {subject} - Error: {error_msg}")
     print(f"========================================================================\n"
           f"[EMAIL ALERT SENDING]\n"
@@ -170,26 +192,8 @@ def send_admin_api_failed_alert(admin_emails: list, total_client_credits: int, e
           f"Subject: {subject}\n"
           f"Body: {body}\n"
           f"========================================================================")
-          
-    if not settings.SMTP_USER or not settings.SMTP_PASSWORD:
-        logger.warning("SMTP credentials are not configured. Email warning skipped.")
-        return
-        
-    try:
-        msg = MIMEMultipart()
-        msg['From'] = settings.SMTP_USER
-        msg['To'] = ", ".join(admin_emails)
-        msg['Subject'] = subject
-        msg.attach(MIMEText(body, 'html'))
-        
-        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
-            server.starttls()
-            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-            server.sendmail(settings.SMTP_USER, admin_emails, msg.as_string())
-            
-        logger.info("Admin API failed email alert sent successfully.")
-    except Exception as e:
-        logger.error(f"Failed to send admin API failed email alert: {str(e)}")
+
+    await asyncio.to_thread(_send_bulk_email_sync, admin_emails, subject, body)
 
 
 async def check_and_enforce_gateway_liquidity(db) -> bool:
@@ -201,7 +205,7 @@ async def check_and_enforce_gateway_liquidity(db) -> bool:
     # 1. Calculate outstanding client credits (sum of live sms_balance of all active non-admin users)
     res_client_credits = await db.execute(select(func.sum(User.sms_balance)).where(User.is_superuser == False))
     total_client_credits = int(res_client_credits.scalar() or 0)
-    
+
     # 2. Retrieve AdvantaSMS master gateway balance
     from app.services.sms_gateway import AdvantaSMSGateway
     gateway = AdvantaSMSGateway()
@@ -216,7 +220,7 @@ async def check_and_enforce_gateway_liquidity(db) -> bool:
         api_failed = True
         error_msg = str(e)
         logger.warning(f"Advanta SMS gateway balance check failed: {e}. Defaulting to fail-open.")
-        
+
     # Fetch all admin emails to notify (needed for alerts)
     res_admins = await db.execute(select(User.email).where(User.is_superuser == True))
     admin_emails = [email for email in res_admins.scalars().all()]
@@ -225,12 +229,89 @@ async def check_and_enforce_gateway_liquidity(db) -> bool:
 
     if api_failed:
         # Trigger alert email about check failure (throttled)
-        send_admin_api_failed_alert(admin_emails, total_client_credits, error_msg)
-        
+        await send_admin_api_failed_alert(admin_emails, total_client_credits, error_msg)
+
     # 3. Check condition
     if total_client_credits > system_balance:
         # Send/Log alert
-        send_admin_underfunded_alert(admin_emails, total_client_credits, system_balance)
+        await send_admin_underfunded_alert(admin_emails, total_client_credits, system_balance)
         return True
-        
+
     return False
+
+
+def _generate_html_template(title: str, body: str, cta_text: str = None, cta_url: str = None) -> str:
+    """Generates a professional, branded HTML email template for Trackom B2B."""
+    cta_html = ""
+    if cta_text and cta_url:
+        cta_html = f"""
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="{cta_url}" style="background-color: #6366f1; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 12px; font-weight: bold; font-size: 16px; display: inline-block;">{cta_text}</a>
+        </div>
+        """
+        
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #0f172a; font-family: 'Inter', 'Segoe UI', sans-serif; color: #cbd5e1; line-height: 1.6;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #0f172a; padding: 40px 20px;">
+            <tr>
+                <td align="center">
+                    <table width="100%" max-width="600" cellpadding="0" cellspacing="0" style="background-color: #1e293b; border: 1px solid #334155; border-radius: 24px; max-width: 600px; width: 100%; margin: 0 auto; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);">
+                        
+                        <!-- Header -->
+                        <tr>
+                            <td style="padding: 30px 40px; border-bottom: 1px solid #334155; text-align: center; background-color: #1e293b;">
+                                <h1 style="color: #6366f1; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">TRACKOM B2B</h1>
+                                <p style="color: #64748b; margin: 5px 0 0 0; font-size: 13px; text-transform: uppercase; letter-spacing: 2px;">Automated SaaS SMS Portal</p>
+                            </td>
+                        </tr>
+                        
+                        <!-- Content -->
+                        <tr>
+                            <td style="padding: 40px;">
+                                <h2 style="color: #ffffff; margin-top: 0; font-size: 20px; font-weight: 700;">{title}</h2>
+                                <div style="color: #94a3b8; font-size: 15px; margin-bottom: 20px;">
+                                    {body}
+                                </div>
+                                {cta_html}
+                            </td>
+                        </tr>
+                        
+                        <!-- Footer -->
+                        <tr>
+                            <td style="padding: 30px 40px; background-color: #0f172a; text-align: center; border-top: 1px solid #334155;">
+                                <p style="color: #475569; font-size: 12px; margin: 0 0 10px 0;">
+                                    © 2026 Trackom SaaS. All rights reserved.
+                                </p>
+                                <p style="color: #475569; font-size: 12px; margin: 0;">
+                                    <a href="https://trackomgroup.com" style="color: #6366f1; text-decoration: none;">Visit trackomgroup.com</a>
+                                </p>
+                            </td>
+                        </tr>
+                        
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>
+    """
+
+
+async def send_welcome_email(email: str, name: str):
+    """Sends a warm onboarding welcome email to new tenants."""
+    subject = "Welcome to Trackom B2B SaaS! 🚀"
+    body = f"""
+    <p>Hello {name},</p>
+    <p>We are absolutely thrilled to welcome you to the Trackom B2B family!</p>
+    <p>Your tenant workspace has been set up successfully. You can now configure your SMS gateways, whitelist Sender IDs, build contact groups, and deploy high-speed notification dispatches or campaigns.</p>
+    <p>To help you get started, we have credited your sandbox balance with test SMS credits.</p>
+    <p>Should you need any assistance, our support team is always here to guide you.</p>
+    """
+    html_content = _generate_html_template("Your Tenant Account is Active!", body, "Go to Dashboard", "http://localhost:3000")
+    await send_email(email, subject, html_content)
