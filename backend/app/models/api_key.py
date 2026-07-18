@@ -34,6 +34,7 @@ class ApiKey(Base):
 
     # Relationships
     user = relationship("User", back_populates="api_keys")
+    logs = relationship("ApiKeyLog", back_populates="api_key", cascade="all, delete-orphan")
 
     @staticmethod
     def generate_key() -> str:

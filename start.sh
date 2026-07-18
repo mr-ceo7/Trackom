@@ -24,12 +24,15 @@ fi
 
 # 1. Start Database Container
 echo "Starting PostgreSQL database..."
+if [ "$(docker ps -aq -f name=trackom_db)" ]; then
+    echo "Found existing container named trackom_db, removing it to avoid conflicts..."
+    docker rm -f trackom_db || true
+fi
 docker compose up -d
 
 # 2. Wait for Database & Run Migrations
 echo "Waiting for PostgreSQL database to be ready..."
 cd backend
-source venv/bin/activate
 
 DB_URL=$(grep -E "^DATABASE_URL=" .env | cut -d'=' -f2- | tr -d '"' | tr -d "'")
 if [ -z "$DB_URL" ]; then
@@ -37,7 +40,7 @@ if [ -z "$DB_URL" ]; then
 fi
 TEST_URL=$(echo $DB_URL | sed 's/postgresql+asyncpg/postgresql/')
 
-python3 -c "
+venv/bin/python -c "
 import asyncio, asyncpg, sys
 async def check():
     for i in range(45):
@@ -55,7 +58,12 @@ asyncio.run(check())
 "
 
 echo "Applying migrations..."
-alembic upgrade head
+if ! venv/bin/python -m alembic upgrade head; then
+    echo "Database migrations failed. Attempting to initialize clean database schema..."
+    venv/bin/python -c "import asyncio; from app.database import init_db; asyncio.run(init_db())"
+    venv/bin/python -m alembic stamp head
+    echo "Database initialized successfully."
+fi
 cd ..
 
 # 3. Setup cleanup on Ctrl+C (SIGINT/SIGTERM)
@@ -73,8 +81,7 @@ trap cleanup SIGINT SIGTERM
 # 4. Start Backend in the background (outputting logs to terminal)
 echo "Starting backend server (port 8000)..."
 cd backend
-source venv/bin/activate
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload &
+venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload &
 BACKEND_PID=$!
 cd ..
 

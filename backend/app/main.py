@@ -17,6 +17,7 @@ from app.database import init_db, seed_demo_user
 from app.routers import auth, users, blog, contacts, sms, api_keys, campaigns, wallet, notifications, inquiry, sender_ids, admin, reseller, templates, public_services
 from app.services.campaign_worker import scheduled_campaign_monitor_loop
 
+
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,

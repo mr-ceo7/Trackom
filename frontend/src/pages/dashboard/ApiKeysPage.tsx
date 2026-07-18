@@ -43,6 +43,8 @@ export default function ApiKeysPage() {
   const [expandedKeyId, setExpandedKeyId] = useState<string | null>(null);
   const [statsStart, setStatsStart] = useState('');
   const [statsEnd, setStatsEnd] = useState('');
+  const [keyStats, setKeyStats] = useState<Record<string, any>>({});
+  const [statsLoading, setStatsLoading] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (expandedKeyId) {
@@ -55,6 +57,26 @@ export default function ApiKeysPage() {
       setStatsEnd(formatDate(end));
     }
   }, [expandedKeyId]);
+
+  const fetchKeyStats = useCallback(async (keyId: string, start: string, end: string) => {
+    setStatsLoading(prev => ({ ...prev, [keyId]: true }));
+    try {
+      const resp = await api.get(`/api-keys/${keyId}/stats`, {
+        params: { start, end }
+      });
+      setKeyStats(prev => ({ ...prev, [keyId]: resp.data }));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setStatsLoading(prev => ({ ...prev, [keyId]: false }));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (expandedKeyId && statsStart && statsEnd) {
+      fetchKeyStats(expandedKeyId, statsStart, statsEnd);
+    }
+  }, [expandedKeyId, statsStart, statsEnd, fetchKeyStats]);
 
   const fetchKeys = useCallback(async () => {
     try {
@@ -303,9 +325,34 @@ export default function ApiKeysPage() {
               </div>
 
               {expandedKeyId === k.id && (() => {
-                const { data: chartData, totalReq, totalCred } = getUsageData(k.id, statsStart, statsEnd);
-                const logs = getLogsData(k.id, Math.min(10, totalReq));
+                const stats = keyStats[k.id];
+                const loading = statsLoading[k.id];
+
+                if (loading || !stats) {
+                  return (
+                    <div className="pt-4 border-t border-slate-200/20 dark:border-white/5 flex flex-col items-center justify-center py-8">
+                      <div className="w-6 h-6 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
+                      <span className="text-xs text-slate-500 dark:text-gray-400 mt-2">Loading statistics...</span>
+                    </div>
+                  );
+                }
+
+                const chartData = stats.chart_data || [];
+                const totalReq = stats.total_requests || 0;
+                const totalCred = stats.total_credits || 0;
+                const successRate = stats.success_rate !== undefined ? `${stats.success_rate.toFixed(1)}%` : '100.0%';
+                const logs = stats.recent_logs || [];
                 
+                const formatTime = (tsStr: string) => {
+                  try {
+                    const d = new Date(tsStr);
+                    if (!isNaN(d.getTime())) {
+                      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    }
+                  } catch (err) {}
+                  return tsStr.split(',')[1] ? tsStr.split(',')[1].trim() : tsStr;
+                };
+
                 return (
                   <motion.div 
                     initial={{ opacity: 0, height: 0 }}
@@ -343,7 +390,7 @@ export default function ApiKeysPage() {
                         </div>
                         <div className="clay-inset rounded-2xl p-3 flex flex-col justify-center">
                           <span className="text-[10px] font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Success Rate</span>
-                          <span className="text-lg font-bold font-mono text-brand-emerald mt-0.5">99.2%</span>
+                          <span className="text-lg font-bold font-mono text-brand-emerald mt-0.5">{successRate}</span>
                         </div>
                       </div>
 
@@ -373,8 +420,8 @@ export default function ApiKeysPage() {
                       <div className="md:col-span-7 space-y-2">
                         <div className="text-[11px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Daily Request Density</div>
                         <div className="clay-inset rounded-2xl p-4 flex items-end justify-between gap-1.5 h-36 relative overflow-hidden bg-slate-50/50 dark:bg-slate-900/30">
-                          {chartData.map((d, idx) => {
-                            const maxRequests = Math.max(...chartData.map(item => item.requests), 1);
+                          {chartData.map((d: any, idx: number) => {
+                            const maxRequests = Math.max(...chartData.map((item: any) => item.requests), 1);
                             const heightPct = (d.requests / maxRequests) * 80 + 10;
                             return (
                               <div key={idx} className="flex-1 flex flex-col items-center group relative cursor-pointer h-full justify-end">
@@ -405,9 +452,9 @@ export default function ApiKeysPage() {
                             <div className="col-span-3 text-right">Status</div>
                           </div>
                           <div className="divide-y divide-slate-100 dark:divide-white/5 max-h-[105px] overflow-y-auto custom-scrollbar text-[10px]">
-                            {logs.map((l, lIdx) => (
+                            {logs.map((l: any, lIdx: number) => (
                               <div key={lIdx} className="px-3 py-1.5 grid grid-cols-12 gap-1 items-center font-mono">
-                                <div className="col-span-4 text-slate-500 dark:text-gray-400">{l.timestamp.split(',')[1] ? l.timestamp.split(',')[1].trim() : l.timestamp}</div>
+                                <div className="col-span-4 text-slate-500 dark:text-gray-400 truncate" title={l.timestamp}>{formatTime(l.timestamp)}</div>
                                 <div className="col-span-5 text-slate-800 dark:text-slate-300 truncate" title={l.endpoint}>{l.endpoint}</div>
                                 <div className="col-span-3 text-right">
                                   <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold ${l.status < 300 ? 'bg-brand-emerald/10 text-brand-emerald' : 'bg-red-500/10 text-red-500'}`}>

@@ -2,6 +2,7 @@
 
 from app.models.user import User
 from app.models.api_key import ApiKey
+from app.models.api_key_log import ApiKeyLog
 from app.models.contact import Contact, ContactGroup, contact_group_members
 from app.models.sms import SmsMessage
 from app.models.campaign import Campaign
@@ -19,6 +20,7 @@ from app.models.audit_log import AuditLog
 __all__ = [
     "User",
     "ApiKey",
+    "ApiKeyLog",
     "Contact",
     "ContactGroup",
     "contact_group_members",

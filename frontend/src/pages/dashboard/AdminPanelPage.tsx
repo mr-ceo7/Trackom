@@ -907,17 +907,54 @@ export default function AdminPanelPage() {
             {loading ? (
               <div className="flex justify-center py-12"><Loader size="md" /></div>
             ) : (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 
-                {/* CARD 1: MASTER GATEWAY POOL */}
-                <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-brand-accent">
-                        <Cpu className="w-5 h-5 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]" />
+                {/* CARD 1: TOTAL CLIENTS */}
+                <div className="clay-stat rounded-3xl p-4 sm:p-5 flex flex-col justify-between min-h-[180px] text-left">
+                  <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-brand-primary">
+                        <Users className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
+                      </div>
+                      <div className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider">Total Clients</div>
+                    </div>
+                    {stats && stats.online_users > 0 && (
+                      <span className="flex items-center gap-1 text-[9px] font-black text-brand-emerald bg-brand-emerald/10 px-2 py-0.5 rounded-full font-mono whitespace-nowrap shrink-0">
+                        <span className="w-1.5 h-1.5 rounded-full bg-brand-emerald animate-ping" />
+                        {stats.online_users} ONLINE
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-2">
+                    <div className="text-3xl font-black text-slate-900 dark:text-white font-mono leading-none">{stats?.total_users || 0}</div>
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <span className="text-[9px] font-bold px-2 py-0.5 bg-brand-emerald/10 text-brand-emerald rounded-full">
+                      ACTIVE {stats?.active_users || 0}
+                    </span>
+                    <span className="text-[9px] font-bold px-2 py-0.5 bg-slate-100 dark:bg-white/5 text-slate-500 rounded-full">
+                      SUSPENDED {(stats?.total_users || 0) - (stats?.active_users || 0)}
+                    </span>
+                  </div>
+                  <div className="border-t border-slate-200/20 dark:border-white/5 pt-2.5 mt-2.5 flex justify-between text-[9px] text-slate-500 font-mono">
+                    <div>TODAY <span className="text-brand-primary font-bold">+{stats?.today_users || 0}</span></div>
+                    <div>YEST <span className="text-brand-primary font-bold">+{stats?.yesterday_users || 0}</span></div>
+                    <div>7D <span className="text-brand-primary font-bold">+{stats?.last_7d_users || 0}</span></div>
+                  </div>
+                </div>
+
+                {/* CARD 2: MASTER GATEWAY POOL */}
+                <div className="clay-stat rounded-3xl p-4 sm:p-5 flex flex-col justify-between min-h-[180px] text-left">
+                  <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-brand-accent">
+                        <Cpu className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]" />
                       </div>
                       <div className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider">Master Gateway Pool</div>
                     </div>
+                    <span className="text-[9px] text-brand-emerald font-bold font-mono bg-brand-emerald/10 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0">
+                      SAAS OWNER
+                    </span>
                   </div>
                   <div className="mt-2">
                     <div className="text-2xl font-black text-slate-900 dark:text-white font-mono leading-none truncate">{stats?.system_balance?.toLocaleString() || 0}</div>
@@ -931,15 +968,18 @@ export default function AdminPanelPage() {
                   </div>
                 </div>
 
-                {/* CARD 2: CLIENT CREDITS OUT */}
-                <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-amber-500">
-                        <Coins className="w-5 h-5 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                {/* CARD 3: OUTSTANDING CLIENT CREDITS */}
+                <div className="clay-stat rounded-3xl p-4 sm:p-5 flex flex-col justify-between min-h-[180px] text-left">
+                  <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-amber-500">
+                        <Coins className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
                       </div>
                       <div className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider">Outstanding Client Credits</div>
                     </div>
+                    <span className="text-[9px] text-brand-primary font-bold font-mono bg-brand-primary/10 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0">
+                      TENANTS
+                    </span>
                   </div>
                   <div className="mt-2">
                     <div className="text-2xl font-black text-slate-900 dark:text-white font-mono leading-none truncate">{stats?.total_client_credits?.toLocaleString() || 0}</div>
@@ -965,13 +1005,146 @@ export default function AdminPanelPage() {
                   )}
                 </div>
 
-                {/* CARD 3: SMS DISPATCH ANALYTICS */}
-                <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
+                {/* CARD 4: TOTAL CAMPAIGNS */}
+                <div className="clay-stat rounded-3xl p-4 sm:p-5 flex flex-col justify-between min-h-[180px] text-left">
+                  <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-indigo-500">
+                        <Megaphone className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
+                      </div>
+                      <div className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider">Total Campaigns</div>
+                    </div>
+                    {stats && stats.active_campaigns > 0 && (
+                      <span className="flex items-center gap-1 text-[9px] font-black text-brand-emerald bg-brand-emerald/10 px-2 py-0.5 rounded-full font-mono whitespace-nowrap shrink-0">
+                        <span className="w-1.5 h-1.5 rounded-full bg-brand-emerald animate-ping" />
+                        {stats.active_campaigns} SENDING
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-2">
+                    <div className="text-3xl font-black text-slate-900 dark:text-white font-mono leading-none">{stats?.total_campaigns || 0}</div>
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <span className="text-[9px] font-bold px-2 py-0.5 bg-brand-primary/10 text-brand-primary rounded-full">
+                      SENDING {stats?.active_campaigns || 0}
+                    </span>
+                    <span className="text-[9px] font-bold px-2 py-0.5 bg-slate-100 dark:bg-white/5 text-slate-500 rounded-full">
+                      WHITELIST REQS {stats?.pending_sender_ids || 0}
+                    </span>
+                  </div>
+                  <div className="border-t border-slate-200/20 dark:border-white/5 pt-2.5 mt-2.5 flex justify-between text-[9px] text-slate-500 font-mono">
+                    <div>DISPATCH WORKERS <span className="text-brand-emerald font-bold">OK</span></div>
+                  </div>
+                </div>
+
+                {/* CARD 5: SMS GATEWAYS WHITELISTED */}
+                <div className="clay-stat rounded-3xl p-4 sm:p-5 flex flex-col justify-between min-h-[180px] text-left">
                   <div className="space-y-3">
                     <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-teal-500">
-                          <Send className="w-5 h-5 drop-shadow-[0_0_8px_rgba(20,184,166,0.5)]" />
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-cyan-500">
+                          <Activity className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]" />
+                        </div>
+                        <div className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider">SMS Gateways Whitelisted</div>
+                      </div>
+                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap shrink-0 ${gateways.some(g => g.is_active) ? 'bg-brand-emerald/10 text-brand-emerald' : 'bg-slate-100 dark:bg-white/5 text-slate-500'}`}>
+                        {gateways.filter(g => g.is_active).length}/{gateways.length} ONLINE
+                      </span>
+                    </div>
+
+                    <div className="pt-1.5 flex items-baseline gap-2">
+                      <div className="text-3xl font-black text-slate-900 dark:text-white font-mono leading-none">
+                        {gateways.length}
+                      </div>
+                    </div>
+
+                    {/* Quick Load Balancer Sliders */}
+                    <div className="space-y-2 mt-3 pt-2.5 border-t border-slate-200/20 dark:border-white/5">
+                      <span className="block text-[8px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">
+                        Quick Load Split Weights
+                      </span>
+                      {gateways.length > 0 ? (
+                        <div className="space-y-2 max-h-[85px] overflow-y-auto custom-scrollbar pr-1">
+                          {gateways.map(gw => (
+                            <div key={gw.id} className="space-y-0.5">
+                              <div className="flex justify-between items-center text-[10px] font-semibold text-slate-700 dark:text-gray-300">
+                                <span className="truncate max-w-[100px]">{gw.name}</span>
+                                <span className="font-mono text-brand-primary font-bold">{gw.weight}%</span>
+                              </div>
+                              <input 
+                                type="range" 
+                                min="0" 
+                                max="100" 
+                                value={gw.weight} 
+                                onChange={e => {
+                                  const val = Number(e.target.value);
+                                  setGateways(prev => prev.map(g => g.id === gw.id ? { ...g, weight: val } : g));
+                                }}
+                                onMouseUp={() => handleUpdateGatewayWeight(gw, gw.weight)}
+                                onTouchEnd={() => handleUpdateGatewayWeight(gw, gw.weight)}
+                                className="w-full h-1 bg-slate-200 dark:bg-white/10 rounded-lg appearance-none cursor-pointer accent-brand-primary" 
+                                disabled={!gw.is_active}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-[10px] text-slate-400 italic block py-1">No active gateways</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="border-t border-slate-200/20 dark:border-white/5 pt-2 mt-3 flex justify-between text-[9px] text-slate-500 font-mono">
+                    <div>SAF <span className="text-brand-emerald font-bold">142ms</span></div>
+                    <div>AIR <span className="text-brand-emerald font-bold">178ms</span></div>
+                  </div>
+                </div>
+
+                {/* CARD 6: MONTHLY TOPUPS */}
+                <div className="clay-stat rounded-3xl p-4 sm:p-5 flex flex-col justify-between min-h-[180px] text-left">
+                  <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-emerald-500">
+                        <Coins className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                      </div>
+                      <div className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider">Monthly Topups</div>
+                    </div>
+                    <span className="text-[9px] text-brand-emerald font-bold font-mono bg-brand-emerald/10 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0">
+                      ↑ KES {(() => { const v = stats?.today_revenue || 0; return v >= 1000000 ? `${(v/1000000).toFixed(1)}M` : v >= 1000 ? `${(v/1000).toFixed(1)}K` : v.toLocaleString(); })()} today
+                    </span>
+                  </div>
+                  <div className="mt-2">
+                    <div className="text-2xl font-black text-slate-900 dark:text-white font-mono leading-none truncate">
+                      KES {(() => { const v = stats?.monthly_revenue || 0; return v >= 1000000 ? `${(v/1000000).toFixed(1)}M` : v >= 1000 ? `${(v/1000).toFixed(1)}K` : v.toLocaleString(); })()}
+                    </div>
+                  </div>
+
+                  {/* Daily revenue breakdown */}
+                  <div className="border-t border-slate-200/20 dark:border-white/5 pt-2 mt-3 text-[9px] text-slate-600 dark:text-slate-300 space-y-1.5 font-mono">
+                    <div className="text-[8px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider pb-0.5">Last 30 Days</div>
+                    {stats?.daily_revenue_breakdown?.slice().reverse().slice(0, 3).map((d, idx) => (
+                      <div key={idx} className="flex justify-between items-center">
+                        <span>{d.label}</span>
+                        <span className={`font-bold px-1.5 py-0.5 rounded text-[9px] ${d.revenue > 0 ? 'text-brand-emerald bg-brand-emerald/10' : 'text-slate-500 dark:text-slate-400'}`}>
+                          KES {(() => { const v = d.revenue; return v >= 1000000 ? `${(v/1000000).toFixed(1)}M` : v >= 1000 ? `${(v/1000).toFixed(1)}K` : v.toLocaleString(); })()}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="border-t border-slate-200/20 dark:border-white/5 pt-2.5 mt-2.5 flex justify-between text-[9px] text-slate-500 font-mono">
+                    <div>All-Time Deposits <span className="text-brand-emerald font-bold">KES {(() => { const v = stats?.all_time_revenue || 0; return v >= 1000000 ? `${(v/1000000).toFixed(1)}M` : v >= 1000 ? `${(v/1000).toFixed(1)}K` : v.toLocaleString(); })()}</span></div>
+                    <div>Paying Clients <span className="text-brand-primary font-bold">{stats?.paying_clients || 0}</span></div>
+                  </div>
+                </div>
+
+                {/* CARD 7: SMS DELIVERY RATE */}
+                <div className="clay-stat rounded-3xl p-4 sm:p-5 flex flex-col justify-between min-h-[180px] text-left">
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-teal-500">
+                          <Send className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-[0_0_8px_rgba(20,184,166,0.5)]" />
                         </div>
                         <div className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider">SMS Delivery Rate</div>
                       </div>
@@ -1050,225 +1223,6 @@ export default function AdminPanelPage() {
                       <span className="block text-[8px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">Void</span>
                       <span className="text-xs font-bold text-slate-500 font-mono">0</span>
                     </div>
-                  </div>
-                </div>
-
-                {/* CARD 4: ONLINE USERS */}
-                <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
-                  <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-brand-emerald">
-                        <UserCheck className="w-5 h-5 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                      </div>
-                      <div className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider">Online Users</div>
-                    </div>
-                    {stats && stats.online_users > 0 && (
-                      <span className="flex items-center gap-1 text-[9px] font-black text-brand-emerald bg-brand-emerald/10 px-2 py-0.5 rounded-full font-mono whitespace-nowrap shrink-0">
-                        <span className="w-1.5 h-1.5 rounded-full bg-brand-emerald animate-ping" />
-                        LIVE
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-2">
-                    <div className="text-3xl font-black text-slate-900 dark:text-white font-mono leading-none">{stats?.online_users || 0}</div>
-                  </div>
-                  <div className="flex gap-2 mt-2">
-                    <span className="text-[9px] font-bold px-2 py-0.5 bg-brand-emerald/10 text-brand-emerald rounded-full">
-                      ACTIVE {stats?.active_users || 0}
-                    </span>
-                    <span className="text-[9px] font-bold px-2 py-0.5 bg-slate-100 dark:bg-white/5 text-slate-500 rounded-full">
-                      TOTAL {stats?.total_users || 0}
-                    </span>
-                  </div>
-                  <div className="border-t border-slate-200/20 dark:border-white/5 pt-2.5 mt-2.5 flex justify-between text-[9px] text-slate-500 font-mono">
-                    <div>TODAY <span className="text-brand-primary font-bold">+{stats?.today_users || 0}</span></div>
-                    <div>YEST <span className="text-brand-primary font-bold">+{stats?.yesterday_users || 0}</span></div>
-                    <div>7D <span className="text-brand-primary font-bold">+{stats?.last_7d_users || 0}</span></div>
-                  </div>
-                </div>
-
-                {/* CARD 5: TOTAL CLIENTS */}
-                <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
-                  <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-brand-primary">
-                        <Users className="w-5 h-5 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
-                      </div>
-                      <div className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider">Total Clients</div>
-                    </div>
-                  </div>
-                  <div className="mt-2">
-                    <div className="text-3xl font-black text-slate-900 dark:text-white font-mono leading-none">{stats?.total_users || 0}</div>
-                  </div>
-                  <div className="flex gap-2 mt-2">
-                    <span className="text-[9px] font-bold px-2 py-0.5 bg-brand-primary/10 text-brand-primary rounded-full">
-                      ACTIVE {stats?.active_users || 0}
-                    </span>
-                    <span className="text-[9px] font-bold px-2 py-0.5 bg-slate-100 dark:bg-white/5 text-slate-500 rounded-full">
-                      SUSPENDED {(stats?.total_users || 0) - (stats?.active_users || 0)}
-                    </span>
-                  </div>
-                  <div className="border-t border-slate-200/20 dark:border-white/5 pt-2.5 mt-2.5 flex justify-between text-[9px] text-slate-500 font-mono">
-                    <div>TODAY <span className="text-brand-primary font-bold">+{stats?.today_users || 0}</span></div>
-                    <div>YEST <span className="text-brand-primary font-bold">+{stats?.yesterday_users || 0}</span></div>
-                    <div>7D <span className="text-brand-primary font-bold">+{stats?.last_7d_users || 0}</span></div>
-                  </div>
-                </div>
-
-                {/* CARD 6: GATEWAYS & ROUTING */}
-                <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
-                  <div className="space-y-3">
-                    <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-cyan-500">
-                          <Activity className="w-5 h-5 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]" />
-                        </div>
-                        <div className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider">SMS Gateways</div>
-                      </div>
-                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap shrink-0 ${gateways.some(g => g.is_active) ? 'bg-brand-emerald/10 text-brand-emerald' : 'bg-slate-100 dark:bg-white/5 text-slate-500'}`}>
-                        {gateways.filter(g => g.is_active).length}/{gateways.length} ONLINE
-                      </span>
-                    </div>
-
-                    <div className="pt-1.5 flex items-baseline gap-2">
-                      <div className="text-3xl font-black text-slate-900 dark:text-white font-mono leading-none">
-                        {gateways.length}
-                      </div>
-                      <span className="text-[10px] font-semibold text-slate-400 dark:text-gray-500">Whitelisted Nodes</span>
-                    </div>
-
-                    {/* Quick Load Balancer Sliders */}
-                    <div className="space-y-2 mt-3 pt-2.5 border-t border-slate-200/20 dark:border-white/5">
-                      <span className="block text-[8px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider">
-                        Quick Load Split Weights
-                      </span>
-                      {gateways.length > 0 ? (
-                        <div className="space-y-2 max-h-[85px] overflow-y-auto custom-scrollbar pr-1">
-                          {gateways.map(gw => (
-                            <div key={gw.id} className="space-y-0.5">
-                              <div className="flex justify-between items-center text-[10px] font-semibold text-slate-700 dark:text-gray-300">
-                                <span className="truncate max-w-[100px]">{gw.name}</span>
-                                <span className="font-mono text-brand-primary font-bold">{gw.weight}%</span>
-                              </div>
-                              <input 
-                                type="range" 
-                                min="0" 
-                                max="100" 
-                                value={gw.weight} 
-                                onChange={e => {
-                                  const val = Number(e.target.value);
-                                  setGateways(prev => prev.map(g => g.id === gw.id ? { ...g, weight: val } : g));
-                                }}
-                                onMouseUp={() => handleUpdateGatewayWeight(gw, gw.weight)}
-                                onTouchEnd={() => handleUpdateGatewayWeight(gw, gw.weight)}
-                                className="w-full h-1 bg-slate-200 dark:bg-white/10 rounded-lg appearance-none cursor-pointer accent-brand-primary" 
-                                disabled={!gw.is_active}
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-[10px] text-slate-400 italic block py-1">No active gateways</span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="border-t border-slate-200/20 dark:border-white/5 pt-2 mt-3 flex justify-between text-[9px] text-slate-500 font-mono">
-                    <div>SAF <span className="text-brand-emerald font-bold">142ms</span></div>
-                    <div>AIR <span className="text-brand-emerald font-bold">178ms</span></div>
-                  </div>
-                </div>
-
-                {/* CARD 7: MONTHLY REVENUE */}
-                <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
-                  <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-emerald-500">
-                        <Coins className="w-5 h-5 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                      </div>
-                      <div className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider">Monthly Revenue</div>
-                    </div>
-                    <span className="text-[9px] text-brand-emerald font-bold font-mono whitespace-nowrap shrink-0">
-                      ↗ KES {(() => { const v = stats?.today_revenue || 0; return v >= 1000000 ? `${(v/1000000).toFixed(1)}M` : v >= 1000 ? `${(v/1000).toFixed(1)}K` : v.toLocaleString(); })()} today
-                    </span>
-                  </div>
-                  <div className="mt-2">
-                    <div className="text-2xl font-black text-slate-900 dark:text-white font-mono leading-none truncate">
-                      KES {(() => { const v = stats?.monthly_revenue || 0; return v >= 1000000 ? `${(v/1000000).toFixed(1)}M` : v >= 1000 ? `${(v/1000).toFixed(1)}K` : v.toLocaleString(); })()}
-                    </div>
-                  </div>
-
-                  {/* Daily revenue breakdown */}
-                  <div className="border-t border-slate-200/20 dark:border-white/5 pt-2 mt-3 text-[9px] text-slate-600 dark:text-slate-300 space-y-1.5 font-mono">
-                    <div className="text-[8px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider pb-0.5">Last 30 Days</div>
-                    {stats?.daily_revenue_breakdown?.slice().reverse().slice(0, 5).map((d, idx) => (
-                      <div key={idx} className="flex justify-between items-center">
-                        <span>{d.label}</span>
-                        <span className={`font-bold px-1.5 py-0.5 rounded text-[9px] ${d.revenue > 0 ? 'text-brand-emerald bg-brand-emerald/10' : 'text-slate-500 dark:text-slate-400'}`}>
-                          KES {(() => { const v = d.revenue; return v >= 1000000 ? `${(v/1000000).toFixed(1)}M` : v >= 1000 ? `${(v/1000).toFixed(1)}K` : v.toLocaleString(); })()}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                  {stats && stats.daily_revenue_breakdown && stats.daily_revenue_breakdown.length > 5 && (
-                    <button
-                      onClick={() => setActiveTab('revenue')}
-                      className="w-full text-center text-[8px] font-black uppercase tracking-wider text-brand-primary hover:text-brand-primary/80 transition-colors mt-1 py-1 bg-transparent border-0 cursor-pointer"
-                    >
-                      Show More →
-                    </button>
-                  )}
-                </div>
-
-                {/* CARD 8: ALL TIME REVENUE */}
-                <div className="clay-stat rounded-3xl p-5 flex flex-col justify-between min-h-[180px] text-left">
-                  <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-2xl clay-icon-raised flex items-center justify-center shrink-0 text-emerald-500">
-                        <TrendingUp className="w-5 h-5 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                      </div>
-                      <div className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-wider">All Time Revenue</div>
-                    </div>
-                    <span className="text-[9px] text-amber-400 font-bold font-mono whitespace-nowrap shrink-0">
-                      KES {(() => { const v = stats?.this_year_revenue || 0; return v >= 1000000 ? `${(v/1000000).toFixed(1)}M` : v >= 1000 ? `${(v/1000).toFixed(1)}K` : v.toLocaleString(); })()} this yr
-                    </span>
-                  </div>
-                  <div className="mt-2">
-                    <div className="text-2xl font-black text-slate-900 dark:text-white font-mono leading-none truncate">
-                      KES {(() => { const v = stats?.all_time_revenue || 0; return v >= 1000000 ? `${(v/1000000).toFixed(1)}M` : v >= 1000 ? `${(v/1000).toFixed(1)}K` : v.toLocaleString(); })()}
-                    </div>
-                  </div>
-                  <div className="border-t border-slate-200/20 dark:border-white/5 pt-2 mt-3 text-[9px] text-slate-600 dark:text-slate-300 space-y-1.5 font-mono">
-                    <div className="text-[8px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider pb-0.5">Previous Months</div>
-                    {/* Current month first */}
-                    {stats?.monthly_revenue !== undefined && (
-                      <div className="flex justify-between items-center">
-                        <span>This Month</span>
-                        <span className="font-bold text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded text-[9px]">
-                          KES {(() => { const v = stats?.monthly_revenue || 0; return v >= 1000000 ? `${(v/1000000).toFixed(1)}M` : v >= 1000 ? `${(v/1000).toFixed(1)}K` : v.toLocaleString(); })()}
-                        </span>
-                      </div>
-                    )}
-                    {stats?.monthly_breakdown?.slice(0, 5).map((b, idx) => (
-                      <div key={idx} className="flex justify-between items-center">
-                        <span>{b.month}</span>
-                        <span className="font-bold text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded text-[9px]">
-                          KES {(() => { const v = b.revenue; return v >= 1000000 ? `${(v/1000000).toFixed(1)}M` : v >= 1000 ? `${(v/1000).toFixed(1)}K` : v.toLocaleString(); })()}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                  {stats && stats.monthly_breakdown && stats.monthly_breakdown.length > 5 && (
-                    <button
-                      onClick={() => setActiveTab('revenue')}
-                      className="w-full text-center text-[8px] font-black uppercase tracking-wider text-brand-primary hover:text-brand-primary/80 transition-colors mt-1 py-1 bg-transparent border-0 cursor-pointer"
-                    >
-                      Show More →
-                    </button>
-                  )}
-                  <div className="border-t border-slate-200/20 dark:border-white/5 pt-2 mt-2 flex justify-between text-[9px] text-slate-600 dark:text-slate-300 font-mono">
-                    <span>Paying Clients</span>
-                    <span className="text-indigo-500 font-bold">{stats?.paying_clients || 0}</span>
                   </div>
                 </div>
 

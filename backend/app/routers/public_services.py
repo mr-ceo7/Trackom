@@ -13,6 +13,7 @@ from sqlalchemy.orm import selectinload
 
 from app.database import get_db
 from app.models.api_key import ApiKey
+from app.models.api_key_log import ApiKeyLog
 from app.models.user import User
 from app.models.sms import SmsMessage
 from app.utils.security import verify_password
@@ -23,7 +24,7 @@ from app.utils.limiter import limiter
 router = APIRouter(tags=["Advanta Compatibility Service"])
 
 
-async def authenticate_api_key(apikey: str, db: AsyncSession) -> Optional[User]:
+async def authenticate_api_key(apikey: str, db: AsyncSession) -> Optional[ApiKey]:
     if not apikey or not apikey.startswith("trk_") or len(apikey) < 10:
         return None
     prefix = apikey[:8]
@@ -35,8 +36,43 @@ async def authenticate_api_key(apikey: str, db: AsyncSession) -> Optional[User]:
         if verify_password(apikey, key.hashed_key):
             if key.expires_at and key.expires_at < datetime.utcnow():
                 continue
-            return key.user
+            return key
     return None
+
+
+async def log_api_key_usage(
+    db: AsyncSession,
+    key: ApiKey,
+    endpoint: str,
+    method: str,
+    status: int,
+    credits: float,
+    request: Optional[Request] = None
+):
+    try:
+        key.usage_count += 1
+        key.last_used_at = datetime.utcnow()
+        
+        ip_address = None
+        user_agent = None
+        if request:
+            ip_address = request.client.host if request.client else None
+            user_agent = request.headers.get("user-agent")
+            
+        log = ApiKeyLog(
+            api_key_id=key.id,
+            endpoint=endpoint,
+            method=method,
+            status=status,
+            credits=credits,
+            ip_address=ip_address,
+            user_agent=user_agent
+        )
+        db.add(log)
+        await db.flush()
+    except Exception as e:
+        import logging
+        logging.getLogger("trackom").error(f"Failed to log API key usage: {e}")
 
 
 async def process_sendsms(
@@ -47,7 +83,8 @@ async def process_sendsms(
     mobile: str,
     timeToSend: Optional[str],
     hashed: Optional[bool],
-    db: AsyncSession
+    db: AsyncSession,
+    request: Optional[Request] = None
 ):
     # Validate parameters
     if not apikey:
@@ -56,13 +93,23 @@ async def process_sendsms(
         return {"response-code": 1005, "response-description": "System error"}
 
     # 2. Authenticate by Trackom API key
-    user = await authenticate_api_key(apikey, db)
-    if not user or not user.is_active:
+    key = await authenticate_api_key(apikey, db)
+    if not key or not key.user or not key.user.is_active:
         return {"response-code": 1006, "response-description": "Invalid credentials"}
+    user = key.user
 
     # 3. Parse recipients
     recipients = [r.strip() for r in mobile.split(",") if r.strip()]
     if not recipients:
+        await log_api_key_usage(
+            db=db,
+            key=key,
+            endpoint="/api/services/sendsms",
+            method=request.method if request else "POST",
+            status=400,
+            credits=0.0,
+            request=request
+        )
         return {"response-code": 1003, "response-description": "Invalid mobile number"}
 
     # 4. Check balance
@@ -72,6 +119,15 @@ async def process_sendsms(
     total_cost = int(math.ceil(len(recipients) * per_message_cost))
 
     if user.active_balance < total_cost:
+        await log_api_key_usage(
+            db=db,
+            key=key,
+            endpoint="/api/services/sendsms",
+            method=request.method if request else "POST",
+            status=400,
+            credits=0.0,
+            request=request
+        )
         return {"response-code": 1004, "response-description": "Low bulk credits"}
 
     # Check for live gateway liquidity if live
@@ -79,6 +135,15 @@ async def process_sendsms(
         from app.services.email import check_and_enforce_gateway_liquidity
         is_held = await check_and_enforce_gateway_liquidity(db)
         if is_held:
+            await log_api_key_usage(
+                db=db,
+                key=key,
+                endpoint="/api/services/sendsms",
+                method=request.method if request else "POST",
+                status=500,
+                credits=0.0,
+                request=request
+            )
             return {"response-code": 1007, "response-description": "System error"}
 
     # Handle scheduling if timeToSend is provided
@@ -152,7 +217,18 @@ async def process_sendsms(
             "messageid": msg.gateway_message_id or batch_id
         })
 
-    return {"responses": response_items}
+    # Log API Key usage on success
+    await log_api_key_usage(
+        db=db,
+        key=key,
+        endpoint="/api/services/sendsms",
+        method=request.method if request else "POST",
+        status=200,
+        credits=float(total_cost),
+        request=request
+    )
+
+    return response_items
 
 
 @router.post("/api/services/sendsms")
@@ -200,7 +276,8 @@ async def sendsms_post(
         mobile=mobile,
         timeToSend=timeToSend,
         hashed=hashed,
-        db=db
+        db=db,
+        request=request
     )
 
 
@@ -225,7 +302,8 @@ async def sendsms_get(
         mobile=mobile,
         timeToSend=timeToSend,
         hashed=hashed,
-        db=db
+        db=db,
+        request=request
     )
 
 
@@ -259,7 +337,8 @@ async def sendotp_get(
         mobile=mobile,
         timeToSend=timeToSend,
         hashed=hashed,
-        db=db
+        db=db,
+        request=request
     )
 
 
@@ -283,9 +362,10 @@ async def sendbulk(
     if not apikey:
         return {"response-code": 1006, "response-description": "Invalid credentials"}
 
-    user = await authenticate_api_key(apikey, db)
-    if not user or not user.is_active:
+    key = await authenticate_api_key(apikey, db)
+    if not key or not key.user or not key.user.is_active:
         return {"response-code": 1006, "response-description": "Invalid credentials"}
+    user = key.user
 
     total_cost = 0
     items_to_process = []
@@ -311,15 +391,42 @@ async def sendbulk(
         })
 
     if not items_to_process:
+        await log_api_key_usage(
+            db=db,
+            key=key,
+            endpoint="/api/services/sendbulk",
+            method="POST",
+            status=400,
+            credits=0.0,
+            request=request
+        )
         return {"response-code": 1005, "response-description": "System error"}
 
     if user.active_balance < total_cost:
+        await log_api_key_usage(
+            db=db,
+            key=key,
+            endpoint="/api/services/sendbulk",
+            method="POST",
+            status=400,
+            credits=0.0,
+            request=request
+        )
         return {"response-code": 1004, "response-description": "Low bulk credits"}
 
     if not user.sandbox_mode:
         from app.services.email import check_and_enforce_gateway_liquidity
         is_held = await check_and_enforce_gateway_liquidity(db)
         if is_held:
+            await log_api_key_usage(
+                db=db,
+                key=key,
+                endpoint="/api/services/sendbulk",
+                method="POST",
+                status=500,
+                credits=0.0,
+                request=request
+            )
             return {"response-code": 1007, "response-description": "System error"}
 
     batch_id = str(uuid_mod.uuid4())
@@ -362,10 +469,10 @@ async def sendbulk(
         gateway = get_sms_gateway()
         groups = {}
         for m in unscheduled:
-            key = (m.content, m.sender_id)
-            if key not in groups:
-                groups[key] = []
-            groups[key].append(m)
+            key_group = (m.content, m.sender_id)
+            if key_group not in groups:
+                groups[key_group] = []
+            groups[key_group].append(m)
 
         for (content, sender_id), msgs in groups.items():
             try:
@@ -397,6 +504,16 @@ async def sendbulk(
             "messageid": msg.gateway_message_id or batch_id
         })
 
+    await log_api_key_usage(
+        db=db,
+        key=key,
+        endpoint="/api/services/sendbulk",
+        method="POST",
+        status=200,
+        credits=float(total_cost),
+        request=request
+    )
+
     return {"responses": response_items}
 
 
@@ -411,9 +528,20 @@ async def getbalance_get(
     if not apikey:
         return {"response-code": 1006, "response-description": "Invalid credentials"}
 
-    user = await authenticate_api_key(apikey, db)
-    if not user or not user.is_active:
+    key = await authenticate_api_key(apikey, db)
+    if not key or not key.user or not key.user.is_active:
         return {"response-code": 1006, "response-description": "Invalid credentials"}
+    user = key.user
+
+    await log_api_key_usage(
+        db=db,
+        key=key,
+        endpoint="/api/services/getbalance",
+        method="GET",
+        status=200,
+        credits=0.0,
+        request=request
+    )
 
     return {
         "response-code": 200,
@@ -447,9 +575,20 @@ async def getbalance_post(
     if not apikey:
         return {"response-code": 1006, "response-description": "Invalid credentials"}
 
-    user = await authenticate_api_key(apikey, db)
-    if not user or not user.is_active:
+    key = await authenticate_api_key(apikey, db)
+    if not key or not key.user or not key.user.is_active:
         return {"response-code": 1006, "response-description": "Invalid credentials"}
+    user = key.user
+
+    await log_api_key_usage(
+        db=db,
+        key=key,
+        endpoint="/api/services/getbalance",
+        method="POST",
+        status=200,
+        credits=0.0,
+        request=request
+    )
 
     return {
         "response-code": 200,
@@ -462,14 +601,16 @@ async def process_getdlr(
     apikey: str,
     partnerID: Optional[str],
     messageid: str,
-    db: AsyncSession
+    db: AsyncSession,
+    request: Optional[Request] = None
 ):
     if not apikey or not messageid:
         return {"response-code": 1006, "response-description": "Invalid credentials"}
 
-    user = await authenticate_api_key(apikey, db)
-    if not user or not user.is_active:
+    key = await authenticate_api_key(apikey, db)
+    if not key or not key.user or not key.user.is_active:
         return {"response-code": 1006, "response-description": "Invalid credentials"}
+    user = key.user
 
     q = select(SmsMessage).where(
         SmsMessage.user_id == user.id,
@@ -480,6 +621,15 @@ async def process_getdlr(
     msg = res.scalar_one_or_none()
 
     if not msg:
+        await log_api_key_usage(
+            db=db,
+            key=key,
+            endpoint="/api/services/getdlr",
+            method=request.method if request else "GET",
+            status=404,
+            credits=0.0,
+            request=request
+        )
         return {"response-code": 1008, "response-description": "No Delivery Report"}
 
     status_mapping = {
@@ -491,6 +641,16 @@ async def process_getdlr(
         "rejected": "Rejected"
     }
     status_str = status_mapping.get(msg.status, "Queued")
+
+    await log_api_key_usage(
+        db=db,
+        key=key,
+        endpoint="/api/services/getdlr",
+        method=request.method if request else "GET",
+        status=200,
+        credits=0.0,
+        request=request
+    )
 
     return {
         "response-code": 200,
@@ -508,7 +668,7 @@ async def getdlr_get(
     partnerID: Optional[str] = None,
     db: AsyncSession = Depends(get_db)
 ):
-    return await process_getdlr(apikey, partnerID, messageid, db)
+    return await process_getdlr(apikey, partnerID, messageid, db, request=request)
 
 
 @router.post("/api/services/getdlr")
@@ -536,4 +696,4 @@ async def getdlr_post(
         partnerID = form.get("partnerID")
         messageid = form.get("messageid")
 
-    return await process_getdlr(apikey, partnerID, messageid, db)
+    return await process_getdlr(apikey, partnerID, messageid, db, request=request)
