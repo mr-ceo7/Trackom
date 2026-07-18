@@ -273,11 +273,19 @@ export default function ApiKeysPage() {
                 <span className={`clay-pill px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide shrink-0 ${
                   k.scope === 'send_only' 
                     ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400' 
+                    : k.scope === 'otp_only' 
+                    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' 
                     : k.scope === 'read_only' 
                     ? 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400' 
                     : 'bg-brand-primary/15 text-brand-primary dark:text-brand-primary-light'
                 }`}>
-                  {k.scope === 'send_only' ? 'Send Only' : k.scope === 'read_only' ? 'Read Only' : 'Full Access'}
+                  {k.scope === 'send_only' 
+                    ? 'Send Only' 
+                    : k.scope === 'otp_only' 
+                    ? 'OTP Only' 
+                    : k.scope === 'read_only' 
+                    ? 'Read Only' 
+                    : 'Full Access'}
                 </span>
 
                 <span className="clay-pill px-2 py-0.5 rounded-md text-[10px] font-semibold text-slate-500 bg-slate-100 dark:bg-slate-800 dark:text-gray-400 shrink-0">
@@ -526,8 +534,9 @@ export default function ApiKeysPage() {
                         className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white focus:outline-none text-xs cursor-pointer"
                       >
                         <option value="full_access">Full Access (Read, Write, Send)</option>
-                        <option value="send_only">Send SMS Only</option>
-                        <option value="read_only">Read Only (Reports & History)</option>
+                        <option value="send_only">Send SMS & Bulk Only</option>
+                        <option value="otp_only">Send OTP Only</option>
+                        <option value="read_only">Read Only (Balance & DLR Reports)</option>
                       </select>
                     </div>
 

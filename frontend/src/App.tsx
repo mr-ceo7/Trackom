@@ -2,8 +2,8 @@
  * App.tsx - Router-based application root with code-split lazy loading.
  */
 import { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Loader from './components/Loader';
 
@@ -99,7 +99,9 @@ export default function App() {
               path="/admin"
               element={
                 <ProtectedRoute>
-                  <AdminPanelPage />
+                  <AdminRoute>
+                    <AdminPanelPage />
+                  </AdminRoute>
                 </ProtectedRoute>
               }
             />
@@ -121,6 +123,21 @@ export default function App() {
       </AuthProvider>
     </BrowserRouter>
   );
+}
+
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { user, isLoading } = useAuth();
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F3F4FD] dark:bg-surface-dark">
+        <Loader size="lg" />
+      </div>
+    );
+  }
+  if (!user || !user.is_superuser) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return <>{children}</>;
 }
 
 function NotFoundPage() {

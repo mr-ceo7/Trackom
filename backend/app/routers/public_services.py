@@ -96,6 +96,13 @@ async def process_sendsms(
     key = await authenticate_api_key(apikey, db)
     if not key or not key.user or not key.user.is_active:
         return {"response-code": 1006, "response-description": "Invalid credentials"}
+    
+    # Enforce scope check
+    is_otp = request and ("sendotp" in str(request.url.path))
+    allowed_scopes = ("full_access", "otp_only") if is_otp else ("full_access", "send_only")
+    if key.scope not in allowed_scopes:
+        return {"response-code": 1006, "response-description": "Invalid credentials - Insufficient permissions"}
+
     user = key.user
 
     # 3. Parse recipients
@@ -359,6 +366,10 @@ async def process_sendbulk_logic(
     key = await authenticate_api_key(apikey, db)
     if not key or not key.user or not key.user.is_active:
         return {"response-code": 1006, "response-description": "Invalid credentials"}
+    
+    if key.scope not in ("full_access", "send_only"):
+        return {"response-code": 1006, "response-description": "Invalid credentials - Insufficient permissions"}
+
     user = key.user
 
     total_cost = 0
@@ -557,6 +568,9 @@ async def getbalance_get(
     key = await authenticate_api_key(apikey, db)
     if not key or not key.user or not key.user.is_active:
         return {"response-code": 1006, "response-description": "Invalid credentials"}
+    
+    if key.scope not in ("full_access", "read_only"):
+        return {"response-code": 1006, "response-description": "Invalid credentials - Insufficient permissions"}
     user = key.user
 
     await log_api_key_usage(
@@ -604,6 +618,9 @@ async def getbalance_post(
     key = await authenticate_api_key(apikey, db)
     if not key or not key.user or not key.user.is_active:
         return {"response-code": 1006, "response-description": "Invalid credentials"}
+    
+    if key.scope not in ("full_access", "read_only"):
+        return {"response-code": 1006, "response-description": "Invalid credentials - Insufficient permissions"}
     user = key.user
 
     await log_api_key_usage(
@@ -636,6 +653,9 @@ async def process_getdlr(
     key = await authenticate_api_key(apikey, db)
     if not key or not key.user or not key.user.is_active:
         return {"response-code": 1006, "response-description": "Invalid credentials"}
+    
+    if key.scope not in ("full_access", "read_only"):
+        return {"response-code": 1006, "response-description": "Invalid credentials - Insufficient permissions"}
     user = key.user
 
     q = select(SmsMessage).where(
