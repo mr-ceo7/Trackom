@@ -18,6 +18,14 @@ const endpoints = [
     response: '[\n  {\n    "response-code": 200,\n    "response-description": "Success",\n    "mobile": "254712345678",\n    "messageid": "batch_uuid_..."\n  }\n]' 
   },
   { 
+    method: 'GET', 
+    path: '/api/services/sendsms', 
+    desc: 'Send standard SMS via HTTP GET query parameters.', 
+    auth: false,
+    body: 'Query Parameters:\n- apikey: trk_your_api_key\n- mobile: 254712345678,254723456789\n- message: Hello from Trackom!\n- shortcode: TRACKOM\n- partnerID: your_partner_id (optional)\n- timeToSend: 1783726765 (optional unix timestamp or date string)', 
+    response: '[\n  {\n    "response-code": 200,\n    "response-description": "Success",\n    "mobile": "254712345678",\n    "messageid": "batch_uuid_..."\n  }\n]' 
+  },
+  { 
     method: 'POST', 
     path: '/api/services/sendbulk', 
     desc: 'Send unique bulk messages. Send up to 1000 unique messages in a single request.', 
@@ -26,11 +34,27 @@ const endpoints = [
     response: '{\n  "responses": [\n    {\n      "response-code": 200,\n      "response-description": "Success",\n      "mobile": "254712345678",\n      "messageid": "message_id_uuid"\n    },\n    {\n      "response-code": 200,\n      "response-description": "Success",\n      "mobile": "254723456789",\n      "messageid": "message_id_uuid"\n    }\n  ]\n}' 
   },
   { 
+    method: 'GET', 
+    path: '/api/services/sendbulk', 
+    desc: 'Send unique bulk messages via HTTP GET query parameters. Expects a URL-encoded JSON list of messages.', 
+    auth: false,
+    body: 'Query Parameters:\n- smslist: JSON-encoded string array (e.g. [{"partnerID":"your_partner_id","apikey":"trk_your_api_key","mobile":"254712345678","message":"First content","shortcode":"TRACKOM"}])', 
+    response: '{\n  "responses": [\n    {\n      "response-code": 200,\n      "response-description": "Success",\n      "mobile": "254712345678",\n      "messageid": "message_id_uuid"\n    }\n  ]\n}' 
+  },
+  { 
     method: 'POST', 
     path: '/api/services/sendotp', 
     desc: 'Send time-critical OTP (One-Time Password) verification messages.', 
     auth: false,
     body: '{\n  "apikey": "trk_your_api_key",\n  "partnerID": "your_partner_id",\n  "message": "Your OTP code is 123456",\n  "shortcode": "TRACKOM",\n  "mobile": "254712345678"\n}', 
+    response: '[\n  {\n    "response-code": 200,\n    "response-description": "Success",\n    "mobile": "254712345678",\n    "messageid": "batch_uuid_..."\n  }\n]' 
+  },
+  { 
+    method: 'GET', 
+    path: '/api/services/sendotp', 
+    desc: 'Send time-critical OTP (One-Time Password) verification messages via HTTP GET query parameters.', 
+    auth: false,
+    body: 'Query Parameters:\n- apikey: trk_your_api_key\n- mobile: 254712345678\n- message: Your OTP code is 123456\n- shortcode: TRACKOM\n- partnerID: your_partner_id (optional)', 
     response: '[\n  {\n    "response-code": 200,\n    "response-description": "Success",\n    "mobile": "254712345678",\n    "messageid": "batch_uuid_..."\n  }\n]' 
   },
   { 

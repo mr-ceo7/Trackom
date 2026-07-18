@@ -342,18 +342,12 @@ async def sendotp_get(
     )
 
 
-@router.post("/api/services/sendbulk")
-@limiter.limit("60/minute")
-async def sendbulk(
+async def process_sendbulk_logic(
+    smslist: List[Dict[str, Any]],
+    db: AsyncSession,
     request: Request,
-    db: AsyncSession = Depends(get_db)
+    method: str = "POST"
 ):
-    try:
-        body = await request.json()
-    except Exception:
-        return {"response-code": 1005, "response-description": "System error"}
-
-    smslist = body.get("smslist", [])
     if not smslist:
         return {"response-code": 1005, "response-description": "System error"}
 
@@ -395,7 +389,7 @@ async def sendbulk(
             db=db,
             key=key,
             endpoint="/api/services/sendbulk",
-            method="POST",
+            method=method,
             status=400,
             credits=0.0,
             request=request
@@ -407,7 +401,7 @@ async def sendbulk(
             db=db,
             key=key,
             endpoint="/api/services/sendbulk",
-            method="POST",
+            method=method,
             status=400,
             credits=0.0,
             request=request
@@ -422,7 +416,7 @@ async def sendbulk(
                 db=db,
                 key=key,
                 endpoint="/api/services/sendbulk",
-                method="POST",
+                method=method,
                 status=500,
                 credits=0.0,
                 request=request
@@ -508,13 +502,45 @@ async def sendbulk(
         db=db,
         key=key,
         endpoint="/api/services/sendbulk",
-        method="POST",
+        method=method,
         status=200,
         credits=float(total_cost),
         request=request
     )
 
     return {"responses": response_items}
+
+
+@router.post("/api/services/sendbulk")
+@limiter.limit("60/minute")
+async def sendbulk(
+    request: Request,
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        body = await request.json()
+    except Exception:
+        return {"response-code": 1005, "response-description": "System error"}
+
+    smslist = body.get("smslist", [])
+    return await process_sendbulk_logic(smslist, db, request, method="POST")
+
+
+@router.get("/api/services/sendbulk")
+@limiter.limit("60/minute")
+async def sendbulk_get(
+    request: Request,
+    smslist: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """GET version of sendbulk API. Accepts a JSON-encoded list of messages as query parameter 'smslist'."""
+    import json
+    try:
+        parsed_smslist = json.loads(smslist)
+    except Exception:
+        return {"response-code": 1005, "response-description": "System error"}
+
+    return await process_sendbulk_logic(parsed_smslist, db, request, method="GET")
 
 
 @router.get("/api/services/getbalance")

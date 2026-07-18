@@ -126,6 +126,46 @@ async def send_sms(
     )
 
 
+@router.get("/send", response_model=SmsSendResponse)
+@limiter.limit("20/minute")
+async def send_sms_get(
+    request: Request,
+    recipients: str,
+    message: str,
+    sender_id: str,
+    include_opt_out: bool = True,
+    scheduled_at: Optional[str] = None,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """GET version of send SMS API. Accepts comma-separated recipients, message, and sender_id via query parameters."""
+    recipient_list = [r.strip() for r in recipients.split(",") if r.strip()]
+    if not recipient_list:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Recipients parameter must contain at least one valid phone number."
+        )
+
+    parsed_scheduled_at = None
+    if scheduled_at:
+        try:
+            parsed_scheduled_at = datetime.fromisoformat(scheduled_at.replace("Z", "+00:00"))
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid scheduled_at format. Use ISO format (e.g. 2026-07-18T15:30:00)."
+            )
+
+    data = SmsSendRequest(
+        recipients=recipient_list,
+        message=message,
+        sender_id=sender_id,
+        include_opt_out=include_opt_out,
+        scheduled_at=parsed_scheduled_at,
+    )
+    return await send_sms(request=request, data=data, current_user=current_user, db=db)
+
+
 def filter_by_date(q, start_date: Optional[str], end_date: Optional[str]):
     if start_date:
         try:
