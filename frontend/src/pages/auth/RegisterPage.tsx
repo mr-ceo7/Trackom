@@ -175,14 +175,14 @@ export default function RegisterPage() {
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="relative z-10 space-y-6">
           <h1 className="text-4xl xl:text-5xl font-display font-bold text-white leading-tight">
-            Start free.
-            <br /><span className="text-white/80">10,000 SMS credits.</span>
+            Get started
+            <br /><span className="text-white/80">in seconds.</span>
           </h1>
           <p className="text-white/60 text-lg max-w-md leading-relaxed">
-            Create your account in under 60 seconds. No credit card required. Get instant API access.
+            Create your account in under 60 seconds. Top up via M-Pesa and start sending SMS instantly.
           </p>
           <div className="flex items-center gap-3 text-sm text-white/70">
-            {['Free forever plan', 'M-Pesa payments', 'API access'].map((f) => (
+            {['M-Pesa payments', 'API access', 'Bulk SMS'].map((f) => (
               <div key={f} className="flex items-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-300" />
                 <span>{f}</span>
