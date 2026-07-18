@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import api from '../../services/api';
 import Loader from '../../components/Loader';
 import GenieModal from '../../components/GenieModal';
+import { useAuth } from '../../contexts/AuthContext';
 
 
 interface ApiKeyData {
@@ -25,6 +26,7 @@ interface ApiKeyData {
 }
 
 export default function ApiKeysPage() {
+  const { user } = useAuth();
   const [keys, setKeys] = useState<ApiKeyData[]>([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState('');
@@ -602,6 +604,27 @@ export default function ApiKeysPage() {
                     {copied === 'new_key' ? <CheckCircle2 className="w-4 h-4 text-brand-emerald" /> : <Copy className="w-4 h-4" />}
                   </button>
                 </div>
+
+                <div className="space-y-2 pt-2 border-t border-slate-200/20 dark:border-white/5">
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-gray-400">Quick Test GET URL (Browser Ready)</label>
+                  <div className="relative">
+                    <pre className="clay-inset bg-slate-900 rounded-2xl p-4 text-[10px] text-emerald-300 font-mono overflow-x-auto whitespace-pre pr-12">
+                      {`${window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:8000' : 'https://api.trackomgroup.com'}/api/services/sendsms?apikey=${newFullKey}&mobile=${user?.phone || '254712345678'}&message=Hello+from+Trackom!&shortcode=ARVOCAP`}
+                    </pre>
+                    <button 
+                      onClick={() => handleCopy(
+                        `${window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:8000' : 'https://api.trackomgroup.com'}/api/services/sendsms?apikey=${newFullKey}&mobile=${user?.phone || '254712345678'}&message=Hello+from+Trackom!&shortcode=ARVOCAP`, 
+                        'get_url'
+                      )} 
+                      className="absolute top-2.5 right-2.5 p-2 rounded-lg bg-white/10 hover:bg-white/20 text-slate-400 hover:text-white cursor-pointer transition-all"
+                      title="Copy GET URL"
+                    >
+                      {copied === 'get_url' ? <CheckCircle2 className="w-4 h-4 text-brand-emerald" /> : <Copy className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  <p className="text-[9px] text-slate-400 dark:text-gray-500 mt-1">Copy and paste this URL directly into your browser's address bar to send a quick test SMS.</p>
+                </div>
+
                 <button onClick={handleCloseModal} className="clay-button-primary w-full py-3 rounded-2xl text-sm font-semibold text-white cursor-pointer transition-all">Done</button>
               </div>
             )}
