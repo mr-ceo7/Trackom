@@ -2703,6 +2703,17 @@ export default function AdminPanelPage() {
                     <li>Create a new app (e.g. "Trackom B2B Platform") and copy the 16 digit code here.</li>
                   </ol>
                 </div>
+
+                <div className="flex justify-end pt-2 border-t border-slate-200/10 dark:border-white/5">
+                  <button
+                    type="submit"
+                    disabled={savingSettings}
+                    className="clay-button-primary px-5 py-2.5 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center gap-2"
+                  >
+                    {savingSettings ? <Loader size="sm" /> : <Save className="w-3.5 h-3.5" />}
+                    <span>Save Email Configuration</span>
+                  </button>
+                </div>
               </div>
 
               {/* CARD 2: PLATFORM SUPPORT & BANNER */}
@@ -2728,20 +2739,19 @@ export default function AdminPanelPage() {
                     <label htmlFor="maintCheck" className="text-xs font-semibold text-slate-700 dark:text-gray-300 cursor-pointer">Activate global platform maintenance mode</label>
                   </div>
                 </div>
+
+                <div className="flex justify-end pt-2 border-t border-slate-200/10 dark:border-white/5">
+                  <button
+                    type="submit"
+                    disabled={savingSettings}
+                    className="clay-button-primary px-5 py-2.5 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center gap-2"
+                  >
+                    {savingSettings ? <Loader size="sm" /> : <Save className="w-3.5 h-3.5" />}
+                    <span>Save Support Settings</span>
+                  </button>
+                </div>
               </div>
 
-            </div>
-
-            {/* SUBMIT BUTTON */}
-            <div className="flex justify-end pt-2">
-              <button
-                type="submit"
-                disabled={savingSettings}
-                className="clay-button-primary px-6 py-3 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center gap-2"
-              >
-                {savingSettings ? <Loader size="sm" /> : <Save className="w-4 h-4" />}
-                <span>Save System Settings</span>
-              </button>
             </div>
           </form>
         </div>
