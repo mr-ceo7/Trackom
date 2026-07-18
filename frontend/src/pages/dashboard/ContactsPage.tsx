@@ -113,7 +113,8 @@ export default function ContactsPage() {
   const tooltipShownRef = useRef(false);
 
   useEffect(() => {
-    if (!loadingContacts && !tooltipShownRef.current) {
+    const isDismissed = localStorage.getItem('trackom_import_guide_dismissed') === 'true';
+    if (!loadingContacts && !tooltipShownRef.current && !isDismissed && totalContactsCount === 0) {
       tooltipShownRef.current = true;
       const timer = setTimeout(() => {
         setShowTooltip(true);
@@ -124,7 +125,12 @@ export default function ContactsPage() {
       }, 1200);
       return () => clearTimeout(timer);
     }
-  }, [loadingContacts]);
+  }, [loadingContacts, totalContactsCount]);
+
+  const handleDismissTooltip = () => {
+    setShowTooltip(false);
+    localStorage.setItem('trackom_import_guide_dismissed', 'true');
+  };
 
   // Clear selection on tab, search, page navigation, filter change, or blacklist filter change
   useEffect(() => {
@@ -658,16 +664,16 @@ export default function ContactsPage() {
             <AnimatePresence>
               {showTooltip && (
                 <motion.div
-                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
                   transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                  className="absolute left-1/2 -translate-x-1/2 top-full mt-2.5 z-30 w-56 bg-brand-primary text-white text-xs p-3 rounded-2xl shadow-xl flex flex-col gap-1.5 pointer-events-auto"
+                  className="absolute left-0 sm:left-1/2 sm:-translate-x-1/2 bottom-full mb-3 z-30 w-64 sm:w-56 bg-brand-primary text-white text-xs p-3 rounded-2xl shadow-xl flex flex-col gap-1.5 pointer-events-auto"
                 >
                   <div className="flex justify-between items-start">
                     <span className="font-bold flex items-center gap-1">✨ Import Guide</span>
                     <button 
-                      onClick={(e) => { e.stopPropagation(); setShowTooltip(false); }}
+                      onClick={(e) => { e.stopPropagation(); handleDismissTooltip(); }}
                       className="text-white/80 hover:text-white cursor-pointer p-0.5"
                     >
                       <X className="w-3 h-3" />
@@ -680,13 +686,13 @@ export default function ContactsPage() {
                     onClick={(e) => {
                       e.stopPropagation();
                       handleDownloadTemplate();
-                      setShowTooltip(false);
+                      handleDismissTooltip();
                     }}
                     className="mt-1 bg-white text-brand-primary font-bold text-[10px] py-1 px-2.5 rounded-lg hover:bg-slate-50 transition-all text-center self-start cursor-pointer"
                   >
                     Get CSV Template
                   </button>
-                  <div className="absolute left-1/2 -translate-x-1/2 -top-1 w-2.5 h-2.5 bg-brand-primary rotate-45" />
+                  <div className="absolute left-8 sm:left-1/2 sm:-translate-x-1/2 -bottom-1 w-2.5 h-2.5 bg-brand-primary rotate-45" />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -1447,7 +1453,7 @@ export default function ContactsPage() {
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-full max-w-2xl px-4"
+            className="fixed bottom-20 sm:bottom-6 left-1/2 -translate-x-1/2 z-40 w-full max-w-2xl px-4"
           >
             <div className="clay-toolbar rounded-2xl p-4 flex items-center justify-between gap-4 flex-wrap">
               <div className="flex items-center gap-2">

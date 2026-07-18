@@ -315,3 +315,70 @@ async def send_welcome_email(email: str, name: str):
     """
     html_content = _generate_html_template("Your Tenant Account is Active!", body, "Go to Dashboard", "http://localhost:3000")
     await send_email(email, subject, html_content)
+
+
+async def send_campaign_summary_email(email: str, name: str, campaign_name: str, status: str, delivered: int, failed: int, refund: int = 0):
+    """Sends a summary email of campaign status changes."""
+    is_success = status.lower() == "completed"
+    subject = f"Campaign '{campaign_name}' {status.capitalize()}! " + ("🚀" if is_success else "❌")
+    title = f"Campaign {status.capitalize()} Report"
+    
+    body = f"""
+    <p>Hello {name},</p>
+    <p>Your campaign <strong>'{campaign_name}'</strong> has finished processing.</p>
+    <table cellpadding="6" cellspacing="0" style="width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 15px; font-size: 14px; color: #cbd5e1;">
+        <tr style="border-bottom: 1px solid #334155;">
+            <td style="padding: 8px 0; font-weight: bold; color: #94a3b8;">Campaign Name:</td>
+            <td style="padding: 8px 0; font-weight: bold; color: #ffffff;">{campaign_name}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #334155;">
+            <td style="padding: 8px 0; font-weight: bold; color: #94a3b8;">Status:</td>
+            <td style="padding: 8px 0; font-weight: bold; color: {'#10b981' if is_success else '#ef4444'};">{status.upper()}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #334155;">
+            <td style="padding: 8px 0; font-weight: bold; color: #94a3b8;">Delivered:</td>
+            <td style="padding: 8px 0; color: #ffffff;">{delivered:,}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #334155;">
+            <td style="padding: 8px 0; font-weight: bold; color: #94a3b8;">Failed:</td>
+            <td style="padding: 8px 0; color: #ffffff;">{failed:,}</td>
+        </tr>
+        {"<tr style='border-bottom: 1px solid #334155;'><td style='padding: 8px 0; font-weight: bold; color: #94a3b8;'>Refunded Credits:</td><td style='padding: 8px 0; color: #10b981; font-weight: bold;'>" + str(int(refund)) + " credits</td></tr>" if refund > 0 else ""}
+    </table>
+    <p>You can view full recipient metrics and delivery status reports in the dashboard.</p>
+    """
+    html_content = _generate_html_template(title, body, "View Campaign Reports", "http://localhost:3000/dashboard/campaigns")
+    await send_email(email, subject, html_content)
+
+
+async def send_low_balance_email(email: str, name: str, current_balance: int):
+    """Sends a warning email that the user's wallet balance is low."""
+    subject = "Action Required: Low Wallet Balance Alert ⚠️"
+    body = f"""
+    <p>Hello {name},</p>
+    <p>This is an automated warning that your active SMS wallet balance is running low.</p>
+    <div style="background-color: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 12px; padding: 15px; margin: 20px 0; text-align: center;">
+        <span style="color: #94a3b8; font-size: 13px; text-transform: uppercase;">Current Balance</span>
+        <div style="font-size: 28px; font-weight: 800; color: #ef4444; margin-top: 5px; font-family: monospace;">{current_balance:,} Credits</div>
+    </div>
+    <p>To avoid delivery timeouts, API failures, or campaign pauses, please top up your wallet via M-Pesa immediately.</p>
+    """
+    html_content = _generate_html_template("SMS Wallet Balance is Low", body, "Top Up Balance", "http://localhost:3000/dashboard/wallet")
+    await send_email(email, subject, html_content)
+
+
+async def send_security_alert_email(email: str, name: str, action: str, details: str = None):
+    """Sends an email notification for critical security modifications."""
+    subject = f"Trackom Security Alert: {action} 🔒"
+    body = f"""
+    <p>Hello {name},</p>
+    <p>This is a security alert that a configuration modification has occurred on your Trackom account:</p>
+    <div style="background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 15px; margin: 20px 0; color: #ffffff; font-size: 14px;">
+        <strong>Activity:</strong> {action}<br/>
+        {f"<strong>Details:</strong> {details}<br/>" if details else ""}
+        <strong>Timestamp:</strong> {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}
+    </div>
+    <p><strong>If you did not perform this action</strong>, please reset your password immediately, revoke any suspicious API keys, and contact security support.</p>
+    """
+    html_content = _generate_html_template("Security Action Notification", body, "Manage Account Security", "http://localhost:3000/dashboard/settings?tab=security")
+    await send_email(email, subject, html_content)

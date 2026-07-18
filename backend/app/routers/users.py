@@ -73,4 +73,18 @@ async def change_password(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Current password is incorrect")
 
     current_user.hashed_password = hash_password(data.new_password)
+    await db.commit()
+
+    if current_user.notification_preferences.get("security", True):
+        from app.services.email import send_security_alert_email
+        import asyncio
+        asyncio.create_task(
+            send_security_alert_email(
+                current_user.email,
+                current_user.full_name,
+                "Password Changed",
+                "Your account password was updated successfully from the settings panel."
+            )
+        )
+
     return {"message": "Password updated successfully"}

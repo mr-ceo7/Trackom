@@ -2,7 +2,7 @@
  * ComposeSMS - send SMS to individual numbers or contact groups.
  */
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Send, Users, Hash, MessageSquare, AlertCircle, CheckCircle2, ChevronDown, Clock, Sliders, X } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -31,6 +31,8 @@ export default function ComposeSMS() {
 
   const { user, refreshUser } = useAuth();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [errorModal, setErrorModal] = useState<{ title: string; message: string; actionText?: string; actionPath?: string } | null>(null);
   const [sendMode, setSendMode] = useState<'single' | 'bulk' | 'group'>('single');
   const [recipients, setRecipients] = useState('');
   const [senderId, setSenderId] = useState('');
@@ -714,10 +716,26 @@ export default function ComposeSMS() {
     } catch (err: any) {
       clearInterval(progressInterval);
       setShowRadar(false);
+      const errMsg = formatErrorDetail(err.response?.data?.detail) || err.message;
       setResult({
         type: 'error',
-        text: `Failed to launch campaign: ${formatErrorDetail(err.response?.data?.detail) || err.message}`
+        text: `Failed to launch campaign: ${errMsg}`
       });
+
+      // Show alert modal with action buttons
+      if (err.response?.status === 402 || errMsg.toLowerCase().includes('balance') || errMsg.toLowerCase().includes('credit') || errMsg.toLowerCase().includes('insufficient')) {
+        setErrorModal({
+          title: "Insufficient Wallet Balance ⚠️",
+          message: "You do not have enough SMS credits in your wallet to launch this campaign. Please top up your balance to proceed.",
+          actionText: "Top Up Wallet",
+          actionPath: "/dashboard/wallet"
+        });
+      } else {
+        setErrorModal({
+          title: "Campaign Dispatch Failed ❌",
+          message: errMsg
+        });
+      }
     } finally {
       setIsSending(false);
     }
@@ -746,6 +764,51 @@ export default function ComposeSMS() {
             {result.type === 'success' ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
             <span>{result.text}</span>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Error Alert Modal */}
+      <AnimatePresence>
+        {errorModal && (
+          <GenieModal 
+            onClose={() => setErrorModal(null)} 
+            className="p-6 space-y-5 text-left max-w-sm"
+          >
+            <div className="flex items-center gap-3 text-red-500">
+              <AlertCircle className="w-6 h-6 shrink-0" />
+              <h3 className="text-base font-display font-bold text-slate-900 dark:text-white">
+                {errorModal.title}
+              </h3>
+            </div>
+            
+            <p className="text-xs text-slate-600 dark:text-gray-400 leading-relaxed">
+              {errorModal.message}
+            </p>
+
+            <div className="flex gap-3 pt-2">
+              <button 
+                type="button" 
+                onClick={() => setErrorModal(null)} 
+                className="clay-button-secondary flex-1 py-2.5 rounded-xl text-xs font-medium text-slate-600 cursor-pointer transition-all"
+              >
+                Close
+              </button>
+              {errorModal.actionText && errorModal.actionPath && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (errorModal.actionPath) {
+                      setErrorModal(null);
+                      navigate(errorModal.actionPath);
+                    }
+                  }}
+                  className="clay-button-primary flex-1 py-2.5 rounded-xl text-xs font-semibold text-white cursor-pointer transition-all bg-brand-primary"
+                >
+                  {errorModal.actionText}
+                </button>
+              )}
+            </div>
+          </GenieModal>
         )}
       </AnimatePresence>
 

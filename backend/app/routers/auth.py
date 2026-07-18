@@ -759,6 +759,18 @@ async def enable_2fa(
     db_user.is_2fa_enabled = True
     await db.commit()
 
+    if db_user.notification_preferences.get("security", True):
+        from app.services.email import send_security_alert_email
+        import asyncio
+        asyncio.create_task(
+            send_security_alert_email(
+                db_user.email,
+                db_user.full_name,
+                "Two-Factor Authentication Enabled",
+                f"Two-factor authentication has been enabled using the method: {db_user.two_factor_method.upper()}."
+            )
+        )
+
     from app.services.audit import log_audit_action
     await log_audit_action(
         db,
@@ -861,6 +873,18 @@ async def disable_2fa(
         db_user.otp_code = None
         db_user.otp_expires_at = None
         await db.commit()
+
+        if db_user.notification_preferences.get("security", True):
+            from app.services.email import send_security_alert_email
+            import asyncio
+            asyncio.create_task(
+                send_security_alert_email(
+                    db_user.email,
+                    db_user.full_name,
+                    "Two-Factor Authentication Disabled",
+                    "Two-factor authentication has been disabled on your account. Your account is now protected by password only."
+                )
+            )
         
         from app.services.audit import log_audit_action
         await log_audit_action(
@@ -874,6 +898,18 @@ async def disable_2fa(
     db_user.is_2fa_enabled = False
     db_user.totp_secret = None
     await db.commit()
+
+    if db_user.notification_preferences.get("security", True):
+        from app.services.email import send_security_alert_email
+        import asyncio
+        asyncio.create_task(
+            send_security_alert_email(
+                db_user.email,
+                db_user.full_name,
+                "Two-Factor Authentication Disabled",
+                "Two-factor authentication has been disabled on your account. Your account is now protected by password only."
+            )
+        )
 
     from app.services.audit import log_audit_action
     await log_audit_action(

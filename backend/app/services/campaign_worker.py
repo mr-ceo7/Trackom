@@ -135,6 +135,18 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
                         type="error",
                         action_url="/dashboard/campaigns"
                     ))
+                    from app.services.email import send_campaign_summary_email
+                    asyncio.create_task(
+                        send_campaign_summary_email(
+                            email=user.email,
+                            name=user.full_name,
+                            campaign_name=campaign.name,
+                            status="failed",
+                            delivered=0,
+                            failed=0,
+                            refund=0
+                        )
+                    )
                 await db.commit()
                 logger.warning(f"Campaign {campaign_id} failed: No contacts found.")
                 return
@@ -159,6 +171,18 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
                         action_url="/dashboard/wallet",
                         sandbox_mode=campaign.sandbox_mode,
                     ))
+                    from app.services.email import send_campaign_summary_email
+                    asyncio.create_task(
+                        send_campaign_summary_email(
+                            email=user.email,
+                            name=user.full_name,
+                            campaign_name=campaign.name,
+                            status="failed",
+                            delivered=0,
+                            failed=total_recipients,
+                            refund=0
+                        )
+                    )
                 await db.commit()
                 logger.warning(f"Campaign {campaign_id} failed: Insufficient balance. Need {total_cost}, have {user_balance}.")
                 return
@@ -228,6 +252,18 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
                                 action_url="/dashboard/campaigns",
                                 sandbox_mode=campaign.sandbox_mode,
                             ))
+                            from app.services.email import send_campaign_summary_email
+                            asyncio.create_task(
+                                send_campaign_summary_email(
+                                    email=user.email,
+                                    name=user.full_name,
+                                    campaign_name=campaign.name,
+                                    status="cancelled",
+                                    delivered=sent_count,
+                                    failed=total_recipients - sent_count,
+                                    refund=refund
+                                )
+                            )
                         await db.commit()
 
                         logger.info(f"Campaign {campaign_id} cancelled after {sent_count} sends. Refunded {refund} credits.")
@@ -367,8 +403,33 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
                     action_url="/dashboard/campaigns",
                     sandbox_mode=campaign.sandbox_mode,
                 ))
+                from app.services.email import send_campaign_summary_email
+                asyncio.create_task(
+                    send_campaign_summary_email(
+                        email=user.email,
+                        name=user.full_name,
+                        campaign_name=campaign.name,
+                        status="completed",
+                        delivered=delivered_count,
+                        failed=failed_count,
+                        refund=total_refund
+                    )
+                )
 
             await db.commit()
+
+            # Low balance check
+            new_balance = user.sandbox_sms_balance if campaign.sandbox_mode else user.sms_balance
+            if new_balance < 500:
+                if user.notification_preferences.get("balance", True):
+                    from app.services.email import send_low_balance_email
+                    asyncio.create_task(
+                        send_low_balance_email(
+                            email=user.email,
+                            name=user.full_name,
+                            current_balance=new_balance
+                        )
+                    )
             logger.info(f"Campaign {campaign_id} finished processing successfully.")
 
         except Exception as e:

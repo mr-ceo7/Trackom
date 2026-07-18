@@ -2,8 +2,9 @@
  * CampaignsPage - view and create SMS campaigns with groups targeting & scheduling.
  */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Megaphone, Plus, Clock, CheckCircle2, XCircle, Send, BarChart3, X, Calendar, Users, Edit, Trash2, Pause, Play, Ban } from 'lucide-react';
+import { Megaphone, Plus, Clock, CheckCircle2, XCircle, Send, BarChart3, X, Calendar, Users, Edit, Trash2, Pause, Play, Ban, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import Loader from '../../components/Loader';
 import GenieModal from '../../components/GenieModal';
@@ -377,6 +378,8 @@ export default function CampaignsPage() {
   
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const navigate = useNavigate();
+  const [errorModal, setErrorModal] = useState<{ title: string; message: string; actionText?: string; actionPath?: string } | null>(null);
 
   // Edit Campaign Modal State
   const [editingCampaign, setEditingCampaign] = useState<CampaignData | null>(null);
@@ -576,7 +579,23 @@ export default function CampaignsPage() {
       await fetchCampaigns();
       await refreshUser();
     } catch (err: any) {
-      setErrorMsg(err.response?.data?.detail || 'Failed to create campaign. Do you have contacts in the target segment?');
+      const errMsg = err.response?.data?.detail || 'Failed to create campaign. Do you have contacts in the target segment?';
+      setErrorMsg(errMsg);
+
+      // Present custom alert modal with action buttons
+      if (err.response?.status === 402 || errMsg.toLowerCase().includes('balance') || errMsg.toLowerCase().includes('credit') || errMsg.toLowerCase().includes('insufficient')) {
+        setErrorModal({
+          title: "Insufficient Wallet Balance ⚠️",
+          message: "You do not have enough SMS credits in your wallet to launch this campaign. Please top up your balance to proceed.",
+          actionText: "Top Up Wallet",
+          actionPath: "/dashboard/wallet"
+        });
+      } else {
+        setErrorModal({
+          title: "Campaign Creation Failed ❌",
+          message: errMsg
+        });
+      }
     } finally {
       setSaving(false);
     }
@@ -589,6 +608,50 @@ export default function CampaignsPage() {
 
   return (
     <div className="max-w-6xl space-y-6">
+      {/* Error Alert Modal */}
+      <AnimatePresence>
+        {errorModal && (
+          <GenieModal 
+            onClose={() => setErrorModal(null)} 
+            className="p-6 space-y-5 text-left max-w-sm"
+          >
+            <div className="flex items-center gap-3 text-red-500">
+              <AlertCircle className="w-6 h-6 shrink-0" />
+              <h3 className="text-base font-display font-bold text-slate-900 dark:text-white">
+                {errorModal.title}
+              </h3>
+            </div>
+            
+            <p className="text-xs text-slate-600 dark:text-gray-400 leading-relaxed">
+              {errorModal.message}
+            </p>
+
+            <div className="flex gap-3 pt-2">
+              <button 
+                type="button" 
+                onClick={() => setErrorModal(null)} 
+                className="clay-button-secondary flex-1 py-2.5 rounded-xl text-xs font-medium text-slate-600 cursor-pointer transition-all"
+              >
+                Close
+              </button>
+              {errorModal.actionText && errorModal.actionPath && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (errorModal.actionPath) {
+                      setErrorModal(null);
+                      navigate(errorModal.actionPath);
+                    }
+                  }}
+                  className="clay-button-primary flex-1 py-2.5 rounded-xl text-xs font-semibold text-white cursor-pointer transition-all bg-brand-primary"
+                >
+                  {errorModal.actionText}
+                </button>
+              )}
+            </div>
+          </GenieModal>
+        )}
+      </AnimatePresence>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-display font-bold text-slate-900 dark:text-white">Campaigns</h1>

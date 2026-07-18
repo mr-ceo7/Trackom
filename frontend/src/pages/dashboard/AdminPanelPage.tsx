@@ -1231,11 +1231,86 @@ export default function AdminPanelPage() {
                   </div>
                 </div>
 
+                {/* CARD 8: TOP CLIENTS BY BALANCE */}
+                <div className="clay-stat rounded-3xl p-4 sm:p-5 flex flex-col justify-between min-h-[180px] text-left">
+                  <div className="flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-2">
+                    <span className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                      <Users className="w-4 h-4 text-brand-primary" /> Top Clients by Balance
+                    </span>
+                    <span className="text-[10px] text-brand-primary font-bold bg-brand-primary/10 px-2 py-0.5 rounded-full">
+                      Rate: {baseSmsCost.toFixed(2)}/SMS
+                    </span>
+                  </div>
+                  <div className="flex-1 flex flex-col justify-between mt-3">
+                    <div className="flex-1 space-y-3 flex flex-col justify-start">
+                      {stats?.client_distributions && stats.client_distributions.length > 0 ? (
+                        (() => {
+                          const itemsPerPage = 3;
+                          const displayedClients = stats.client_distributions.slice((clientPage - 1) * itemsPerPage, clientPage * itemsPerPage);
+                          return displayedClients.map((client, idx) => {
+                            const totalCredits = stats.total_client_credits || 1;
+                            const sharePct = (client.sms_balance / totalCredits) * 100;
+                            return (
+                              <div key={idx} className="space-y-0.5 text-left">
+                                <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-gray-300 font-mono">
+                                  <span className="truncate max-w-[130px] font-sans font-semibold">{client.client_name}</span>
+                                  <span className="font-mono text-brand-primary font-bold">
+                                    {client.sms_balance.toLocaleString()} cr ({sharePct.toFixed(0)}%)
+                                  </span>
+                                </div>
+                                <div className="h-1.5 w-full bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
+                                  <div 
+                                    className="h-full rounded-full bg-brand-primary transition-all duration-500" 
+                                    style={{ width: `${sharePct}%` }} 
+                                  />
+                                </div>
+                              </div>
+                            );
+                          });
+                        })()
+                      ) : (
+                        <div className="text-center text-xs text-slate-400 italic py-6 my-auto">
+                          No client accounts registered to show distributions.
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Pagination Footer */}
+                    {(() => {
+                      const totalClients = stats?.client_distributions?.length || 0;
+                      const itemsPerPage = 3;
+                      const totalPages = Math.ceil(totalClients / itemsPerPage);
+                      if (totalPages <= 1) return null;
+                      return (
+                        <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-gray-500 pt-2 border-t border-slate-200/20 dark:border-white/5 shrink-0 mt-2">
+                          <span>Page {clientPage} of {totalPages}</span>
+                          <div className="flex gap-1">
+                            <button 
+                              disabled={clientPage === 1}
+                              onClick={() => setClientPage(p => Math.max(1, p - 1))}
+                              className="p-0.5 rounded hover:bg-slate-200 dark:hover:bg-white/10 disabled:opacity-30 cursor-pointer transition-colors"
+                            >
+                              <ChevronLeft className="w-3.5 h-3.5" />
+                            </button>
+                            <button 
+                              disabled={clientPage === totalPages}
+                              onClick={() => setClientPage(p => Math.min(totalPages, p + 1))}
+                              className="p-0.5 rounded hover:bg-slate-200 dark:hover:bg-white/10 disabled:opacity-30 cursor-pointer transition-colors"
+                            >
+                              <ChevronRight className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
+
               </div>
             )}
 
             {/* Analytics Charts & Live Monitor Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               {/* SMS Volume Area Chart */}
               <div className="clay-card rounded-3xl p-5 space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-2">
@@ -1289,80 +1364,6 @@ export default function AdminPanelPage() {
                 </div>
               </div>
 
-              {/* Top Clients by Balance */}
-              <div className="clay-card rounded-3xl p-5 space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-200/20 dark:border-white/5 pb-2">
-                  <span className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
-                    <Users className="w-4 h-4 text-brand-primary" /> Top Clients by Balance
-                  </span>
-                  <span className="text-[10px] text-brand-primary font-bold bg-brand-primary/10 px-2 py-0.5 rounded-full">
-                    Rate: {baseSmsCost.toFixed(2)}/SMS
-                  </span>
-                </div>
-                <div className="h-44 flex flex-col justify-between">
-                  <div className="flex-1 space-y-3 flex flex-col justify-start">
-                    {stats?.client_distributions && stats.client_distributions.length > 0 ? (
-                      (() => {
-                        const itemsPerPage = 3;
-                        const displayedClients = stats.client_distributions.slice((clientPage - 1) * itemsPerPage, clientPage * itemsPerPage);
-                        return displayedClients.map((client, idx) => {
-                          const totalCredits = stats.total_client_credits || 1;
-                          const sharePct = (client.sms_balance / totalCredits) * 100;
-                          return (
-                            <div key={idx} className="space-y-0.5 text-left">
-                              <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-gray-300">
-                                <span className="truncate max-w-[150px]">{client.client_name}</span>
-                                <span className="font-mono text-brand-primary font-bold">
-                                  {client.sms_balance.toLocaleString()} cr ({sharePct.toFixed(0)}%)
-                                </span>
-                              </div>
-                              <div className="h-1.5 w-full bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
-                                <div 
-                                  className="h-full rounded-full bg-brand-primary transition-all duration-500" 
-                                  style={{ width: `${sharePct}%` }} 
-                                />
-                              </div>
-                            </div>
-                          );
-                        });
-                      })()
-                    ) : (
-                      <div className="text-center text-xs text-slate-400 italic py-6 my-auto">
-                        No client accounts registered to show distributions.
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Pagination Footer */}
-                  {(() => {
-                    const totalClients = stats?.client_distributions?.length || 0;
-                    const itemsPerPage = 3;
-                    const totalPages = Math.ceil(totalClients / itemsPerPage);
-                    if (totalPages <= 1) return null;
-                    return (
-                      <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-gray-500 pt-2 border-t border-slate-200/20 dark:border-white/5 shrink-0">
-                        <span>Page {clientPage} of {totalPages}</span>
-                        <div className="flex gap-1">
-                          <button 
-                            disabled={clientPage === 1}
-                            onClick={() => setClientPage(p => Math.max(1, p - 1))}
-                            className="p-0.5 rounded hover:bg-slate-200 dark:hover:bg-white/10 disabled:opacity-30 cursor-pointer transition-colors"
-                          >
-                            <ChevronLeft className="w-3.5 h-3.5" />
-                          </button>
-                          <button 
-                            disabled={clientPage === totalPages}
-                            onClick={() => setClientPage(p => Math.min(totalPages, p + 1))}
-                            className="p-0.5 rounded hover:bg-slate-200 dark:hover:bg-white/10 disabled:opacity-30 cursor-pointer transition-colors"
-                          >
-                            <ChevronRight className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
-              </div>
 
               {/* Live Events Feed */}
               <div className="clay-card rounded-3xl p-5 space-y-4">
