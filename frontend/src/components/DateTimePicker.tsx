@@ -238,12 +238,12 @@ export default function DateTimePicker({ value, onChange, minDate = new Date() }
 
       {/* Popover Calendar Modal */}
       {isOpen && (
-        <div className="absolute bottom-full mb-2 left-0 sm:left-auto sm:right-0 z-[90] bg-slate-900 border border-slate-700/50 rounded-2xl shadow-2xl p-3.5 sm:p-4 w-[320px] sm:w-[460px] flex flex-col gap-3 sm:gap-4 animate-in fade-in slide-in-from-bottom-2 duration-150 scale-[0.88] sm:scale-100 origin-bottom-left sm:origin-bottom-right">
+        <div className="absolute bottom-full mb-2 left-0 sm:left-auto sm:right-0 z-[90] bg-slate-900 border border-slate-700/50 rounded-2xl shadow-2xl p-3 sm:p-3.5 w-[310px] sm:w-[400px] flex flex-col gap-2.5 sm:gap-3 animate-in fade-in slide-in-from-bottom-2 duration-150 scale-[0.88] sm:scale-100 origin-bottom-left sm:origin-bottom-right">
           
-          <div className="flex flex-col sm:flex-row gap-3.5 sm:gap-4">
+          <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3">
             
             {/* Calendar Widget (Left side on desktop) */}
-            <div className="flex-1 space-y-2.5">
+            <div className="flex-1 space-y-2">
               {/* Header Navigation */}
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-200 uppercase tracking-wider">
@@ -301,9 +301,9 @@ export default function DateTimePicker({ value, onChange, minDate = new Date() }
             </div>
 
             {/* Separator / Time Widget (Right side on desktop) */}
-            <div className="w-full sm:w-px sm:h-auto bg-slate-800 my-1.5 sm:my-0" />
+            <div className="w-full sm:w-px sm:h-auto bg-slate-800 my-1 sm:my-0" />
 
-            <div className="w-full sm:w-[130px] flex flex-col justify-start gap-2.5">
+            <div className="w-full sm:w-[120px] flex flex-col justify-start gap-2">
               <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider text-left flex items-center gap-1.5 px-1">
                 <Clock className="w-3.5 h-3.5" /> Time
               </span>
