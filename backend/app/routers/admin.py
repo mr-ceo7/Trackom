@@ -392,6 +392,14 @@ async def list_admin_events(
         select(Campaign).options(joinedload(Campaign.user)).order_by(Campaign.created_at.desc()).limit(5)
     )
     campaigns = res_campaigns.scalars().all()
+
+    # Fetch last 5 completed top-up transactions
+    res_transactions = await db.execute(
+        select(Transaction).options(joinedload(Transaction.user))
+        .where((Transaction.type == "topup") & (Transaction.status == "completed"))
+        .order_by(Transaction.created_at.desc()).limit(5)
+    )
+    transactions = res_transactions.scalars().all()
     
     events = []
     
@@ -425,6 +433,17 @@ async def list_admin_events(
             title="Campaign Dispatch Started",
             description=f"Tenant '{user_name}' initiated dispatch for campaign '{c.name}'.",
             created_at=c.created_at
+        ))
+
+    # Combine transactions
+    for t in transactions:
+        user_name = t.user.full_name if t.user else "Unknown Tenant"
+        events.append(AdminEventItem(
+            id=f"transaction-{t.id}",
+            type="topup",
+            title="Credits Purchased 💰",
+            description=f"Tenant '{user_name}' purchased {t.sms_credits:,} credits (KES {t.amount:,}) via {t.payment_method or 'M-Pesa'}.",
+            created_at=t.created_at
         ))
         
     # Sort events by created_at descending

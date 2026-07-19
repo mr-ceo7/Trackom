@@ -443,7 +443,7 @@ export default function DashboardLayout() {
         {[
           { to: '/dashboard', icon: LayoutDashboard, label: 'Overview', end: true },
           { to: '/dashboard/compose', icon: Send, label: 'Compose' },
-          { to: '/dashboard/inbox', icon: Inbox, label: 'Inbox' },
+          { to: '/dashboard/contacts', icon: Users, label: 'Contacts' },
           { to: '/dashboard/campaigns', icon: Megaphone, label: 'Campaigns' },
           { to: '/dashboard/wallet', icon: Wallet, label: 'Wallet' },
         ].map((item) => (

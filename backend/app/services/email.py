@@ -115,7 +115,7 @@ async def send_admin_underfunded_alert(admin_emails: list, total_client_credits:
     </head>
     <body>
         <div class="container">
-            <div class="alert-header">⚠️ Trackom SaaS Administrator Alert</div>
+            <div class="alert-header">⚠️ Trackom Administrator Alert</div>
             <p>This is an automated system notification that the platform's live SMS gateway pool is currently underfunded relative to outstanding client balances.</p>
             <ul class="metrics-list">
                 <li><b>Outstanding Client Credits Sold:</b> {total_client_credits:,} credits</li>
@@ -124,7 +124,7 @@ async def send_admin_underfunded_alert(admin_emails: list, total_client_credits:
             <p><b>Status:</b> Live SMS dispatches for all clients have been temporarily held/suspended to prevent unsent provider failures.</p>
             <p><b>Action Required:</b> Please log in to your AdvantaSMS gateway panel and purchase additional credits to top up the master gateway pool.</p>
             <div class="footer">
-                <p>Best regards,<br/>Trackom SaaS Automated Monitor</p>
+                <p>Best regards,<br/>Trackom Automated Monitor</p>
             </div>
         </div>
     </body>
@@ -168,7 +168,7 @@ async def send_admin_api_failed_alert(admin_emails: list, total_client_credits: 
     </head>
     <body>
         <div class="container">
-            <div class="alert-header">⚠️ Trackom SaaS Administrator Warning</div>
+            <div class="alert-header">⚠️ Trackom Administrator Warning</div>
             <p>This is an automated system notification that the platform failed to verify the live SMS gateway pool balance.</p>
             <p><b>Error Details:</b> {error_msg}</p>
             <ul class="metrics-list">
@@ -178,7 +178,7 @@ async def send_admin_api_failed_alert(admin_emails: list, total_client_credits: 
             <p><b>Status:</b> Live SMS dispatches are operating in a fail-open mode using the fallback balance. Client traffic is NOT currently blocked, but gateway underfunding cannot be checked.</p>
             <p><b>Action Required:</b> Please inspect your connection to the AdvantaSMS gateway APIs immediately.</p>
             <div class="footer">
-                <p>Best regards,<br/>Trackom SaaS Automated Monitor</p>
+                <p>Best regards,<br/>Trackom Automated Monitor</p>
             </div>
         </div>
     </body>
@@ -266,8 +266,8 @@ def _generate_html_template(title: str, body: str, cta_text: str = None, cta_url
                         <!-- Header -->
                         <tr>
                             <td style="padding: 30px 40px; border-bottom: 1px solid #334155; text-align: center; background-color: #1e293b;">
-                                <h1 style="color: #6366f1; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">TRACKOM B2B</h1>
-                                <p style="color: #64748b; margin: 5px 0 0 0; font-size: 13px; text-transform: uppercase; letter-spacing: 2px;">Automated SaaS SMS Portal</p>
+                                <h1 style="color: #6366f1; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">TRACKOM</h1>
+                                <p style="color: #64748b; margin: 5px 0 0 0; font-size: 13px; text-transform: uppercase; letter-spacing: 2px;">Automated SMS Portal</p>
                             </td>
                         </tr>
                         
@@ -286,7 +286,7 @@ def _generate_html_template(title: str, body: str, cta_text: str = None, cta_url
                         <tr>
                             <td style="padding: 30px 40px; background-color: #0f172a; text-align: center; border-top: 1px solid #334155;">
                                 <p style="color: #475569; font-size: 12px; margin: 0 0 10px 0;">
-                                    © 2026 Trackom SaaS. All rights reserved.
+                                    © 2026 Trackom. All rights reserved.
                                 </p>
                                 <p style="color: #475569; font-size: 12px; margin: 0;">
                                     <a href="https://trackomgroup.com" style="color: #6366f1; text-decoration: none;">Visit trackomgroup.com</a>
@@ -305,10 +305,10 @@ def _generate_html_template(title: str, body: str, cta_text: str = None, cta_url
 
 async def send_welcome_email(email: str, name: str):
     """Sends a warm onboarding welcome email to new tenants."""
-    subject = "Welcome to Trackom B2B SaaS! 🚀"
+    subject = "Welcome to Trackom! 🚀"
     body = f"""
     <p>Hello {name},</p>
-    <p>We are absolutely thrilled to welcome you to the Trackom B2B family!</p>
+    <p>We are absolutely thrilled to welcome you to the Trackom family!</p>
     <p>Your tenant workspace has been set up successfully. You can now configure your SMS gateways, whitelist Sender IDs, build contact groups, and deploy high-speed notification dispatches or campaigns.</p>
     <p>To help you get started, we have credited your sandbox balance with test SMS credits.</p>
     <p>Should you need any assistance, our support team is always here to guide you.</p>

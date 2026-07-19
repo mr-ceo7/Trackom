@@ -2,19 +2,30 @@
  * SandboxToggle - Premium pill-shaped toggle for switching between Sandbox and Live modes.
  * Shows confirmation dialog when switching to Live mode.
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { FlaskConical, Radio, AlertTriangle } from 'lucide-react';
+import { FlaskConical, Radio, AlertTriangle, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function SandboxToggle() {
   const { user, toggleSandboxMode } = useAuth();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  const isSandbox = user?.sandbox_mode !== false; // default true
+
+  // Automatically trigger tooltip on page load if user is on sandbox
+  useEffect(() => {
+    if (isSandbox && !localStorage.getItem('trackom_dismiss_sandbox_tooltip')) {
+      const timer = setTimeout(() => {
+        setShowTooltip(true);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [isSandbox]);
 
   if (!user) return null;
-
-  const isSandbox = user.sandbox_mode !== false; // default true
 
   const handleToggle = async () => {
     if (isSandbox) {
@@ -46,55 +57,92 @@ export default function SandboxToggle() {
 
   return (
     <>
-      <div
-        onClick={handleToggle}
-        className={`
-          relative flex items-center p-0.5 rounded-full bg-slate-200/40 dark:bg-white/5 border border-slate-300/20 dark:border-white/5 cursor-pointer select-none h-8 w-16 sm:w-36 transition-all
-          ${isToggling ? 'opacity-60 pointer-events-none' : ''}
-        `}
-        aria-label={isSandbox ? 'Switch to Live mode' : 'Switch to Sandbox mode'}
-      >
-        {/* Sliding background */}
-        <motion.div
-          className={`absolute top-0.5 bottom-0.5 rounded-full shadow-sm ${
+      <div className="relative">
+        <div
+          onClick={handleToggle}
+          className={`
+            relative flex items-center p-0.5 rounded-full bg-slate-200/40 dark:bg-white/5 border border-slate-300/20 dark:border-white/5 cursor-pointer select-none h-8 w-16 sm:w-36 transition-all
+            ${isToggling ? 'opacity-60 pointer-events-none' : ''}
+          `}
+          aria-label={isSandbox ? 'Switch to Live mode' : 'Switch to Sandbox mode'}
+        >
+          {/* Sliding background */}
+          <motion.div
+            className={`absolute top-0.5 bottom-0.5 rounded-full shadow-sm ${
+              isSandbox 
+                ? 'bg-amber-500/20 border border-amber-500/30' 
+                : 'bg-emerald-500/20 border border-emerald-500/30'
+            }`}
+            layout
+            initial={false}
+            animate={{
+              left: isSandbox ? '2px' : '50%',
+              right: isSandbox ? '50%' : '2px',
+            }}
+            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+          />
+
+          {/* Sandbox Option */}
+          <div className={`relative flex-1 flex items-center justify-center gap-1.5 z-10 text-[10px] font-bold transition-colors ${
             isSandbox 
-              ? 'bg-amber-500/20 border border-amber-500/30' 
-              : 'bg-emerald-500/20 border border-emerald-500/30'
-          }`}
-          layout
-          initial={false}
-          animate={{
-            left: isSandbox ? '2px' : '50%',
-            right: isSandbox ? '50%' : '2px',
-          }}
-          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-        />
+              ? 'text-amber-600 dark:text-amber-400' 
+              : 'text-slate-500 dark:text-gray-400'
+          }`}>
+            <FlaskConical className="w-3.5 h-3.5 shrink-0" />
+            <span className="hidden sm:inline">Sandbox</span>
+          </div>
 
-        {/* Sandbox Option */}
-        <div className={`relative flex-1 flex items-center justify-center gap-1.5 z-10 text-[10px] font-bold transition-colors ${
-          isSandbox 
-            ? 'text-amber-600 dark:text-amber-400' 
-            : 'text-slate-500 dark:text-gray-400'
-        }`}>
-          <FlaskConical className="w-3.5 h-3.5 shrink-0" />
-          <span className="hidden sm:inline">Sandbox</span>
+          {/* Live Option */}
+          <div className={`relative flex-1 flex items-center justify-center gap-1.5 z-10 text-[10px] font-bold transition-colors ${
+            !isSandbox 
+              ? 'text-emerald-600 dark:text-emerald-400' 
+              : 'text-slate-500 dark:text-gray-400'
+          }`}>
+            <Radio className="w-3.5 h-3.5 shrink-0" />
+            <span className="hidden sm:inline">Live</span>
+            {!isSandbox && (
+              <span className="relative flex h-1.5 w-1.5 shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+              </span>
+            )}
+          </div>
         </div>
 
-        {/* Live Option */}
-        <div className={`relative flex-1 flex items-center justify-center gap-1.5 z-10 text-[10px] font-bold transition-colors ${
-          !isSandbox 
-            ? 'text-emerald-600 dark:text-emerald-400' 
-            : 'text-slate-500 dark:text-gray-400'
-        }`}>
-          <Radio className="w-3.5 h-3.5 shrink-0" />
-          <span className="hidden sm:inline">Live</span>
-          {!isSandbox && (
-            <span className="relative flex h-1.5 w-1.5 shrink-0">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75" />
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
-            </span>
+        {/* Sandbox Tooltip Dropdown */}
+        <AnimatePresence>
+          {showTooltip && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="absolute right-0 mt-2.5 w-56 p-3.5 bg-slate-900/95 border border-amber-500/35 rounded-2xl shadow-2xl z-50 text-left backdrop-blur-md"
+            >
+              {/* Arrow */}
+              <div className="absolute top-[-5px] right-6 w-2 h-2 bg-slate-900 border-t border-l border-amber-500/35 rotate-45" />
+
+              <div className="flex justify-between items-start gap-1">
+                <span className="text-[10px] font-black text-amber-500 flex items-center gap-1 uppercase tracking-wider">
+                  <FlaskConical className="w-3.5 h-3.5 shrink-0" /> Sandbox Mode
+                </span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowTooltip(false);
+                    localStorage.setItem('trackom_dismiss_sandbox_tooltip', 'true');
+                  }}
+                  className="p-0.5 rounded hover:bg-white/5 text-slate-400 hover:text-white cursor-pointer"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+
+              <p className="text-[9px] text-slate-400 leading-normal mt-1.5">
+                You are currently in sandbox mode. Tap this switch to toggle between <strong className="text-white">Sandbox</strong> and <strong className="text-emerald-400">Live</strong> mode at any time.
+              </p>
+            </motion.div>
           )}
-        </div>
+        </AnimatePresence>
       </div>
 
       {/* Confirmation Modal for switching to Live */}
