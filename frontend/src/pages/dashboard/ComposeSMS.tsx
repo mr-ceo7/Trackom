@@ -1273,31 +1273,9 @@ export default function ComposeSMS() {
               <span className="text-[10px] font-bold text-slate-500">{radarProgress}%</span>
             </div>
 
-            {/* Glowing Radar Sweep */}
-            <div className="relative w-32 h-32 mx-auto flex items-center justify-center border border-indigo-500/10 rounded-full">
-              <div className="absolute inset-0 rounded-full border border-indigo-500/20 animate-pulse" />
-              <div className="absolute inset-4 rounded-full border border-indigo-500/15" />
-              <div className="absolute inset-10 rounded-full border border-indigo-500/10" />
-              
-              <motion.div 
-                animate={{ rotate: 360 }}
-                transition={{ repeat: Infinity, duration: 2.2, ease: 'linear' }}
-                className="absolute inset-0 origin-center flex items-start justify-center"
-              >
-                <div className="w-0.5 h-1/2 bg-gradient-to-t from-transparent to-brand-primary" />
-              </motion.div>
-
-              {/* Carrier Node pulsing */}
-              <div className="absolute top-2 left-6 w-3.5 h-3.5 rounded-full bg-brand-emerald animate-ping" />
-              <div className="absolute top-2 left-6 w-2.5 h-2.5 rounded-full bg-brand-emerald border border-white/20" title="Safaricom Link" />
-              
-              <div className="absolute bottom-4 right-4 w-3.5 h-3.5 rounded-full bg-red-500 animate-ping" />
-              <div className="absolute bottom-4 right-4 w-2.5 h-2.5 rounded-full bg-red-500 border border-white/20" title="Airtel Link" />
-              
-              <div className="absolute top-10 right-2 w-3.5 h-3.5 rounded-full bg-cyan-400 animate-ping" />
-              <div className="absolute top-10 right-2 w-2.5 h-2.5 rounded-full bg-cyan-400 border border-white/20" title="Telkom Link" />
-
-              <div className="w-3.5 h-3.5 bg-brand-primary rounded-full shadow-lg shadow-brand-primary animate-pulse" />
+            {/* Default Loader */}
+            <div className="py-6 flex items-center justify-center">
+              <Loader size="md" />
             </div>
 
             <div className="space-y-1">
