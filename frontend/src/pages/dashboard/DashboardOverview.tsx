@@ -1,7 +1,4 @@
-/**
- * DashboardOverview - real-time overview stats, live gateway throughput gauge, and carrier monitors.
- */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { MessageSquare, Users, Megaphone, TrendingUp, Cpu, Server, Wifi } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -18,24 +15,38 @@ export default function DashboardOverview() {
   const [airtelPing, setAirtelPing] = useState(178);
   const [telkomPing, setTelkomPing] = useState(210);
 
-  useEffect(() => {
-    async function loadStats() {
-      try {
-        const [statsResp, contactsResp] = await Promise.all([
-          api.get('/messages/stats'),
-          api.get('/contacts'),
-        ]);
-        setStatsData(statsResp.data);
-        const totalHeader = contactsResp.headers['x-total-count'];
-        if (totalHeader) {
-          setContactsCount(parseInt(totalHeader, 10));
-        } else {
-          setContactsCount(contactsResp.data.length);
-        }
-      } catch { /* noop */ }
-    }
-    loadStats();
+  const loadStats = useCallback(async () => {
+    try {
+      const [statsResp, contactsResp] = await Promise.all([
+        api.get('/messages/stats'),
+        api.get('/contacts'),
+      ]);
+      setStatsData(statsResp.data);
+      const totalHeader = contactsResp.headers['x-total-count'];
+      if (totalHeader) {
+        setContactsCount(parseInt(totalHeader, 10));
+      } else {
+        setContactsCount(contactsResp.data.length);
+      }
+    } catch { /* noop */ }
   }, []);
+
+  useEffect(() => {
+    loadStats();
+  }, [loadStats]);
+
+  // Real-time SSE-driven stats refresh
+  useEffect(() => {
+    const handler = () => loadStats();
+    window.addEventListener('sse:wallet_update', handler);
+    window.addEventListener('sse:campaign_update', handler);
+    window.addEventListener('sse:contacts_import', handler);
+    return () => {
+      window.removeEventListener('sse:wallet_update', handler);
+      window.removeEventListener('sse:campaign_update', handler);
+      window.removeEventListener('sse:contacts_import', handler);
+    };
+  }, [loadStats]);
 
   // Fluctuate stats in real time for premium live dashboard experience
   useEffect(() => {

@@ -212,6 +212,18 @@ async def mpesa_callback(
         ))
 
         await db.commit()
+        
+        # Publish real-time success event
+        try:
+            from app.services.event_bus import event_bus
+            event_bus.publish(str(user.id), "wallet_update", {
+                "sms_balance": user.active_balance,
+                "message": f"Added {tx.sms_credits} credits to your live wallet.",
+                "type": "success"
+            })
+        except Exception:
+            pass
+
         return {"status": "success", "message": f"Successfully completed topup for user: {user.email}"}
     else:
         # STK failed (cancelled by user, timeout, wrong PIN, etc.)
@@ -229,6 +241,18 @@ async def mpesa_callback(
         ))
 
         await db.commit()
+
+        # Publish real-time failure event
+        try:
+            from app.services.event_bus import event_bus
+            event_bus.publish(str(tx.user_id), "wallet_update", {
+                "sms_balance": None,
+                "message": f"M-Pesa payment failed: {result_desc}",
+                "type": "failed"
+            })
+        except Exception:
+            pass
+
         return {"status": "failed", "message": f"Transaction marked as failed: {result_desc}"}
 
 

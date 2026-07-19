@@ -186,6 +186,20 @@ export default function ContactsPage() {
     fetchGroups();
   }, [fetchGroups]);
 
+  // Real-time SSE-driven contacts refresh (e.g. after background CSV import completes)
+  useEffect(() => {
+    const handler = () => {
+      fetchContacts();
+      fetchGroups();
+    };
+    window.addEventListener('sse:refresh_contacts', handler);
+    window.addEventListener('sse:contacts_import', handler);
+    return () => {
+      window.removeEventListener('sse:refresh_contacts', handler);
+      window.removeEventListener('sse:contacts_import', handler);
+    };
+  }, [fetchContacts, fetchGroups]);
+
   // Contact Actions
   const handleAddContact = async (e: React.FormEvent) => {
     e.preventDefault();

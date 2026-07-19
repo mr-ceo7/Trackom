@@ -92,7 +92,7 @@ export default function WalletPage() {
     fetchPublicSettings();
   }, [fetchTransactions, fetchPublicSettings]);
 
-  // Poll for status updates if there are any pending transactions in the general list
+  // Poll for status updates if there are any pending transactions (fallback)
   useEffect(() => {
     const hasPending = transactions.some(tx => tx.status === 'pending');
     if (!hasPending) return;
@@ -100,10 +100,20 @@ export default function WalletPage() {
     const interval = setInterval(() => {
       fetchTransactions();
       refreshUser();
-    }, 3000);
+    }, 10000); // fallback poll every 10s
 
     return () => clearInterval(interval);
   }, [transactions, fetchTransactions, refreshUser]);
+
+  // Real-time SSE-driven wallet refresh
+  useEffect(() => {
+    const handler = () => {
+      fetchTransactions();
+      refreshUser();
+    };
+    window.addEventListener('sse:wallet_update', handler);
+    return () => window.removeEventListener('sse:wallet_update', handler);
+  }, [fetchTransactions, refreshUser]);
 
   // Poll specifically for the current live transaction confirmation
   useEffect(() => {

@@ -552,17 +552,30 @@ export default function CampaignsPage() {
     fetchSenderIds();
   }, [fetchCampaigns, fetchGroups, fetchTemplates, fetchSenderIds]);
 
-  // Poll active campaigns
+  // Poll active campaigns (fallback for when SSE misses)
   useEffect(() => {
     const hasActive = campaigns.some(c => c.status === 'queued' || c.status === 'sending' || c.status === 'paused');
     if (!hasActive) return;
 
     const interval = setInterval(() => {
       fetchCampaigns();
-    }, 3000);
+    }, 10000); // fallback poll every 10s
 
     return () => clearInterval(interval);
   }, [campaigns, fetchCampaigns]);
+
+  // Real-time SSE-driven campaign refresh
+  useEffect(() => {
+    const handler = () => fetchCampaigns();
+    window.addEventListener('sse:refresh_campaigns', handler);
+    window.addEventListener('sse:campaign_update', handler);
+    window.addEventListener('sse:campaign_progress', handler);
+    return () => {
+      window.removeEventListener('sse:refresh_campaigns', handler);
+      window.removeEventListener('sse:campaign_update', handler);
+      window.removeEventListener('sse:campaign_progress', handler);
+    };
+  }, [fetchCampaigns]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();

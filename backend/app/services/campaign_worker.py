@@ -104,6 +104,16 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
             campaign.started_at = datetime.utcnow()
             await db.commit()
 
+            # Publish real-time status update
+            try:
+                from app.services.event_bus import event_bus
+                event_bus.publish(str(user.id), "campaign_update", {
+                    "campaign_id": str(campaign.id),
+                    "status": "sending"
+                })
+            except Exception:
+                pass
+
             # 4. Fetch targeted contacts (either group segment or all user contacts)
             has_group = hasattr(campaign, 'group_id') and campaign.group_id is not None
             if has_group:
@@ -358,6 +368,19 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
                 campaign.failed_count = failed_count
                 await db.commit()
 
+                # Publish real-time progression update
+                try:
+                    from app.services.event_bus import event_bus
+                    event_bus.publish(str(user.id), "campaign_progress", {
+                        "campaign_id": str(campaign.id),
+                        "sent_count": sent_count,
+                        "delivered_count": delivered_count,
+                        "failed_count": failed_count,
+                        "total_contacts": len(contacts)
+                    })
+                except Exception:
+                    pass
+
                 # If developer configured a callback webhook URL, send status update reports asynchronously
                 if user.webhook_url:
                     webhook_payload = {
@@ -418,6 +441,24 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
 
             await db.commit()
 
+            # Publish real-time completion status and wallet balance change if blacklisted
+            try:
+                from app.services.event_bus import event_bus
+                event_bus.publish(str(user.id), "campaign_update", {
+                    "campaign_id": str(campaign.id),
+                    "status": "completed",
+                    "delivered_count": delivered_count,
+                    "failed_count": failed_count
+                })
+                
+                # Update wallet balance reactively (e.g. if blacklist credits were refunded)
+                event_bus.publish(str(user.id), "wallet_update", {
+                    "sms_balance": user.active_balance,
+                    "message": f"Campaign '{campaign.name}' completed successfully."
+                })
+            except Exception:
+                pass
+
             # Low balance check
             new_balance = user.sandbox_sms_balance if campaign.sandbox_mode else user.sms_balance
             if new_balance < 500:
@@ -443,6 +484,16 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
                 if campaign:
                     campaign.status = "failed"
                     await db.commit()
+                    
+                    # Publish failure event
+                    try:
+                        from app.services.event_bus import event_bus
+                        event_bus.publish(str(campaign.user_id), "campaign_update", {
+                            "campaign_id": str(campaign.id),
+                            "status": "failed"
+                        })
+                    except Exception:
+                        pass
             except Exception as nested_e:
                 logger.error(f"Failed to fail-state campaign: {nested_e}")
 

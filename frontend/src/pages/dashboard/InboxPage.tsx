@@ -120,6 +120,17 @@ export default function InboxPage() {
     fetchFiltersData();
   }, [fetchFiltersData]);
 
+  // Real-time SSE-driven inbox refresh (new incoming SMS)
+  useEffect(() => {
+    const handler = () => fetchMessages();
+    window.addEventListener('sse:refresh_inbox', handler);
+    window.addEventListener('sse:incoming_sms', handler);
+    return () => {
+      window.removeEventListener('sse:refresh_inbox', handler);
+      window.removeEventListener('sse:incoming_sms', handler);
+    };
+  }, [fetchMessages]);
+
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this message?')) return;
     try {

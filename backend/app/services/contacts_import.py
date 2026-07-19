@@ -283,6 +283,18 @@ async def process_contacts_csv_import(
             ))
             await db.commit()
 
+            # Publish real-time success event
+            try:
+                from app.services.event_bus import event_bus
+                event_bus.publish(str(user_id), "contacts_import", {
+                    "status": "success",
+                    "message": msg,
+                    "success_count": success_count,
+                    "fail_count": fail_count
+                })
+            except Exception:
+                pass
+
         except Exception as e:
             logger.exception(f"Unhandled error during CSV import background task: {e}")
             from app.utils.import_stream import import_queues
@@ -299,6 +311,16 @@ async def process_contacts_csv_import(
                     action_url="/dashboard/contacts"
                 ))
                 await db.commit()
+
+                # Publish real-time failure event
+                try:
+                    from app.services.event_bus import event_bus
+                    event_bus.publish(str(user_id), "contacts_import", {
+                        "status": "failed",
+                        "message": f"An error occurred while importing your contacts: {str(e)}"
+                    })
+                except Exception:
+                    pass
             except Exception as nested_e:
                 logger.error(f"Failed to record import error notification: {nested_e}")
         finally:

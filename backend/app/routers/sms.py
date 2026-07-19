@@ -541,6 +541,19 @@ async def incoming_sms_webhook(
     db.add(incoming_msg)
     await db.commit()
 
+    # Publish real-time incoming SMS event
+    try:
+        from app.services.event_bus import event_bus
+        event_bus.publish(str(user_id), "incoming_sms", {
+            "id": str(incoming_msg.id),
+            "sender": incoming_msg.sender,
+            "recipient": incoming_msg.recipient,
+            "content": incoming_msg.content,
+            "received_at": incoming_msg.received_at.isoformat()
+        })
+    except Exception:
+        pass
+
     return {"status": "success", "message": "Inbound SMS received and logged."}
 
 

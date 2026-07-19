@@ -1,7 +1,7 @@
 /**
  * DashboardLayout - sidebar + topbar + main content area + notification drawer.
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -10,6 +10,7 @@ import {
   MessageSquare, CheckCircle2, AlertCircle, Info, AlertTriangle, Shield, FileText, Inbox, Smartphone
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import useRealtimeEvents from '../hooks/useRealtimeEvents';
 import ThemeToggle from '../components/ThemeToggle';
 import SandboxToggle from '../components/SandboxToggle';
 import TrackomLogo from '../components/TrackomLogo';
@@ -57,7 +58,10 @@ const typeColors: Record<string, string> = {
 };
 
 export default function DashboardLayout() {
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
+
+  // Establish SSE connection for real-time updates
+  useRealtimeEvents();
   
   const currentNavItems = [...navItems];
   if (user?.is_superuser) {
@@ -148,12 +152,63 @@ export default function DashboardLayout() {
   useEffect(() => {
     fetchNotifications();
     fetchPublicSettings();
+    // Fallback polling at 60s (SSE handles instant updates)
     const interval = setInterval(() => {
       fetchNotifications();
       fetchPublicSettings();
-    }, 15000); // refresh every 15s
+    }, 60000);
     return () => clearInterval(interval);
   }, [fetchNotifications, fetchPublicSettings]);
+
+  // ── Real-time SSE event listeners ─────────────────────────────────
+  useEffect(() => {
+    const onWalletUpdate = () => {
+      refreshUser(); // refresh user object to pick up new sms_balance
+    };
+
+    const onCampaignUpdate = () => {
+      fetchNotifications(); // new notification was likely created
+      refreshUser();        // balance may have changed (refunds)
+    };
+
+    const onCampaignProgress = () => {
+      // Dispatch a DOM event that the campaigns page can subscribe to
+      // (it will re-fetch its own data)
+      window.dispatchEvent(new Event('sse:refresh_campaigns'));
+    };
+
+    const onContactsImport = () => {
+      fetchNotifications();
+      window.dispatchEvent(new Event('sse:refresh_contacts'));
+    };
+
+    const onIncomingSms = () => {
+      fetchNotifications();
+      window.dispatchEvent(new Event('sse:refresh_inbox'));
+    };
+
+    const onConnected = () => {
+      // Initial connection – do a fresh pull
+      fetchNotifications();
+      refreshUser();
+    };
+
+    window.addEventListener('sse:wallet_update', onWalletUpdate);
+    window.addEventListener('sse:campaign_update', onCampaignUpdate);
+    window.addEventListener('sse:campaign_progress', onCampaignProgress);
+    window.addEventListener('sse:contacts_import', onContactsImport);
+    window.addEventListener('sse:incoming_sms', onIncomingSms);
+    window.addEventListener('sse:connected', onConnected);
+
+    return () => {
+      window.removeEventListener('sse:wallet_update', onWalletUpdate);
+      window.removeEventListener('sse:campaign_update', onCampaignUpdate);
+      window.removeEventListener('sse:campaign_progress', onCampaignProgress);
+      window.removeEventListener('sse:contacts_import', onContactsImport);
+      window.removeEventListener('sse:incoming_sms', onIncomingSms);
+      window.removeEventListener('sse:connected', onConnected);
+    };
+  }, [fetchNotifications, refreshUser]);
 
 
   const handleLogout = () => {
