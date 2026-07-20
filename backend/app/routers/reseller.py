@@ -49,7 +49,7 @@ class CreateSubUserRequest(BaseModel):
     email: EmailStr
     phone: Optional[str] = None
     company: Optional[str] = None
-    password: str = Field(..., min_length=8)
+    password: Optional[str] = Field(None, min_length=8)
 
 class TransferCreditsRequest(BaseModel):
     amount: int = Field(..., gt=0)
@@ -118,9 +118,16 @@ async def create_reseller_user(
             detail="A user with this email address already exists."
         )
 
+    import secrets
+    password_to_hash = data.password
+    is_invited = False
+    if not password_to_hash:
+        password_to_hash = secrets.token_urlsafe(16)
+        is_invited = True
+
     sub_user = User(
         email=data.email,
-        hashed_password=hash_password(data.password),
+        hashed_password=hash_password(password_to_hash),
         full_name=data.full_name,
         phone=data.phone,
         company=data.company,
@@ -141,6 +148,35 @@ async def create_reseller_user(
         purpose="System Default Sender ID",
         status="approved"
     ))
+
+    # Send Welcome / Invite Email if password was not set manually
+    if is_invited:
+        try:
+            from app.services.email import send_email
+            from app.config import get_settings
+            config_settings = get_settings()
+            invite_link = f"{config_settings.FRONTEND_URL}/reset-password?email={sub_user.email}"
+            
+            email_body = f"""
+            <p>Hello {sub_user.full_name},</p>
+            <p>Welcome to {reseller.custom_brand_name or "Trackom"}!</p>
+            <p>Your business messaging account has been created by your reseller ({reseller.full_name}).</p>
+            <p>To set your password and access your dashboard, please click the link below:</p>
+            <p><a href="{invite_link}">{invite_link}</a></p>
+            <p>If you have any questions, please contact your account manager at {reseller.email}.</p>
+            <br/>
+            <p>Best regards,</p>
+            <p>The {reseller.custom_brand_name or "Trackom"} Team</p>
+            """
+            await send_email(
+                to_email=sub_user.email,
+                subject=f"Welcome to {reseller.custom_brand_name or 'Trackom'} - Activate Your Account",
+                body_html=email_body
+            )
+        except Exception as e:
+            # We fail silently/log the error so that the user account creation itself doesn't crash
+            print(f"Failed to send reseller welcome email: {e}")
+
     return sub_user
 
 

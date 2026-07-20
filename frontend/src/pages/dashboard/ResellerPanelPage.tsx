@@ -149,7 +149,7 @@ export default function ResellerPanelPage() {
   const handleCreateChild = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreateError('');
-    if (!childName || !childEmail || !childPassword) return;
+    if (!childName || !childEmail) return;
 
     setSubmittingCreate(true);
     try {
@@ -157,8 +157,7 @@ export default function ResellerPanelPage() {
         full_name: childName,
         email: childEmail,
         phone: childPhone || undefined,
-        company: childCompany || undefined,
-        password: childPassword
+        company: childCompany || undefined
       });
       setIsCreateOpen(false);
       setChildName('');
@@ -630,10 +629,7 @@ export default function ResellerPanelPage() {
                 </div>
               </div>
 
-              <div className="space-y-1.5 text-left">
-                <label className="text-xs font-semibold text-slate-700 dark:text-gray-300">Login Password</label>
-                <input type="password" value={childPassword} onChange={(e) => setChildPassword(e.target.value)} placeholder="••••••••" className="clay-input w-full px-4 py-2.5 rounded-2xl text-slate-900 dark:text-white text-xs focus:outline-none" required />
-              </div>
+              {/* No password field - client will set it via invite link */}
 
               <button type="submit" disabled={submittingCreate} className="clay-button-primary w-full py-3 rounded-2xl text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2">
                 {submittingCreate ? <Loader size="sm" /> : <span>Create Client Account</span>}
