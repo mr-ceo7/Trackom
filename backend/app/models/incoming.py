@@ -27,7 +27,7 @@ class IncomingSms(Base):
 
 
     # Relationships
-    user = relationship("User", backref="incoming_sms")
+    user = relationship("User", back_populates="incoming_sms")
 
     def __repr__(self) -> str:
         return f"<IncomingSms from={self.sender} to={self.recipient}>"

@@ -30,7 +30,7 @@ class SenderIdRequest(Base):
 
 
     # Relationships
-    user = relationship("User", backref="sender_id_requests")
+    user = relationship("User", back_populates="sender_id_requests")
 
     def __repr__(self) -> str:
         return f"<SenderIdRequest {self.sender_id} status={self.status}>"

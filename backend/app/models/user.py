@@ -103,6 +103,8 @@ class User(Base):
     notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
     sms_messages = relationship("SmsMessage", back_populates="user", cascade="all, delete-orphan")
     sms_templates = relationship("SmsTemplate", back_populates="user", cascade="all, delete-orphan")
+    sender_id_requests = relationship("SenderIdRequest", back_populates="user", cascade="all, delete-orphan")
+    incoming_sms = relationship("IncomingSms", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"<User {self.email}>"
