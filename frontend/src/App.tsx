@@ -1,7 +1,7 @@
 /**
  * App.tsx - Router-based application root with code-split lazy loading.
  */
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -51,6 +51,11 @@ function PageLoader() {
 }
 
 export default function App() {
+  useEffect(() => {
+    // Clear chunk load reload flag on successful mount
+    sessionStorage.removeItem('chunk-load-reloaded');
+  }, []);
+
   return (
     <BrowserRouter>
       <AuthProvider>
