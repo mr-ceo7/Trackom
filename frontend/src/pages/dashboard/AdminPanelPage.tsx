@@ -400,6 +400,16 @@ export default function AdminPanelPage() {
     }
   };
 
+  const handleRevokeSenderId = async (id: string) => {
+    if (!confirm('Are you sure you want to revoke/remove this Sender ID assignment? The client will no longer be able to use it.')) return;
+    try {
+      await api.delete(`/admin/sender-ids/${id}`);
+      await fetchSenderIds();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Failed to revoke Sender ID.');
+    }
+  };
+
   useEffect(() => {
     fetchStats();
   }, [fetchStats]);
@@ -527,6 +537,22 @@ export default function AdminPanelPage() {
       await fetchUsers();
       await fetchStats();
     } catch { /* noop */ }
+  };
+
+  // Delete User Account Permanently
+  const handleDeleteUser = async (user: AdminUser) => {
+    if (user.is_superuser) return;
+    const confirmMsg = `WARNING: Are you sure you want to permanently delete the user account for ${user.full_name} (${user.email})?\n\nThis will permanently delete all campaigns, transaction logs, whitelisted Sender IDs, API keys, and custom branding settings. This action CANNOT be undone.`;
+    
+    if (!confirm(confirmMsg)) return;
+
+    try {
+      await api.delete(`/admin/users/${user.id}`);
+      await fetchUsers();
+      await fetchStats();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Failed to delete user.');
+    }
   };
 
   // Create or Update SMS Gateway
@@ -1538,6 +1564,16 @@ export default function AdminPanelPage() {
                             >
                               {u.is_active ? <Ban className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
                             </button>
+
+                            {/* Delete User Button */}
+                            <button
+                              onClick={() => handleDeleteUser(u)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-500/10 cursor-pointer transition-all"
+                              title="Delete account permanently"
+                              disabled={u.is_superuser}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -2053,7 +2089,18 @@ export default function AdminPanelPage() {
                                   </button>
                                 </div>
                               ) : (
-                                <span className="text-[10px] text-slate-400 italic">Audited</span>
+                                <div className="inline-flex items-center gap-2">
+                                  <span className="text-[10px] text-slate-400 italic">Audited</span>
+                                  {r.status === 'approved' && (
+                                    <button
+                                      onClick={() => handleRevokeSenderId(r.id)}
+                                      className="p-1 text-white bg-rose-500 hover:bg-rose-600 rounded-lg cursor-pointer transition-all flex items-center justify-center"
+                                      title="Revoke / Remove Sender ID"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
+                                </div>
                               )}
                             </td>
                           </tr>

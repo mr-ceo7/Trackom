@@ -572,6 +572,27 @@ async def admin_update_user(
     return {"message": "User profile updated successfully."}
 
 
+@router.delete("/users/{user_id}")
+async def delete_user(
+    user_id: uuid.UUID,
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Permanently delete a user account and all associated data."""
+    res = await db.execute(select(User).where(User.id == user_id))
+    user = res.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Prevent admin self-deletion
+    if user.id == admin.id:
+        raise HTTPException(status_code=400, detail="Cannot delete your own administrator account.")
+        
+    await db.delete(user)
+    await db.flush()
+    return {"message": "User and all associated data deleted successfully."}
+
+
 @router.get("/gateways", response_model=List[AdminGatewayResponse])
 async def list_gateways(
     admin: User = Depends(get_current_admin),
@@ -801,6 +822,36 @@ async def assign_sender_id(
     
     await db.flush()
     return {"message": f"Sender ID '{sender_upper}' successfully assigned to {user.full_name}."}
+
+
+@router.delete("/sender-ids/{request_id}")
+async def delete_user_sender_id(
+    request_id: uuid.UUID,
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Delete/Revoke an assigned or approved Sender ID from a user."""
+    res = await db.execute(select(SenderIdRequest).where(SenderIdRequest.id == request_id))
+    req = res.scalar_one_or_none()
+    if not req:
+        raise HTTPException(status_code=404, detail="Sender ID request/assignment not found.")
+
+    sender_id = req.sender_id
+    user_id = req.user_id
+
+    await db.delete(req)
+    
+    # Notify user that their Sender ID has been revoked
+    db.add(Notification(
+        user_id=user_id,
+        title="Sender ID Revoked 🚫",
+        message=f"Administrator has revoked the Sender ID '{sender_id}' from your account.",
+        type="warning",
+        action_url="/dashboard/sender-ids"
+    ))
+    
+    await db.flush()
+    return {"message": f"Sender ID '{sender_id}' successfully removed from user."}
 
 
 class CreateAdvantaSenderIdRequest(BaseModel):
