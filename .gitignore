@@ -4,11 +4,20 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+.pytest_cache/
+.cache/
 
 # Build
 dist/
 build/
 *.egg-info/
+
+# Databases
+*.db
+*testdb
+
+# Scratch scripts
+backend/scratch/
 
 # Environment
 .env

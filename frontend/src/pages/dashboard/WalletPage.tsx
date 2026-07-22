@@ -239,19 +239,33 @@ export default function WalletPage() {
         <div className="absolute top-0 right-0 w-40 h-40 rounded-full bg-white/10 blur-3xl" />
         <div className="relative z-10 flex justify-between items-start w-full">
           <div className="space-y-1">
-            <div className="text-white/80 text-xs font-semibold uppercase tracking-wider">SMS Balance</div>
-            <div className="text-4xl font-bold font-mono leading-none py-1">{user?.sms_balance?.toLocaleString() || '0'}</div>
-            <div className="text-white/65 text-xs">credits remaining</div>
+            {user?.is_postpay ? (
+              <>
+                <div className="text-white/80 text-xs font-semibold uppercase tracking-wider">Credit Consumed</div>
+                <div className="text-4xl font-bold font-mono leading-none py-1">
+                  KSH {(user.sms_balance < 0 ? Math.abs(user.sms_balance) * (user.credit_rate || 1.0) : 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                </div>
+                <div className="text-white/65 text-xs">billed monthly (rate: KSH {user.credit_rate || 1.0}/SMS)</div>
+              </>
+            ) : (
+              <>
+                <div className="text-white/80 text-xs font-semibold uppercase tracking-wider">SMS Balance</div>
+                <div className="text-4xl font-bold font-mono leading-none py-1">{user?.sms_balance?.toLocaleString() || '0'}</div>
+                <div className="text-white/65 text-xs">credits remaining</div>
+              </>
+            )}
           </div>
           <div className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center backdrop-blur-md border border-white/20 shadow-lg shrink-0">
             <Wallet className="w-6 h-6 text-white" />
           </div>
         </div>
-        <div className="relative z-10 mt-4">
-          <button onClick={() => { setErrorMsg(''); setSuccessMsg(''); setShowTopup(!showTopup); }} className="flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-semibold bg-white/25 hover:bg-white/35 backdrop-blur cursor-pointer transition-all border border-white/15">
-            <Plus className="w-4 h-4" />Top Up
-          </button>
-        </div>
+        {!user?.is_postpay && (
+          <div className="relative z-10 mt-4">
+            <button onClick={() => { setErrorMsg(''); setSuccessMsg(''); setShowTopup(!showTopup); }} className="flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-semibold bg-white/25 hover:bg-white/35 backdrop-blur cursor-pointer transition-all border border-white/15">
+              <Plus className="w-4 h-4" />Top Up
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Top-up panel */}

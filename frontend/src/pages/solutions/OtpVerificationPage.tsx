@@ -5,8 +5,15 @@ import TrackomLogo from '../../components/TrackomLogo';
 import Footer from '../../components/Footer';
 import ParticleCanvas from '../../components/ParticleCanvas';
 import { ShieldCheck, ArrowRight, Shield, Cpu, Lock, RefreshCw } from 'lucide-react';
+import usePageTitle from '../../hooks/usePageTitle';
 
 export default function OtpVerificationPage() {
+  usePageTitle({
+    title: 'Secure OTP Verification & SMS Authentication API',
+    description: 'Fast, secure OTP verification and multi-factor authentication API. Deliver verification codes in Kenya in under 2 seconds with high-priority carrier fallback routing.',
+    keywords: 'OTP API Kenya, SMS verification, user authentication API, multi-factor authentication, secure OTP delivery'
+  });
+
   const [otpLatency, setOtpLatency] = useState(132);
 
   // Fluctuate latency metric

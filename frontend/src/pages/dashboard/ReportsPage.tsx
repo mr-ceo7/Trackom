@@ -32,6 +32,11 @@ export default function ReportsPage() {
   const [debouncedBatchFilter, setDebouncedBatchFilter] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [senderFilter, setSenderFilter] = useState('');
+  const [campaignFilter, setCampaignFilter] = useState('');
+  const [senderIds, setSenderIds] = useState<string[]>([]);
+  const [campaigns, setCampaigns] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const [limit] = useState(25);
 
@@ -42,6 +47,20 @@ export default function ReportsPage() {
     }, 400);
     return () => clearTimeout(handler);
   }, [batchFilter]);
+
+  useEffect(() => {
+    const loadFilterOptions = async () => {
+      try {
+        const [sendersResp, campaignsResp] = await Promise.all([
+          api.get('/sender-ids/approved'),
+          api.get('/campaigns')
+        ]);
+        setSenderIds(sendersResp.data.map((s: any) => s.name));
+        setCampaigns(campaignsResp.data);
+      } catch { /* noop */ }
+    };
+    loadFilterOptions();
+  }, []);
 
   // Scheduled states
   const [scheduledMessages, setScheduledMessages] = useState<any[]>([]);
@@ -55,15 +74,18 @@ export default function ReportsPage() {
         params: {
           page,
           limit,
-          ...(debouncedBatchFilter ? { batch_number: debouncedBatchFilter } : {}),
+          ...(debouncedBatchFilter ? { search: debouncedBatchFilter } : {}),
           ...(startDate ? { start_date: startDate } : {}),
-          ...(endDate ? { end_date: endDate } : {})
+          ...(endDate ? { end_date: endDate } : {}),
+          ...(statusFilter ? { status: statusFilter } : {}),
+          ...(senderFilter ? { sender_id: senderFilter } : {}),
+          ...(campaignFilter ? { campaign_id: campaignFilter } : {})
         }
       });
       setMessages(resp.data);
     } catch { /* noop */ }
     finally { setLoading(false); }
-  }, [page, limit, debouncedBatchFilter, startDate, endDate]);
+  }, [page, limit, debouncedBatchFilter, startDate, endDate, statusFilter, senderFilter, campaignFilter]);
 
   const fetchScheduled = useCallback(async () => {
     setLoadingScheduled(true);
@@ -135,9 +157,12 @@ export default function ReportsPage() {
     try {
       const response = await api.get(`/messages/export/${format}`, {
         params: {
-          batch_number: batchFilter || undefined,
+          search: batchFilter || undefined,
           start_date: startDate || undefined,
-          end_date: endDate || undefined
+          end_date: endDate || undefined,
+          status: statusFilter || undefined,
+          sender_id: senderFilter || undefined,
+          campaign_id: campaignFilter || undefined
         },
         responseType: 'blob'
       });
@@ -217,51 +242,113 @@ export default function ReportsPage() {
           <>
             {/* Filters Card */}
             <div className="clay-card rounded-3xl p-5 space-y-4 dark:border dark:border-white/10">
-              <div className="text-xs font-semibold text-slate-700 dark:text-gray-300">Filter History Logs</div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div className="relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input 
-                    type="text" 
-                    value={batchFilter} 
-                    onChange={e => setBatchFilter(e.target.value)} 
-                    className="w-full pl-11 pr-4 py-3 rounded-2xl clay-input text-slate-900 dark:text-white focus:outline-none text-xs transition-all" 
-                    placeholder="Batch Tracking Number..." 
-                  />
+              <div className="text-xs font-semibold text-slate-700 dark:text-gray-300 text-left">Filter History Logs</div>
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input 
+                      type="text" 
+                      value={batchFilter} 
+                      onChange={e => setBatchFilter(e.target.value)} 
+                      className="w-full pl-11 pr-4 py-3 rounded-2xl clay-input text-slate-900 dark:text-white focus:outline-none text-xs transition-all" 
+                      placeholder="Search Batch / Recipient / Content..." 
+                    />
+                  </div>
+                  
+                  <div className="relative flex items-center">
+                    <span className="absolute left-4 text-[10px] uppercase font-bold text-slate-400 dark:text-gray-500 z-10 pointer-events-none">Start</span>
+                    <input 
+                      type="datetime-local" 
+                      value={startDate} 
+                      onChange={e => { setStartDate(e.target.value); setPage(1); }} 
+                      className="w-full pl-14 pr-4 py-3 rounded-2xl clay-input text-slate-900 dark:text-white focus:outline-none text-xs transition-all font-mono" 
+                    />
+                  </div>
+                  
+                  <div className="relative flex items-center">
+                    <span className="absolute left-4 text-[10px] uppercase font-bold text-slate-400 dark:text-gray-500 z-10 pointer-events-none">End</span>
+                    <input 
+                      type="datetime-local" 
+                      value={endDate} 
+                      onChange={e => { setEndDate(e.target.value); setPage(1); }} 
+                      className="w-full pl-14 pr-4 py-3 rounded-2xl clay-input text-slate-900 dark:text-white focus:outline-none text-xs transition-all font-mono" 
+                    />
+                  </div>
                 </div>
-                
-                <div className="relative flex items-center">
-                  <span className="absolute left-4 text-[10px] uppercase font-bold text-slate-400 dark:text-gray-500 z-10 pointer-events-none">Start</span>
-                  <input 
-                    type="datetime-local" 
-                    value={startDate} 
-                    onChange={e => { setStartDate(e.target.value); setPage(1); }} 
-                    className="w-full pl-14 pr-4 py-3 rounded-2xl clay-input text-slate-900 dark:text-white focus:outline-none text-xs transition-all font-mono" 
-                  />
-                </div>
-                
-                <div className="relative flex items-center">
-                  <span className="absolute left-4 text-[10px] uppercase font-bold text-slate-400 dark:text-gray-500 z-10 pointer-events-none">End</span>
-                  <input 
-                    type="datetime-local" 
-                    value={endDate} 
-                    onChange={e => { setEndDate(e.target.value); setPage(1); }} 
-                    className="w-full pl-14 pr-4 py-3 rounded-2xl clay-input text-slate-900 dark:text-white focus:outline-none text-xs transition-all font-mono" 
-                  />
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {/* Status Dropdown */}
+                  <div className="relative flex items-center">
+                    <span className="absolute left-4 text-[10px] uppercase font-bold text-slate-400 dark:text-gray-500 z-10 pointer-events-none">Status</span>
+                    <select
+                      value={statusFilter}
+                      onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
+                      className="w-full pl-16 pr-8 py-3 rounded-2xl clay-input text-slate-900 dark:text-white focus:outline-none text-xs transition-all appearance-none cursor-pointer"
+                    >
+                      <option value="">All Statuses</option>
+                      <option value="delivered">Delivered</option>
+                      <option value="failed">Failed</option>
+                      <option value="rejected">Rejected</option>
+                      <option value="queued">Queued / Sending</option>
+                      <option value="scheduled">Scheduled</option>
+                    </select>
+                    <div className="absolute right-4 pointer-events-none border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-400 dark:border-t-gray-500 w-0 h-0" />
+                  </div>
+
+                  {/* Sender ID Dropdown */}
+                  <div className="relative flex items-center">
+                    <span className="absolute left-4 text-[10px] uppercase font-bold text-slate-400 dark:text-gray-500 z-10 pointer-events-none">Sender</span>
+                    <select
+                      value={senderFilter}
+                      onChange={e => { setSenderFilter(e.target.value); setPage(1); }}
+                      className="w-full pl-16 pr-8 py-3 rounded-2xl clay-input text-slate-900 dark:text-white focus:outline-none text-xs transition-all appearance-none cursor-pointer"
+                    >
+                      <option value="">All Sender IDs</option>
+                      {senderIds.map(name => (
+                        <option key={name} value={name}>{name}</option>
+                      ))}
+                    </select>
+                    <div className="absolute right-4 pointer-events-none border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-400 dark:border-t-gray-500 w-0 h-0" />
+                  </div>
+
+                  {/* Campaign Dropdown */}
+                  <div className="relative flex items-center">
+                    <span className="absolute left-4 text-[10px] uppercase font-bold text-slate-400 dark:text-gray-500 z-10 pointer-events-none">Campaign</span>
+                    <select
+                      value={campaignFilter}
+                      onChange={e => { setCampaignFilter(e.target.value); setPage(1); }}
+                      className="w-full pl-20 pr-8 py-3 rounded-2xl clay-input text-slate-900 dark:text-white focus:outline-none text-xs transition-all appearance-none cursor-pointer"
+                    >
+                      <option value="">All Campaigns</option>
+                      {campaigns.map(c => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                    <div className="absolute right-4 pointer-events-none border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-400 dark:border-t-gray-500 w-0 h-0" />
+                  </div>
                 </div>
               </div>
               
               <div className="flex flex-col sm:flex-row gap-3 items-center justify-between pt-3.5 border-t border-slate-200/20 dark:border-white/5">
                 <div>
-                  {(startDate || endDate || batchFilter) ? (
+                  {(startDate || endDate || batchFilter || statusFilter || senderFilter || campaignFilter) ? (
                     <button 
-                      onClick={() => { setStartDate(''); setEndDate(''); setBatchFilter(''); setPage(1); }}
+                      onClick={() => { 
+                        setStartDate(''); 
+                        setEndDate(''); 
+                        setBatchFilter(''); 
+                        setStatusFilter('');
+                        setSenderFilter('');
+                        setCampaignFilter('');
+                        setPage(1); 
+                      }}
                       className="text-xs font-semibold text-brand-primary hover:text-brand-primary-hover hover:underline cursor-pointer transition-all"
                     >
                       Clear Active Filters
                     </button>
                   ) : (
-                    <span className="text-[10px] text-slate-400 dark:text-gray-500">Specify dates, times, or batches to refine results.</span>
+                    <span className="text-[10px] text-slate-400 dark:text-gray-500">Specify dates, status, or search query to refine results.</span>
                   )}
                 </div>
                 

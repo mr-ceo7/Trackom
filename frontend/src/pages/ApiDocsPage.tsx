@@ -7,6 +7,7 @@ import { Code2, Copy, CheckCircle2, Terminal, Cpu, Lock, Globe } from 'lucide-re
 import Header from '../components/Header';
 import TrackomLogo from '../components/TrackomLogo';
 import Footer from '../components/Footer';
+import usePageTitle from '../hooks/usePageTitle';
 
 const endpoints = [
   { 
@@ -118,6 +119,12 @@ const methodColors: Record<string, string> = {
 };
 
 export default function ApiDocsPage() {
+  usePageTitle({
+    title: 'Developer REST API Reference & SMS Integration Guide',
+    description: 'Trackom SMS API docs. Send bulk SMS, verify OTPs, and schedule messages with easy-to-use API endpoints, JSON request formats, and integration code snippets in Python, curl, and Node.js.',
+    keywords: 'SMS API documentation, bulk SMS REST API, SMS integration Python, OTP verification API, Trackom API keys'
+  });
+
   const [activeEndpoint, setActiveEndpoint] = useState(0);
   const [activeSDK, setActiveSDK] = useState('curl');
   const [copied, setCopied] = useState(false);

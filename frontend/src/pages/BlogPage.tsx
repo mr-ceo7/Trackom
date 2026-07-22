@@ -9,6 +9,7 @@ import api from '../services/api';
 import Header from '../components/Header';
 import TrackomLogo from '../components/TrackomLogo';
 import Footer from '../components/Footer';
+import usePageTitle from '../hooks/usePageTitle';
 
 interface BlogPost {
   id: string; title: string; slug: string; excerpt: string | null;
@@ -29,10 +30,16 @@ const categoryColors: Record<string, string> = {
   Marketing: 'bg-purple-500/10 text-purple-500',
   Developer: 'bg-blue-500/10 text-blue-500',
   Product: 'bg-brand-primary/10 text-brand-primary',
-  Compliance: 'bg-amber-500/10 text-amber-500',
+  Compliance: 'bg-amber-500/10 text-brand-emerald',
 };
 
 export default function BlogPage() {
+  usePageTitle({
+    title: 'Insights, Tutorials & SMS Marketing Guides',
+    description: 'Trackom Blog. Read tutorials on SMS API integration, guides on CA Kenya SMS compliance, and best practices for bulk SMS marketing and WhatsApp API automation.',
+    keywords: 'bulk SMS tutorials, SMS compliance Kenya, WhatsApp Business API guide, M-Pesa SMS integration, SMS marketing strategy'
+  });
+
   const [posts, setPosts] = useState<BlogPost[]>(seedPosts);
   const [filter, setFilter] = useState('all');
 

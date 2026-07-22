@@ -551,7 +551,7 @@ export default function ContactsPage() {
 
     setTerminalLogs([
       '⚡ [SYSTEM] Handshaking connection to server event stream...',
-      '📂 [FILE] Reading CSV upload buffer...',
+      '📂 [FILE] Reading upload buffer...',
     ]);
 
     let targetGroupId = importGroupId;
@@ -600,7 +600,7 @@ export default function ContactsPage() {
         const msg = event.data;
         setTerminalLogs(prev => [...prev.slice(-40), msg]);
 
-        if (msg.includes('COMPLETE') || msg.includes('FATAL') || msg.includes('❌')) {
+        if (msg.includes('COMPLETE') || msg.includes('[FATAL]')) {
           eventSource?.close();
           setImporting(false);
           
@@ -622,7 +622,7 @@ export default function ContactsPage() {
           } else {
             setImportResult({
               type: 'error',
-              text: 'CSV Import encountered an error.'
+              text: 'Import encountered an error.'
             });
           }
         }
@@ -632,10 +632,16 @@ export default function ContactsPage() {
         console.error('SSE Error:', err);
         eventSource?.close();
         setImporting(false);
-        setTerminalLogs(prev => [...prev, '❌ [FATAL] Lost connection to server log stream.']);
-        setImportResult({
-          type: 'error',
-          text: 'Connection to stream lost.'
+        setTerminalLogs(prev => {
+          const hasCompleted = prev.some(log => log.includes('COMPLETE'));
+          if (hasCompleted) {
+            return prev;
+          }
+          setImportResult({
+            type: 'error',
+            text: 'Connection to stream lost.'
+          });
+          return [...prev, '❌ [FATAL] Lost connection to server log stream.'];
         });
       };
 
@@ -678,11 +684,11 @@ export default function ContactsPage() {
             <AnimatePresence>
               {showTooltip && (
                 <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
                   transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                  className="absolute left-0 sm:left-1/2 sm:-translate-x-1/2 bottom-full mb-3 z-30 w-64 sm:w-56 bg-brand-primary text-white text-xs p-3 rounded-2xl shadow-xl flex flex-col gap-1.5 pointer-events-auto"
+                  className="absolute left-0 sm:left-1/2 sm:-translate-x-1/2 top-full mt-3 z-30 w-64 sm:w-56 bg-brand-primary text-white text-xs p-3 rounded-2xl shadow-xl flex flex-col gap-1.5 pointer-events-auto"
                 >
                   <div className="flex justify-between items-start">
                     <span className="font-bold flex items-center gap-1">✨ Import Guide</span>
@@ -706,7 +712,7 @@ export default function ContactsPage() {
                   >
                     Get CSV Template
                   </button>
-                  <div className="absolute left-8 sm:left-1/2 sm:-translate-x-1/2 -bottom-1 w-2.5 h-2.5 bg-brand-primary rotate-45" />
+                  <div className="absolute left-8 sm:left-1/2 sm:-translate-x-1/2 -top-1 w-2.5 h-2.5 bg-brand-primary rotate-45" />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -717,7 +723,7 @@ export default function ContactsPage() {
             className="clay-button-secondary flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-semibold text-slate-600 dark:text-gray-300 cursor-pointer transition-all"
           >
             <Upload className="w-3.5 h-3.5" />
-            Import CSV
+            Import CSV/Excel
           </button>
           <button 
             onClick={handleExportAll}
@@ -1058,7 +1064,7 @@ export default function ContactsPage() {
           <GenieModal onClose={handleCloseImport} className="p-6 space-y-5">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <FileSpreadsheet className="w-5 h-5 text-brand-primary" />Import Contacts (CSV)
+                <FileSpreadsheet className="w-5 h-5 text-brand-primary" />Import Contacts (CSV/Excel)
               </h3>
               <button onClick={handleCloseImport} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer"><X className="w-5 h-5" /></button>
             </div>
@@ -1105,7 +1111,7 @@ export default function ContactsPage() {
               <form onSubmit={handleImportCSV} className="space-y-4">
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center">
-                    <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Select CSV File</label>
+                    <label className="block text-xs font-medium text-slate-600 dark:text-gray-400">Select CSV or Excel File</label>
                     <button 
                       type="button" 
                       onClick={handleDownloadTemplate} 
@@ -1118,11 +1124,11 @@ export default function ContactsPage() {
                     type="file" 
                     ref={fileInputRef}
                     onChange={handleFileChange} 
-                    accept=".csv"
+                    accept=".csv,.xlsx,.xls"
                     required
                     className="clay-input w-full px-3 py-2 rounded-2xl text-sm text-slate-800 dark:text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-primary/10 file:text-brand-primary hover:file:bg-brand-primary/20"
                   />
-                  <p className="text-[10px] text-slate-400">Headers like 'name', 'phone' and 'email' are auto-detected. Format Kenya numbers as +254... or 07...</p>
+                  <p className="text-[10px] text-slate-400">Headers like 'name', 'phone' and 'email' are auto-detected. CSV and Excel files (.xlsx, .xls) are supported.</p>
                 </div>
 
                 <div className="space-y-1.5">
@@ -1173,7 +1179,7 @@ export default function ContactsPage() {
                 <div className="clay-inset rounded-2xl p-3.5 text-[11px] text-slate-500 leading-normal flex gap-2">
                   <AlertCircle className="w-4 h-4 text-brand-primary shrink-0" />
                   <span>
-                    <strong>Async Upload Optimizations:</strong> Large CSV files are processed asynchronously in the background. Duplicate phone numbers and empty lines are skipped automatically.
+                    <strong>Async Upload Optimizations:</strong> Large CSV or Excel files are processed asynchronously in the background. Duplicate phone numbers and empty lines are skipped automatically.
                   </span>
                 </div>
 

@@ -5,8 +5,15 @@ import TrackomLogo from '../../components/TrackomLogo';
 import Footer from '../../components/Footer';
 import ParticleCanvas from '../../components/ParticleCanvas';
 import { MessageSquare, Shield, CheckCircle2, ArrowRight, BarChart3, Users, Sparkles } from 'lucide-react';
+import usePageTitle from '../../hooks/usePageTitle';
 
 export default function SmsMarketingPage() {
+  usePageTitle({
+    title: 'Bulk SMS Marketing Campaigns & Opt-out Automation',
+    description: 'Grow your business with Trackom bulk SMS marketing. Send target campaigns, handle opt-outs automatically per CA Kenya guidelines, and monitor real-time delivery reports.',
+    keywords: 'bulk SMS marketing, SMS campaign Kenya, bulk SMS gateway, marketing SMS provider, target SMS blast'
+  });
+
   const [recipientCount, setRecipientCount] = useState(5000);
   
   const costPerSms = 1.0; // 1 KES

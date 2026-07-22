@@ -4,6 +4,7 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ToastProvider } from './contexts/ToastContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Loader from './components/Loader';
 
@@ -59,72 +60,74 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/blog" element={<BlogPage />} />
-            <Route path="/docs" element={<ApiDocsPage />} />
-            <Route path="/contact" element={<ContactPage />} />
+        <ToastProvider>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/blog" element={<BlogPage />} />
+              <Route path="/docs" element={<ApiDocsPage />} />
+              <Route path="/contact" element={<ContactPage />} />
 
-            {/* Product Solutions */}
-            <Route path="/solutions/sms-marketing" element={<SmsMarketingPage />} />
-            <Route path="/solutions/otp-verification" element={<OtpVerificationPage />} />
-            <Route path="/solutions/two-way-sms" element={<TwoWaySmsPage />} />
-            <Route path="/solutions/reseller-portal" element={<ResellerPage />} />
+              {/* Product Solutions */}
+              <Route path="/solutions/sms-marketing" element={<SmsMarketingPage />} />
+              <Route path="/solutions/otp-verification" element={<OtpVerificationPage />} />
+              <Route path="/solutions/two-way-sms" element={<TwoWaySmsPage />} />
+              <Route path="/solutions/reseller-portal" element={<ResellerPage />} />
 
-            {/* Protected dashboard routes */}
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <DashboardLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<DashboardOverview />} />
-              <Route path="compose" element={<ComposeSMS />} />
-              <Route path="inbox" element={<InboxPage />} />
-              <Route path="contacts" element={<ContactsPage />} />
-              <Route path="campaigns" element={<CampaignsPage />} />
-              <Route path="templates" element={<TemplatesPage />} />
-              <Route path="sender-ids" element={<SenderIdsPage />} />
-              <Route path="reports" element={<ReportsPage />} />
-              <Route path="wallet" element={<WalletPage />} />
-              <Route path="api-keys" element={<ApiKeysPage />} />
-              <Route path="settings" element={<SettingsPage />} />
-              <Route path="reseller" element={<ResellerPanelPage />} />
-            </Route>
+              {/* Protected dashboard routes */}
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <DashboardLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<DashboardOverview />} />
+                <Route path="compose" element={<ComposeSMS />} />
+                <Route path="inbox" element={<InboxPage />} />
+                <Route path="contacts" element={<ContactsPage />} />
+                <Route path="campaigns" element={<CampaignsPage />} />
+                <Route path="templates" element={<TemplatesPage />} />
+                <Route path="sender-ids" element={<SenderIdsPage />} />
+                <Route path="reports" element={<ReportsPage />} />
+                <Route path="wallet" element={<WalletPage />} />
+                <Route path="api-keys" element={<ApiKeysPage />} />
+                <Route path="settings" element={<SettingsPage />} />
+                <Route path="reseller" element={<ResellerPanelPage />} />
+              </Route>
 
-            {/* Standalone Admin Console Route */}
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute>
-                  <AdminRoute>
-                    <AdminPanelPage />
-                  </AdminRoute>
-                </ProtectedRoute>
-              }
-            />
+              {/* Standalone Admin Console Route */}
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute>
+                    <AdminRoute>
+                      <AdminPanelPage />
+                    </AdminRoute>
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* Standalone Onboarding Route */}
-            <Route
-              path="/onboarding"
-              element={
-                <ProtectedRoute>
-                  <OnboardingPage />
-                </ProtectedRoute>
-              }
-            />
+              {/* Standalone Onboarding Route */}
+              <Route
+                path="/onboarding"
+                element={
+                  <ProtectedRoute>
+                    <OnboardingPage />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* 404 */}
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </Suspense>
+              {/* 404 */}
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </Suspense>
+        </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
   );

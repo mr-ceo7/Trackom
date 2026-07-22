@@ -29,6 +29,9 @@ class SmsSendRequest(BaseModel):
             # Map 07... (Kenyan local format) to +2547...
             if cleaned.startswith("0") and len(cleaned) == 10:
                 cleaned = "+254" + cleaned[1:]
+            # Map 7... or 1... to +254...
+            elif (cleaned.startswith("7") or cleaned.startswith("1")) and len(cleaned) == 9:
+                cleaned = "+254" + cleaned
             # Map 254... to +254...
             elif cleaned.startswith("254") and len(cleaned) == 12:
                 cleaned = "+" + cleaned

@@ -148,7 +148,7 @@ export default function GenieModal({
         <Component
           onSubmit={onSubmit}
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
-          className={`clay-card rounded-3xl dark:bg-[#0c0f1d] dark:border dark:border-white/10 shadow-2xl w-full max-h-[90vh] overflow-y-auto ${className}`}
+          className={`clay-card rounded-3xl dark:bg-[#0c0f1d] dark:border dark:border-white/10 shadow-2xl w-full max-h-[90vh] ${className.includes('overflow-') ? '' : 'overflow-y-auto'} ${className}`}
           {...props}
         >
           <motion.div

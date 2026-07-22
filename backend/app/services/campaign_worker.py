@@ -169,7 +169,7 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
             total_cost = total_recipients * sms_parts
 
             user_balance = user.sandbox_sms_balance if campaign.sandbox_mode else user.sms_balance
-            if user_balance < total_cost:
+            if not user.is_postpay and user_balance < total_cost:
                 campaign.status = "failed"
                 campaign.completed_at = datetime.utcnow()
                 if user.notification_preferences.get("campaign", True):
@@ -214,7 +214,7 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
             sent_count = 0
             delivered_count = 0
             failed_count = 0
-            total_refund = 0
+            total_blacklist_refund = 0.0
 
             for i in range(0, total_recipients, batch_size):
                 batch_contacts = contacts[i:i+batch_size]
@@ -252,6 +252,7 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
                                 user_refund.sandbox_sms_balance += refund
                             else:
                                 user_refund.sms_balance += refund
+                        campaign.total_cost -= refund
                         campaign.completed_at = datetime.utcnow()
                         if user.notification_preferences.get("campaign", True):
                             db.add(Notification(
@@ -311,6 +312,11 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
                         if res_list:
                             res = res_list[0]
                             res["compiled_message"] = personalized_msg
+                            
+                            # Overwrite cost with actual calculated parts of compiled message
+                            calc_single = calculate_sms_parts(personalized_msg)
+                            res["cost"] = float(calc_single["parts"])
+                            
                             return res
                     except Exception as e:
                         logger.error(f"Gateway failed for contact {contact.phone}: {e}")
@@ -329,12 +335,12 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
                 gateway_results = await asyncio.gather(*(send_to_one(c) for c in batch_contacts))
 
                 # Map response metrics back to models
+                batch_adjustment = 0.0
                 for res in gateway_results:
                     if res["status"] == "rejected":
                         status_mapped = "rejected"
                         failed_count += 1
-                        # Refund the credit that was deducted upfront
-                        total_refund += sms_parts
+                        total_blacklist_refund += sms_parts
                     else:
                         status_mapped = "delivered" if res["status"] == "success" else "failed"
                         if status_mapped == "delivered":
@@ -343,6 +349,9 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
                             failed_count += 1
                     
                     sent_count += 1
+                    
+                    # Accumulate balance adjustment (upfront template cost minus actual personalized cost)
+                    batch_adjustment += (sms_parts - res["cost"])
                     
                     msg = SmsMessage(
                         user_id=user.id,
@@ -361,6 +370,14 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
                     )
 
                     db.add(msg)
+
+                # Apply batch balance adjustments and update campaign total cost
+                if batch_adjustment != 0.0:
+                    if campaign.sandbox_mode:
+                        user.sandbox_sms_balance += batch_adjustment
+                    else:
+                        user.sms_balance += batch_adjustment
+                    campaign.total_cost -= batch_adjustment
 
                 # Commit batch updates and increment stats
                 campaign.sent_count = sent_count
@@ -407,13 +424,6 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
                 await asyncio.sleep(0.02)
 
             # 7. Complete Campaign
-            if total_refund > 0:
-                if campaign.sandbox_mode:
-                    user.sandbox_sms_balance += total_refund
-                else:
-                    user.sms_balance += total_refund
-                logger.info(f"Refunded {total_refund} credits to user {user.id} for blacklisted contacts in campaign {campaign_id}")
-
             campaign.status = "completed"
             campaign.completed_at = datetime.utcnow()
             
@@ -421,7 +431,7 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
                 db.add(Notification(
                     user_id=user.id,
                     title=f"Campaign '{campaign.name}' Sent! 🚀",
-                    message=f"Completed campaign. Delivered: {delivered_count}, Failed: {failed_count}. " + (f"{int(total_refund)} blacklist credits refunded." if total_refund > 0 else ""),
+                    message=f"Completed campaign. Delivered: {delivered_count}, Failed: {failed_count}. " + (f"{int(total_blacklist_refund)} blacklist credits refunded." if total_blacklist_refund > 0 else ""),
                     type="success",
                     action_url="/dashboard/campaigns",
                     sandbox_mode=campaign.sandbox_mode,
@@ -435,7 +445,7 @@ async def send_campaign_messages(campaign_id: uuid.UUID):
                         status="completed",
                         delivered=delivered_count,
                         failed=failed_count,
-                        refund=total_refund
+                        refund=total_blacklist_refund
                     )
                 )
 

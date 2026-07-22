@@ -9,7 +9,7 @@ import math
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Form, Request
 from fastapi.responses import StreamingResponse
-from sqlalchemy import select, func
+from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -48,7 +48,7 @@ async def send_sms(
     user_res = await db.execute(user_q)
     db_user = user_res.scalar_one()
 
-    if db_user.active_balance < total_cost:
+    if not db_user.is_postpay and db_user.active_balance < total_cost:
         raise HTTPException(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
             detail=f"Insufficient balance. Need {total_cost} credits, have {db_user.active_balance}."
@@ -189,28 +189,17 @@ def filter_by_date(q, start_date: Optional[str], end_date: Optional[str]):
     return q
 
 
-@router.get("/history", response_model=List[SmsMessageResponse])
-async def message_history(
-    page: int = Query(1, ge=1),
-    limit: int = Query(50, ge=1, le=200),
-    batch_number: Optional[str] = Query(None),
-    campaign_id: Optional[str] = Query(None),
-    status: Optional[str] = Query(None),
-    start_date: Optional[str] = Query(None),
-    end_date: Optional[str] = Query(None),
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+def apply_sms_filters(
+    q,
+    batch_number: Optional[str],
+    campaign_id: Optional[str],
+    status: Optional[str],
+    sender_id: Optional[str],
+    recipient: Optional[str],
+    search: Optional[str],
+    start_date: Optional[str],
+    end_date: Optional[str]
 ):
-    """Get SMS send history for the current user, optionally filtered by batch, campaign, status, and date range."""
-    q = (
-        select(SmsMessage)
-        .where(
-            SmsMessage.user_id == current_user.id,
-            SmsMessage.deleted_at.is_(None),
-            SmsMessage.sandbox_mode == current_user.sandbox_mode
-        )
-    )
-    
     if batch_number:
         q = q.where(SmsMessage.batch_number.ilike(f"%{batch_number}%"))
         
@@ -222,8 +211,62 @@ async def message_history(
         
     if status:
         q = q.where(SmsMessage.status == status.lower())
+
+    if sender_id:
+        q = q.where(SmsMessage.sender_id == sender_id)
+
+    if recipient:
+        q = q.where(SmsMessage.recipient.ilike(f"%{recipient}%"))
+
+    if search:
+        q = q.where(
+            or_(
+                SmsMessage.batch_number.ilike(f"%{search}%"),
+                SmsMessage.recipient.ilike(f"%{search}%"),
+                SmsMessage.content.ilike(f"%{search}%"),
+            )
+        )
         
     q = filter_by_date(q, start_date, end_date)
+    return q
+
+
+@router.get("/history", response_model=List[SmsMessageResponse])
+async def message_history(
+    page: int = Query(1, ge=1),
+    limit: int = Query(50, ge=1, le=200),
+    batch_number: Optional[str] = Query(None),
+    campaign_id: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+    sender_id: Optional[str] = Query(None),
+    recipient: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get SMS send history for the current user, optionally filtered by batch, campaign, status, sender ID, recipient, search and date range."""
+    q = (
+        select(SmsMessage)
+        .where(
+            SmsMessage.user_id == current_user.id,
+            SmsMessage.deleted_at.is_(None),
+            SmsMessage.sandbox_mode == current_user.sandbox_mode
+        )
+    )
+    
+    q = apply_sms_filters(
+        q,
+        batch_number=batch_number,
+        campaign_id=campaign_id,
+        status=status,
+        sender_id=sender_id,
+        recipient=recipient,
+        search=search,
+        start_date=start_date,
+        end_date=end_date
+    )
         
     q = q.order_by(SmsMessage.created_at.desc()).offset((page - 1) * limit).limit(limit)
     result = await db.execute(q)
@@ -263,6 +306,11 @@ async def sms_stats(
 @router.get("/export/csv")
 async def export_csv(
     batch_number: Optional[str] = Query(None),
+    campaign_id: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+    sender_id: Optional[str] = Query(None),
+    recipient: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
     current_user: User = Depends(get_current_user),
@@ -274,9 +322,17 @@ async def export_csv(
         SmsMessage.deleted_at.is_(None),
         SmsMessage.sandbox_mode == current_user.sandbox_mode,
     )
-    if batch_number:
-        q = q.where(SmsMessage.batch_number.ilike(f"%{batch_number}%"))
-    q = filter_by_date(q, start_date, end_date)
+    q = apply_sms_filters(
+        q,
+        batch_number=batch_number,
+        campaign_id=campaign_id,
+        status=status,
+        sender_id=sender_id,
+        recipient=recipient,
+        search=search,
+        start_date=start_date,
+        end_date=end_date
+    )
     q = q.order_by(SmsMessage.created_at.desc())
     res = await db.execute(q)
     messages = res.scalars().all()
@@ -307,16 +363,33 @@ async def export_csv(
 @router.get("/export/xlsx")
 async def export_xlsx(
     batch_number: Optional[str] = Query(None),
+    campaign_id: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+    sender_id: Optional[str] = Query(None),
+    recipient: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Export SMS history as XML/Excel XLS compatible spreadsheet."""
-    q = select(SmsMessage).where(SmsMessage.user_id == current_user.id, SmsMessage.deleted_at.is_(None))
-    if batch_number:
-        q = q.where(SmsMessage.batch_number.ilike(f"%{batch_number}%"))
-    q = filter_by_date(q, start_date, end_date)
+    q = select(SmsMessage).where(
+        SmsMessage.user_id == current_user.id,
+        SmsMessage.deleted_at.is_(None),
+        SmsMessage.sandbox_mode == current_user.sandbox_mode
+    )
+    q = apply_sms_filters(
+        q,
+        batch_number=batch_number,
+        campaign_id=campaign_id,
+        status=status,
+        sender_id=sender_id,
+        recipient=recipient,
+        search=search,
+        start_date=start_date,
+        end_date=end_date
+    )
     q = q.order_by(SmsMessage.created_at.desc())
     res = await db.execute(q)
     messages = res.scalars().all()
@@ -336,16 +409,33 @@ async def export_xlsx(
 @router.get("/export/pdf")
 async def export_pdf(
     batch_number: Optional[str] = Query(None),
+    campaign_id: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+    sender_id: Optional[str] = Query(None),
+    recipient: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Export SMS history as print-ready HTML template (which browsers print/save as PDF)."""
-    q = select(SmsMessage).where(SmsMessage.user_id == current_user.id, SmsMessage.deleted_at.is_(None))
-    if batch_number:
-        q = q.where(SmsMessage.batch_number.ilike(f"%{batch_number}%"))
-    q = filter_by_date(q, start_date, end_date)
+    q = select(SmsMessage).where(
+        SmsMessage.user_id == current_user.id,
+        SmsMessage.deleted_at.is_(None),
+        SmsMessage.sandbox_mode == current_user.sandbox_mode
+    )
+    q = apply_sms_filters(
+        q,
+        batch_number=batch_number,
+        campaign_id=campaign_id,
+        status=status,
+        sender_id=sender_id,
+        recipient=recipient,
+        search=search,
+        start_date=start_date,
+        end_date=end_date
+    )
     q = q.order_by(SmsMessage.created_at.desc())
     res = await db.execute(q)
     messages = res.scalars().all()

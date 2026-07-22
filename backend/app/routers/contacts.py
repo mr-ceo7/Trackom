@@ -175,13 +175,15 @@ async def import_contacts(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Accepts CSV file upload, streams it to a temporary local file,
+    Accepts CSV/Excel file upload, streams it to a temporary local file,
     and dispatches a background worker to import contacts efficiently.
     """
-    if not file.filename.lower().endswith('.csv'):
+    allowed_extensions = ('.csv', '.xlsx', '.xls')
+    filename_lower = file.filename.lower()
+    if not any(filename_lower.endswith(ext) for ext in allowed_extensions):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid file format. Please upload a valid CSV file."
+            detail="Invalid file format. Please upload a valid CSV or Excel file."
         )
 
     # Limit file size to 10MB to prevent memory/disk exhaustion
@@ -210,7 +212,8 @@ async def import_contacts(
     # Write uploaded stream to a temporary location on disk to save RAM
     temp_dir = "/tmp/trackom_imports"
     os.makedirs(temp_dir, exist_ok=True)
-    temp_file_path = os.path.join(temp_dir, f"import_{uuid_mod.uuid4()}.csv")
+    _, ext = os.path.splitext(filename_lower)
+    temp_file_path = os.path.join(temp_dir, f"import_{uuid_mod.uuid4()}{ext}")
 
     try:
         with open(temp_file_path, "wb") as buffer:
@@ -242,7 +245,7 @@ async def import_contacts(
     return {
         "status": "queued",
         "import_id": import_id,
-        "message": "CSV import initiated. You will receive a notification when the import is complete."
+        "message": "Import initiated. You will receive a notification when the import is complete."
     }
 
 
@@ -266,6 +269,7 @@ async def stream_import(
                 msg = await queue.get()
                 yield f"data: {msg}\n\n"
                 if "COMPLETE" in msg or "FATAL" in msg or "❌" in msg:
+                    await asyncio.sleep(1.0)
                     break
         except asyncio.CancelledError:
             pass

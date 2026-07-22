@@ -94,6 +94,39 @@ class TestSMS:
         })
         assert resp.status_code == 402
 
+    async def test_send_sms_postpay(self, auth_client: AsyncClient):
+        # Update user to is_postpay and set balance to 0
+        from app.models.user import User
+        from sqlalchemy import update
+        from tests.conftest import TestSession
+
+        async with TestSession() as session:
+            await session.execute(
+                update(User).where(User.email == "auth@test.com").values(
+                    is_postpay=True,
+                    sms_balance=0,
+                    sandbox_sms_balance=0
+                )
+            )
+            await session.commit()
+
+        # Send SMS - should succeed with status 200 since the user is postpaid
+        resp = await auth_client.post("/api/v1/messages/send", json={
+            "recipients": ["+254700000001", "+254700000002"],
+            "message": "Postpay test message",
+            "sender_id": "TRACKOM"
+        })
+        assert resp.status_code == 200
+        assert resp.json()["queued"] == 2
+        assert resp.json()["total_cost"] == 2
+
+        # Check balance in database to verify it went negative
+        async with TestSession() as session:
+            from sqlalchemy import select
+            res = await session.execute(select(User).where(User.email == "auth@test.com"))
+            db_user = res.scalar_one()
+            assert db_user.active_balance == -2
+
     async def test_sms_history(self, auth_client: AsyncClient):
         await auth_client.post("/api/v1/messages/send", json={
             "recipients": ["+254712345678"], "message": "History test", "sender_id": "TRACKOM"
@@ -101,6 +134,19 @@ class TestSMS:
         resp = await auth_client.get("/api/v1/messages/history")
         assert resp.status_code == 200
         assert len(resp.json()) >= 1
+
+        # Test new filters
+        resp_status = await auth_client.get("/api/v1/messages/history", params={"status": "queued"})
+        assert resp_status.status_code == 200
+
+        resp_sender = await auth_client.get("/api/v1/messages/history", params={"sender_id": "TRACKOM"})
+        assert resp_sender.status_code == 200
+
+        resp_recipient = await auth_client.get("/api/v1/messages/history", params={"recipient": "+254712345678"})
+        assert resp_recipient.status_code == 200
+
+        resp_search = await auth_client.get("/api/v1/messages/history", params={"search": "History"})
+        assert resp_search.status_code == 200
 
     async def test_sms_stats(self, auth_client: AsyncClient):
         resp = await auth_client.get("/api/v1/messages/stats")

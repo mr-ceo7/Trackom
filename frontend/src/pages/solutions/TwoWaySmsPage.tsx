@@ -6,8 +6,15 @@ import Footer from '../../components/Footer';
 import ParticleCanvas from '../../components/ParticleCanvas';
 import { MessageSquare, ArrowRight, CornerDownLeft, Send } from 'lucide-react';
 import { motion } from 'motion/react';
+import usePageTitle from '../../hooks/usePageTitle';
 
 export default function TwoWaySmsPage() {
+  usePageTitle({
+    title: 'Two-Way SMS Integration & Interactive SMS Gateway',
+    description: 'Build interactive SMS applications. Set up real-time two-way messaging workflows, incoming webhooks, keywords auto-responses, and shortcode integrations in Kenya.',
+    keywords: 'two-way SMS, incoming SMS gateway, interactive SMS, SMS shortcode Kenya, incoming webhook SMS'
+  });
+
   const [inputText, setInputText] = useState('');
   const [chats, setChats] = useState([
     { sender: 'user', text: 'JOIN PROMO' },

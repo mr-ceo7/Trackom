@@ -74,6 +74,7 @@ class AdminStatsResponse(BaseModel):
     pending_sender_ids: int
     active_campaigns: int
     system_balance: int
+    postpaid_credit_revenue: float
 
 class AdminUserResponse(BaseModel):
     id: uuid.UUID
@@ -87,6 +88,7 @@ class AdminUserResponse(BaseModel):
     is_active: bool
     is_verified: bool
     is_superuser: bool
+    is_postpay: bool
     credit_rate: float
     created_at: datetime
 
@@ -110,6 +112,7 @@ class AdminUpdateUserRequest(BaseModel):
     account_type: Optional[str] = None
     plan: Optional[str] = None
     is_superuser: Optional[bool] = None
+    is_postpay: Optional[bool] = None
 
 class AdminGatewayResponse(BaseModel):
     id: uuid.UUID
@@ -220,28 +223,73 @@ async def get_admin_stats(
         select(func.sum(Transaction.amount))
         .where((Transaction.type == "topup") & (Transaction.status == "completed") & (Transaction.created_at >= start_of_month))
     )
-    monthly_revenue = float(res_monthly_rev.scalar() or 0)
+    res_monthly_postpaid = await db.execute(
+        select(func.sum(SmsMessage.cost * User.credit_rate))
+        .join(User, SmsMessage.user_id == User.id)
+        .where(
+            User.is_postpay == True,
+            SmsMessage.status != 'failed',
+            SmsMessage.status != 'rejected',
+            SmsMessage.sandbox_mode == False,
+            SmsMessage.created_at >= start_of_month
+        )
+    )
+    monthly_revenue = float(res_monthly_rev.scalar() or 0) + float(res_monthly_postpaid.scalar() or 0)
 
     # Today topups
     res_today_rev = await db.execute(
         select(func.sum(Transaction.amount))
         .where((Transaction.type == "topup") & (Transaction.status == "completed") & (Transaction.created_at >= start_of_today))
     )
-    today_revenue = float(res_today_rev.scalar() or 0)
+    res_today_postpaid = await db.execute(
+        select(func.sum(SmsMessage.cost * User.credit_rate))
+        .join(User, SmsMessage.user_id == User.id)
+        .where(
+            User.is_postpay == True,
+            SmsMessage.status != 'failed',
+            SmsMessage.status != 'rejected',
+            SmsMessage.sandbox_mode == False,
+            SmsMessage.created_at >= start_of_today
+        )
+    )
+    today_revenue = float(res_today_rev.scalar() or 0) + float(res_today_postpaid.scalar() or 0)
 
     # Yesterday topups
     res_yest_rev = await db.execute(
         select(func.sum(Transaction.amount))
         .where((Transaction.type == "topup") & (Transaction.status == "completed") & (Transaction.created_at >= start_of_yesterday) & (Transaction.created_at < start_of_today))
     )
-    yesterday_revenue = float(res_yest_rev.scalar() or 0)
+    res_yest_postpaid = await db.execute(
+        select(func.sum(SmsMessage.cost * User.credit_rate))
+        .join(User, SmsMessage.user_id == User.id)
+        .where(
+            User.is_postpay == True,
+            SmsMessage.status != 'failed',
+            SmsMessage.status != 'rejected',
+            SmsMessage.sandbox_mode == False,
+            SmsMessage.created_at >= start_of_yesterday,
+            SmsMessage.created_at < start_of_today
+        )
+    )
+    yesterday_revenue = float(res_yest_rev.scalar() or 0) + float(res_yest_postpaid.scalar() or 0)
 
     # All-time revenue
     res_all_time_rev = await db.execute(
         select(func.sum(Transaction.amount))
         .where((Transaction.type == "topup") & (Transaction.status == "completed"))
     )
-    all_time_revenue = float(res_all_time_rev.scalar() or 0)
+    res_all_time_postpaid = await db.execute(
+        select(func.sum(SmsMessage.cost * User.credit_rate))
+        .join(User, SmsMessage.user_id == User.id)
+        .where(
+            User.is_postpay == True,
+            SmsMessage.status != 'failed',
+            SmsMessage.status != 'rejected',
+            SmsMessage.sandbox_mode == False
+        )
+    )
+    all_time_postpaid = float(res_all_time_postpaid.scalar() or 0)
+    all_time_revenue = float(res_all_time_rev.scalar() or 0) + all_time_postpaid
 
     # This year revenue
     start_of_year = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -249,7 +297,18 @@ async def get_admin_stats(
         select(func.sum(Transaction.amount))
         .where((Transaction.type == "topup") & (Transaction.status == "completed") & (Transaction.created_at >= start_of_year))
     )
-    this_year_revenue = float(res_year_rev.scalar() or 0)
+    res_year_postpaid = await db.execute(
+        select(func.sum(SmsMessage.cost * User.credit_rate))
+        .join(User, SmsMessage.user_id == User.id)
+        .where(
+            User.is_postpay == True,
+            SmsMessage.status != 'failed',
+            SmsMessage.status != 'rejected',
+            SmsMessage.sandbox_mode == False,
+            SmsMessage.created_at >= start_of_year
+        )
+    )
+    this_year_revenue = float(res_year_rev.scalar() or 0) + float(res_year_postpaid.scalar() or 0)
 
     # Monthly breakdown breakdown list
     monthly_breakdown = []
@@ -265,7 +324,19 @@ async def get_admin_stats(
             select(func.sum(Transaction.amount))
             .where((Transaction.type == "topup") & (Transaction.status == "completed") & (Transaction.created_at >= m_start) & (Transaction.created_at < m_end))
         )
-        amt = float(res_m.scalar() or 0)
+        res_m_postpaid = await db.execute(
+            select(func.sum(SmsMessage.cost * User.credit_rate))
+            .join(User, SmsMessage.user_id == User.id)
+            .where(
+                User.is_postpay == True,
+                SmsMessage.status != 'failed',
+                SmsMessage.status != 'rejected',
+                SmsMessage.sandbox_mode == False,
+                SmsMessage.created_at >= m_start,
+                SmsMessage.created_at < m_end
+            )
+        )
+        amt = float(res_m.scalar() or 0) + float(res_m_postpaid.scalar() or 0)
         monthly_breakdown.append(MonthlyBreakdownItem(
             month=m_start.strftime("%B %Y"),
             revenue=amt
@@ -295,7 +366,19 @@ async def get_admin_stats(
             select(func.sum(Transaction.amount))
             .where((Transaction.type == "topup") & (Transaction.status == "completed") & (Transaction.created_at >= day_start) & (Transaction.created_at < day_end))
         )
-        day_rev = float(res_day_rev.scalar() or 0)
+        res_day_postpaid = await db.execute(
+            select(func.sum(SmsMessage.cost * User.credit_rate))
+            .join(User, SmsMessage.user_id == User.id)
+            .where(
+                User.is_postpay == True,
+                SmsMessage.status != 'failed',
+                SmsMessage.status != 'rejected',
+                SmsMessage.sandbox_mode == False,
+                SmsMessage.created_at >= day_start,
+                SmsMessage.created_at < day_end
+            )
+        )
+        day_rev = float(res_day_rev.scalar() or 0) + float(res_day_postpaid.scalar() or 0)
         # Format label: "Today", "Yesterday", or "Mon 05"
         if i == 0:
             day_label = "Today"
@@ -359,7 +442,8 @@ async def get_admin_stats(
         paying_clients=paying_clients,
         pending_sender_ids=pending_sender_ids,
         active_campaigns=active_campaigns,
-        system_balance=system_balance
+        system_balance=system_balance,
+        postpaid_credit_revenue=all_time_postpaid
     )
 
 
@@ -565,8 +649,12 @@ async def admin_update_user(
         user.company = data.company
     if data.account_type is not None:
         user.account_type = data.account_type
+    if data.plan is not None:
+        user.plan = data.plan
     if data.is_superuser is not None:
         user.is_superuser = data.is_superuser
+    if data.is_postpay is not None:
+        user.is_postpay = data.is_postpay
 
     await db.flush()
     return {"message": "User profile updated successfully."}
@@ -1052,11 +1140,24 @@ async def get_revenue_stats(
         res = await db.execute(q)
         return float(res.scalar())
 
-    total_revenue = await sum_topup_since()
-    today_revenue = await sum_topup_since(today_start)
-    week_revenue = await sum_topup_since(week_start)
-    month_revenue = await sum_topup_since(month_start)
-    year_revenue = await sum_topup_since(year_start)
+    async def sum_postpaid_since(start_date=None):
+        q = select(func.coalesce(func.sum(SmsMessage.cost * User.credit_rate), 0)).join(User, SmsMessage.user_id == User.id).where(
+            User.is_postpay == True,
+            SmsMessage.status != 'failed',
+            SmsMessage.status != 'rejected',
+            SmsMessage.sandbox_mode == False
+        )
+        if start_date:
+            q = q.where(SmsMessage.created_at >= start_date)
+        res = await db.execute(q)
+        return float(res.scalar())
+
+    total_revenue = await sum_topup_since() + await sum_postpaid_since()
+    today_revenue = await sum_topup_since(today_start) + await sum_postpaid_since(today_start)
+    week_revenue = await sum_topup_since(week_start) + await sum_postpaid_since(week_start)
+    month_revenue = await sum_topup_since(month_start) + await sum_postpaid_since(month_start)
+    year_revenue = await sum_topup_since(year_start) + await sum_postpaid_since(year_start)
+    postpaid_all = await sum_postpaid_since()
 
     # 30 days trend
     trend_data = []
@@ -1072,6 +1173,18 @@ async def get_revenue_stats(
         )
         res = await db.execute(q)
         daily_amount = float(res.scalar())
+
+        q_post = select(func.coalesce(func.sum(SmsMessage.cost * User.credit_rate), 0)).join(User, SmsMessage.user_id == User.id).where(
+            User.is_postpay == True,
+            SmsMessage.status != 'failed',
+            SmsMessage.status != 'rejected',
+            SmsMessage.sandbox_mode == False,
+            SmsMessage.created_at >= target_day,
+            SmsMessage.created_at < next_day
+        )
+        res_post = await db.execute(q_post)
+        daily_amount += float(res_post.scalar())
+
         trend_data.append({
             "date": target_day.strftime("%m-%d"),
             "full_date": target_day.strftime("%Y-%m-%d"),
@@ -1091,7 +1204,7 @@ async def get_revenue_stats(
     methods_raw = res_method.all()
     
     by_payment_method = []
-    total_method_sum = sum(float(r[1]) for r in methods_raw)
+    total_method_sum = sum(float(r[1]) for r in methods_raw) + postpaid_all
     
     for r in methods_raw:
         method_name = str(r[0]).title() if r[0] else "Mpesa"
@@ -1106,6 +1219,14 @@ async def get_revenue_stats(
             "percentage": round(percentage, 2)
         })
         
+    if postpaid_all > 0:
+        percentage = (postpaid_all / total_method_sum * 100) if total_method_sum > 0 else 0
+        by_payment_method.append({
+            "method": "Credit (Postpaid)",
+            "amount": postpaid_all,
+            "percentage": round(percentage, 2)
+        })
+
     if not by_payment_method:
         by_payment_method.append({
             "method": "Mpesa",
@@ -1120,7 +1241,8 @@ async def get_revenue_stats(
         "month_revenue": month_revenue,
         "year_revenue": year_revenue,
         "trend_data": trend_data,
-        "by_payment_method": by_payment_method
+        "by_payment_method": by_payment_method,
+        "postpaid_credit_revenue": postpaid_all
     }
 
 

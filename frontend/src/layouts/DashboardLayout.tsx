@@ -10,6 +10,7 @@ import {
   MessageSquare, CheckCircle2, AlertCircle, Info, AlertTriangle, Shield, FileText, Inbox, Smartphone
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 import useRealtimeEvents from '../hooks/useRealtimeEvents';
 import ThemeToggle from '../components/ThemeToggle';
 import SandboxToggle from '../components/SandboxToggle';
@@ -59,6 +60,7 @@ const typeColors: Record<string, string> = {
 
 export default function DashboardLayout() {
   const { user, logout, refreshUser } = useAuth();
+  const { success: showSuccessToast, error: showErrorToast, info: showInfoToast } = useToast();
 
   // Establish SSE connection for real-time updates
   useRealtimeEvents();
@@ -162,13 +164,27 @@ export default function DashboardLayout() {
 
   // ── Real-time SSE event listeners ─────────────────────────────────
   useEffect(() => {
-    const onWalletUpdate = () => {
+    const onWalletUpdate = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
       refreshUser(); // refresh user object to pick up new sms_balance
+      if (detail && detail.message) {
+        showSuccessToast("Wallet Updated", detail.message);
+      }
     };
 
-    const onCampaignUpdate = () => {
+    const onCampaignUpdate = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
       fetchNotifications(); // new notification was likely created
       refreshUser();        // balance may have changed (refunds)
+      if (detail && detail.message) {
+        if (detail.status === 'completed') {
+          showSuccessToast("Campaign Completed", detail.message);
+        } else if (detail.status === 'failed') {
+          showErrorToast("Campaign Failed", detail.message);
+        } else {
+          showInfoToast("Campaign Status", detail.message);
+        }
+      }
     };
 
     const onCampaignProgress = () => {
@@ -177,14 +193,29 @@ export default function DashboardLayout() {
       window.dispatchEvent(new Event('sse:refresh_campaigns'));
     };
 
-    const onContactsImport = () => {
+    const onContactsImport = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
       fetchNotifications();
       window.dispatchEvent(new Event('sse:refresh_contacts'));
+      if (detail && detail.message) {
+        if (detail.status === 'success') {
+          showSuccessToast("Import Complete", detail.message);
+        } else {
+          showErrorToast("Import Failed", detail.message);
+        }
+      }
     };
 
-    const onIncomingSms = () => {
+    const onIncomingSms = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
       fetchNotifications();
       window.dispatchEvent(new Event('sse:refresh_inbox'));
+      if (detail) {
+        showInfoToast(
+          `New Message from ${detail.sender || 'Unknown'}`,
+          detail.content ? (detail.content.length > 60 ? detail.content.substring(0, 57) + '...' : detail.content) : ''
+        );
+      }
     };
 
     const onConnected = () => {
@@ -193,22 +224,22 @@ export default function DashboardLayout() {
       refreshUser();
     };
 
-    window.addEventListener('sse:wallet_update', onWalletUpdate);
-    window.addEventListener('sse:campaign_update', onCampaignUpdate);
+    window.addEventListener('sse:wallet_update', onWalletUpdate as EventListener);
+    window.addEventListener('sse:campaign_update', onCampaignUpdate as EventListener);
     window.addEventListener('sse:campaign_progress', onCampaignProgress);
-    window.addEventListener('sse:contacts_import', onContactsImport);
-    window.addEventListener('sse:incoming_sms', onIncomingSms);
+    window.addEventListener('sse:contacts_import', onContactsImport as EventListener);
+    window.addEventListener('sse:incoming_sms', onIncomingSms as EventListener);
     window.addEventListener('sse:connected', onConnected);
 
     return () => {
-      window.removeEventListener('sse:wallet_update', onWalletUpdate);
-      window.removeEventListener('sse:campaign_update', onCampaignUpdate);
+      window.removeEventListener('sse:wallet_update', onWalletUpdate as EventListener);
+      window.removeEventListener('sse:campaign_update', onCampaignUpdate as EventListener);
       window.removeEventListener('sse:campaign_progress', onCampaignProgress);
-      window.removeEventListener('sse:contacts_import', onContactsImport);
-      window.removeEventListener('sse:incoming_sms', onIncomingSms);
+      window.removeEventListener('sse:contacts_import', onContactsImport as EventListener);
+      window.removeEventListener('sse:incoming_sms', onIncomingSms as EventListener);
       window.removeEventListener('sse:connected', onConnected);
     };
-  }, [fetchNotifications, refreshUser]);
+  }, [fetchNotifications, refreshUser, showSuccessToast, showErrorToast, showInfoToast]);
 
 
   const handleLogout = () => {
@@ -286,10 +317,21 @@ export default function DashboardLayout() {
           <div className="flex items-center gap-2 px-3 py-2 rounded-2xl clay-inset">
             <MessageSquare className="w-4 h-4 text-brand-primary" />
             <div className="flex-1">
-              <div className="text-[10px] text-slate-400 dark:text-gray-500 uppercase tracking-wider font-semibold">SMS Balance</div>
-              <div className="text-sm font-bold text-slate-900 dark:text-white font-mono">
-                {user?.sms_balance?.toLocaleString() || '0'}
-              </div>
+              {user?.is_postpay ? (
+                <>
+                  <div className="text-[10px] text-slate-400 dark:text-gray-500 uppercase tracking-wider font-semibold">Credit Consumed</div>
+                  <div className="text-sm font-bold text-slate-900 dark:text-white font-mono">
+                    KSH {(user.sms_balance < 0 ? Math.abs(user.sms_balance) * (user.credit_rate || 1.0) : 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="text-[10px] text-slate-400 dark:text-gray-500 uppercase tracking-wider font-semibold">SMS Balance</div>
+                  <div className="text-sm font-bold text-slate-900 dark:text-white font-mono">
+                    {user?.sms_balance?.toLocaleString() || '0'}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -331,10 +373,21 @@ export default function DashboardLayout() {
                 <div className="flex items-center gap-2 px-3 py-2 rounded-2xl clay-inset">
                   <MessageSquare className="w-4 h-4 text-brand-primary" />
                   <div className="flex-1">
-                    <div className="text-[10px] text-slate-400 dark:text-gray-500 uppercase tracking-wider font-semibold">SMS Balance</div>
-                    <div className="text-sm font-bold text-slate-900 dark:text-white font-mono">
-                      {user?.sms_balance?.toLocaleString() || '0'}
-                    </div>
+                    {user?.is_postpay ? (
+                      <>
+                        <div className="text-[10px] text-slate-400 dark:text-gray-500 uppercase tracking-wider font-semibold">Credit Consumed</div>
+                        <div className="text-sm font-bold text-slate-900 dark:text-white font-mono">
+                          KSH {(user.sms_balance < 0 ? Math.abs(user.sms_balance) * (user.credit_rate || 1.0) : 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-[10px] text-slate-400 dark:text-gray-500 uppercase tracking-wider font-semibold">SMS Balance</div>
+                        <div className="text-sm font-bold text-slate-900 dark:text-white font-mono">
+                          {user?.sms_balance?.toLocaleString() || '0'}
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

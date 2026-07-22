@@ -71,7 +71,25 @@ export default function DashboardOverview() {
   }, [statsData]);
 
   const stats = [
-    { label: 'SMS Balance', value: (user?.sms_balance || statsData.balance).toLocaleString(), icon: MessageSquare, color: 'text-brand-primary', bg: 'clay-icon-raised', glow: 'drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]' },
+    user?.is_postpay ? (
+      { 
+        label: 'Credit Consumed', 
+        value: `KSH ${(user.sms_balance < 0 ? Math.abs(user.sms_balance) * (user.credit_rate || 1.0) : 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, 
+        icon: MessageSquare, 
+        color: 'text-brand-primary', 
+        bg: 'clay-icon-raised', 
+        glow: 'drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]' 
+      }
+    ) : (
+      { 
+        label: 'SMS Balance', 
+        value: (user?.sms_balance || statsData.balance).toLocaleString(), 
+        icon: MessageSquare, 
+        color: 'text-brand-primary', 
+        bg: 'clay-icon-raised', 
+        glow: 'drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]' 
+      }
+    ),
     { label: 'Messages Today', value: statsData.sent_today.toLocaleString(), icon: TrendingUp, color: 'text-brand-emerald', bg: 'clay-icon-raised', glow: 'drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]' },
     { label: 'Contacts', value: contactsCount.toLocaleString(), icon: Users, color: 'text-brand-accent', bg: 'clay-icon-raised', glow: 'drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]' },
     { label: 'Total Sent', value: statsData.total_sent.toLocaleString(), icon: Megaphone, color: 'text-purple-500', bg: 'clay-icon-raised', glow: 'drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]' },
@@ -228,7 +246,10 @@ export default function DashboardOverview() {
         <div className="text-4xl mb-3">🚀</div>
         <h3 className="font-display font-semibold text-lg text-slate-900 dark:text-white">Ready to send your first message?</h3>
         <p className="text-sm text-slate-500 dark:text-gray-400 mt-1 mb-4 max-w-md mx-auto">
-          You have {user?.sms_balance?.toLocaleString()} free SMS credits. Start by composing a message or importing your contacts.
+          {user?.is_postpay 
+            ? 'Your postpaid credit account is active. Start by composing a message or importing your contacts.'
+            : `You have ${user?.sms_balance?.toLocaleString()} free SMS credits. Start by composing a message or importing your contacts.`
+          }
         </p>
         <div className="flex items-center justify-center gap-3">
           <a href="/dashboard/compose" className="clay-button-primary px-5 py-2.5 rounded-2xl text-sm font-semibold text-white transition-all">

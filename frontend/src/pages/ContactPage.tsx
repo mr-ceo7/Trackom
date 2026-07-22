@@ -9,8 +9,15 @@ import TrackomLogo from '../components/TrackomLogo';
 import Footer from '../components/Footer';
 import api from '../services/api';
 import Loader from '../components/Loader';
+import usePageTitle from '../hooks/usePageTitle';
 
 export default function ContactPage() {
+  usePageTitle({
+    title: 'Contact Sales & Support',
+    description: 'Get in touch with the Trackom team. Contact us for bulk SMS pricing, WhatsApp Business API integrations, custom USSD development, and developer support in Kenya.',
+    keywords: 'contact Trackom, bulk SMS sales, Trackom support Kenya, bulk SMS API support, WhatsApp Business API pricing'
+  });
+
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [company, setCompany] = useState('');

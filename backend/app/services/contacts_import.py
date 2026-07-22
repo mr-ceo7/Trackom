@@ -21,14 +21,53 @@ def clean_phone_number(phone: str) -> str:
     # E.164 conversion for Kenya mobile numbers
     # e.g., 0712345678 -> +254712345678
     # e.g., 712345678 -> +254712345678
+    # e.g., 112345678 -> +254112345678
+    # e.g., 254712345678 -> +254712345678
     if cleaned.startswith("0") and len(cleaned) == 10:
         cleaned = "+254" + cleaned[1:]
-    elif cleaned.startswith("7") and len(cleaned) == 9:
+    elif (cleaned.startswith("7") or cleaned.startswith("1")) and len(cleaned) == 9:
         cleaned = "+254" + cleaned
     elif not cleaned.startswith("+") and cleaned.startswith("254") and len(cleaned) == 12:
         cleaned = "+" + cleaned
         
     return cleaned
+
+
+def clean_excel_value(val) -> str:
+    if val is None:
+        return ""
+    if isinstance(val, float):
+        if val.is_integer():
+            return str(int(val))
+        return str(val)
+    return str(val).strip()
+
+
+def convert_xlsx_to_csv(xlsx_path: str, csv_path: str):
+    import openpyxl
+    wb = openpyxl.load_workbook(xlsx_path, read_only=True, data_only=True)
+    sh = wb.active
+    if not sh:
+        raise ValueError("Excel file has no active sheets.")
+    with open(csv_path, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        for row in sh.iter_rows(values_only=True):
+            row_str = [clean_excel_value(cell) for cell in row]
+            if any(cell != "" for cell in row_str):
+                writer.writerow(row_str)
+
+
+def convert_xls_to_csv(xls_path: str, csv_path: str):
+    import xlrd
+    wb = xlrd.open_workbook(xls_path)
+    sh = wb.sheet_by_index(0)
+    with open(csv_path, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        for row_idx in range(sh.nrows):
+            row = sh.row_values(row_idx)
+            row_str = [clean_excel_value(cell) for cell in row]
+            if any(cell != "" for cell in row_str):
+                writer.writerow(row_str)
 
 
 async def process_contacts_csv_import(
@@ -38,11 +77,43 @@ async def process_contacts_csv_import(
     import_id: Optional[str] = None
 ):
     """
-    Parses a CSV file from disk in batches, cleans phone numbers,
+    Parses a CSV/Excel file from disk in batches, cleans phone numbers,
     and performs bulk database insertions.
     """
-    logger.info(f"Starting CSV import background task for user_id={user_id}, file={file_path}")
+    logger.info(f"Starting import background task for user_id={user_id}, file={file_path}")
     
+    # Detect Excel files and convert to CSV
+    original_file_path = file_path
+    temp_csv_path = None
+    
+    _, ext = os.path.splitext(file_path.lower())
+    if ext in ('.xlsx', '.xls'):
+        from app.utils.import_stream import import_queues
+        import_queue = import_queues.get(import_id) if import_id else None
+        if import_queue:
+            await import_queue.put(f"📂 [EXCEL] Converting Excel ({ext}) spreadsheet to CSV structure...")
+        
+        try:
+            temp_csv_path = file_path + ".converted.csv"
+            if ext == '.xlsx':
+                convert_xlsx_to_csv(file_path, temp_csv_path)
+            else:
+                convert_xls_to_csv(file_path, temp_csv_path)
+            file_path = temp_csv_path
+            if import_queue:
+                await import_queue.put("✅ [EXCEL] Conversion complete. Proceeding with database ingestion...")
+        except Exception as e:
+            logger.exception(f"Failed to convert Excel to CSV: {e}")
+            if import_queue:
+                await import_queue.put(f"❌ [FATAL] Excel conversion failed: {str(e)}")
+            # Cleanup source file
+            if os.path.exists(original_file_path):
+                try:
+                    os.remove(original_file_path)
+                except Exception:
+                    pass
+            return
+
     if not os.path.exists(file_path):
         logger.error(f"Import file not found: {file_path}")
         return
@@ -72,53 +143,89 @@ async def process_contacts_csv_import(
 
             # Open file with 'utf-8-sig' to automatically strip Excel BOM signatures
             with open(file_path, "r", encoding="utf-8-sig", errors="ignore") as f:
-                # Read sample to detect dialect & header
+                # Read sample to detect dialect
                 sample = f.read(4096)
                 f.seek(0)
                 
                 dialect = None
-                has_header = False
                 try:
                     dialect = csv.Sniffer().sniff(sample, delimiters=[',', ';', '\t', '|'])
-                    has_header = csv.Sniffer().has_header(sample)
                 except Exception:
                     pass
 
-                f.seek(0)
                 if dialect:
                     reader = csv.reader(f, dialect)
                 else:
                     reader = csv.reader(f)
                 
-                # Default indices
-                name_idx = 0
-                phone_idx = 1
-                email_idx = 2
+                has_header = False
                 headers = []
                 
-                if has_header:
-                    header = next(reader, [])
-                    headers = header
-                    # Lowercase columns to find indices
-                    header_lower = [col.lower().strip() for col in header]
+                # Read first row to determine if it is a header
+                first_row = next(reader, None)
+                if first_row is not None:
+                    header_lower = [str(col).lower().strip() for col in first_row]
                     
-                    # Try matching typical names
-                    phone_names = ["phone", "mobile", "number", "telephone", "phone number", "msisdn", "recipient"]
-                    name_names = ["name", "full name", "fullname", "contact name", "first name", "username"]
-                    email_names = ["email", "e-mail", "email address"]
+                    phone_keywords = ["phone", "mobile", "number", "telephone", "phone number", "msisdn", "recipient", "tel"]
+                    name_keywords = ["name", "full name", "fullname", "contact", "first name", "last name", "username"]
+                    email_keywords = ["email", "e-mail", "email address"]
                     
-                    for p_name in phone_names:
-                        if p_name in header_lower:
-                            phone_idx = header_lower.index(p_name)
-                            break
-                    for n_name in name_names:
-                        if n_name in header_lower:
-                            name_idx = header_lower.index(n_name)
-                            break
-                    for e_name in email_names:
-                        if e_name in header_lower:
-                            email_idx = header_lower.index(e_name)
-                            break
+                    found_phone_idx = -1
+                    found_name_idx = -1
+                    found_email_idx = -1
+                    
+                    for idx, col in enumerate(header_lower):
+                        if any(k == col or col.startswith(k) or col.endswith(k) for k in phone_keywords):
+                            found_phone_idx = idx
+                        elif any(k == col or col.startswith(k) or col.endswith(k) for k in name_keywords):
+                            found_name_idx = idx
+                        elif any(k == col or col.startswith(k) or col.endswith(k) for k in email_keywords):
+                            found_email_idx = idx
+                            
+                    if found_phone_idx != -1 or found_name_idx != -1 or found_email_idx != -1:
+                        # Found a header!
+                        has_header = True
+                        headers = first_row
+                        phone_idx = found_phone_idx if found_phone_idx != -1 else 0
+                        name_idx = found_name_idx if found_name_idx != -1 else 1
+                        email_idx = found_email_idx if found_email_idx != -1 else 2
+                    else:
+                        # No header found. Reset reader and treat first row as data!
+                        has_header = False
+                        f.seek(0)
+                        if dialect:
+                            reader = csv.reader(f, dialect)
+                        else:
+                            reader = csv.reader(f)
+                        
+                        # Auto-detect indices based on cell contents of the first row
+                        if len(first_row) > 0:
+                            phone_scores = []
+                            for col in first_row:
+                                digits = "".join([c for c in str(col) if c.isdigit()])
+                                phone_scores.append(len(digits))
+                            
+                            best_phone_idx = 0
+                            max_digits = 0
+                            for idx, score in enumerate(phone_scores):
+                                if score > max_digits:
+                                    max_digits = score
+                                    best_phone_idx = idx
+                                    
+                            if max_digits >= 7:
+                                phone_idx = best_phone_idx
+                                name_idx = 1 if phone_idx == 0 else 0
+                            else:
+                                phone_idx = 1
+                                name_idx = 0
+                        else:
+                            phone_idx = 1
+                            name_idx = 0
+                        email_idx = 2
+                else:
+                    phone_idx = 1
+                    name_idx = 0
+                    email_idx = 2
 
                 # Query existing contacts to map phone to id and prevent duplicate contact creation
                 existing_res = await db.execute(
@@ -324,10 +431,12 @@ async def process_contacts_csv_import(
             except Exception as nested_e:
                 logger.error(f"Failed to record import error notification: {nested_e}")
         finally:
-            # Clean up temp file
-            try:
-                if os.path.exists(file_path):
-                    os.remove(file_path)
-                    logger.info(f"Cleaned up temp import file: {file_path}")
-            except Exception as cleanup_e:
-                logger.error(f"Failed to clean up temp file {file_path}: {cleanup_e}")
+            # Clean up temp files
+            for p in (original_file_path, temp_csv_path):
+                if p and os.path.exists(p):
+                    try:
+                        os.remove(p)
+                        logger.info(f"Cleaned up temp import file: {p}")
+                    except Exception as cleanup_e:
+                        logger.error(f"Failed to clean up temp file {p}: {cleanup_e}")
+

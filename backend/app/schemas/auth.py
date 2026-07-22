@@ -91,6 +91,8 @@ class UserResponse(BaseModel):
     is_2fa_enabled: bool = False
     two_factor_method: str = "totp"
     sandbox_mode: bool = True
+    is_postpay: bool = False
+    credit_rate: float = 1.0
     created_at: datetime
     custom_logo_url: Optional[str] = None
     custom_brand_name: Optional[str] = None

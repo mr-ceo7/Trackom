@@ -17,8 +17,10 @@ class TopupRequest(BaseModel):
     @classmethod
     def validate_phone(cls, v: str) -> str:
         cleaned = v.strip()
-        if cleaned.startswith("0"):
+        if cleaned.startswith("0") and len(cleaned) == 10:
             cleaned = "+254" + cleaned[1:]
+        elif (cleaned.startswith("7") or cleaned.startswith("1")) and len(cleaned) == 9:
+            cleaned = "+254" + cleaned
         elif cleaned.startswith("254") and not cleaned.startswith("+"):
             cleaned = "+" + cleaned
         elif not cleaned.startswith("+") and cleaned.isdigit():

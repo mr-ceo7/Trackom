@@ -12,6 +12,8 @@ import GenieModal from '../../components/GenieModal';
 
 import { calculateSmsParts } from '../../utils';
 import DateTimePicker from '../../components/DateTimePicker';
+import * as XLSX from 'xlsx';
+
 
 const formatErrorDetail = (detail: any): string => {
   if (!detail) return '';
@@ -178,14 +180,41 @@ export default function ComposeSMS() {
     });
   };
 
+  const convertExcelToCSVText = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target?.result as ArrayBuffer);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const csvText = XLSX.utils.sheet_to_csv(worksheet);
+          resolve(csvText);
+        } catch (err) {
+          reject(err);
+        }
+      };
+      reader.onerror = (err) => reject(err);
+      reader.readAsArrayBuffer(file);
+    });
+  };
+
   const handleComposerCSVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    let file = e.target.files?.[0];
     if (!file) return;
 
     setCsvUploadLoading(true);
     setResult(null);
 
     try {
+      const isExcel = file.name.toLowerCase().endsWith('.xlsx') || file.name.toLowerCase().endsWith('.xls');
+      let originalName = file.name;
+      if (isExcel) {
+        const csvText = await convertExcelToCSVText(file);
+        file = new File([csvText], file.name.replace(/\.(xlsx|xls)$/i, '.csv'), { type: 'text/csv' });
+      }
+
       const { headers, preview } = await parseCSVPreview(file);
       setCsvHeaders(headers);
       setCsvPreviewRow(preview);
@@ -194,19 +223,19 @@ export default function ComposeSMS() {
       setEstimatedContactsCount(lines);
       setDirectCsvFile(file);
 
-      const groupName = `Composer Upload: ${file.name}`;
+      const groupName = `Composer Upload: ${originalName}`;
       setDirectCsvGroupName(groupName);
 
       const phones = await parseCSVPhones(file, headers);
       if (phones.length > 5000) {
-        setRecipients(phones.slice(0, 5000).join('\n') + `\n\n[... and ${phones.length - 5000} more contacts loaded from ${file.name}]`);
+        setRecipients(phones.slice(0, 5000).join('\n') + `\n\n[... and ${phones.length - 5000} more contacts loaded from ${originalName}]`);
       } else {
         setRecipients(phones.join('\n'));
       }
       setIsLocalUploadActive(true);
-      setResult({ type: 'success', text: `CSV '${file.name}' mapped successfully. Ready to compose campaign!` });
+      setResult({ type: 'success', text: `Spreadsheet '${originalName}' mapped successfully. Ready to compose campaign!` });
     } catch (err: any) {
-      setResult({ type: 'error', text: `Failed to map CSV list: ${err.message}` });
+      setResult({ type: 'error', text: `Failed to map spreadsheet: ${err.message}` });
     } finally {
       setCsvUploadLoading(false);
     }
@@ -512,7 +541,7 @@ export default function ComposeSMS() {
         return;
       }
 
-      if ((user?.sms_balance || 0) < estimatedCost) {
+      if (!user?.is_postpay && (user?.sms_balance || 0) < estimatedCost) {
         setResult({ type: 'error', text: `Insufficient balance. Need ${estimatedCost.toFixed(2)} credits, you have ${user?.sms_balance?.toLocaleString()}.` });
         setIsSending(false);
         return;
@@ -584,7 +613,7 @@ export default function ComposeSMS() {
       return;
     }
 
-    if ((user?.sms_balance || 0) < estimatedCost) {
+    if (!user?.is_postpay && (user?.sms_balance || 0) < estimatedCost) {
       setResult({ type: 'error', text: `Insufficient balance. Need ${estimatedCost.toFixed(2)} credits, you have ${user?.sms_balance?.toLocaleString()}.` });
       setIsSending(false);
       return;
@@ -903,11 +932,11 @@ export default function ComposeSMS() {
                     {csvUploadLoading ? (
                       <Loader size="sm" />
                     ) : (
-                      <>📁 Upload CSV List</>
+                      <>📁 Upload CSV/Excel List</>
                     )}
                     <input
                       type="file"
-                      accept=".csv"
+                      accept=".csv,.xlsx,.xls"
                       disabled={csvUploadLoading}
                       onChange={handleComposerCSVUpload}
                       className="hidden"
@@ -1132,22 +1161,31 @@ export default function ComposeSMS() {
               <div className="h-px bg-slate-200/20 dark:bg-white/6" />
 
               <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-500 dark:text-gray-400">Your Balance</span>
-                <span className="font-bold text-brand-primary font-mono">{user?.sms_balance?.toLocaleString() || '0'}</span>
+                {user?.is_postpay ? (
+                  <>
+                    <span className="text-slate-500 dark:text-gray-400">Billing Model</span>
+                    <span className="font-bold text-brand-primary font-mono">Postpaid</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-slate-500 dark:text-gray-400">Your Balance</span>
+                    <span className="font-bold text-brand-primary font-mono">{user?.sms_balance?.toLocaleString() || '0'}</span>
+                  </>
+                )}
               </div>
 
-              {estimatedCost > (user?.sms_balance || 0) && estimatedCost > 0 && (
+              {!user?.is_postpay && estimatedCost > (user?.sms_balance || 0) && estimatedCost > 0 && (
                 <div className="flex items-center gap-2 p-2 rounded-lg bg-red-50 dark:bg-red-500/10 text-red-500 text-xs font-medium">
                   <AlertCircle className="w-3.5 h-3.5" />
                   <span>Insufficient balance</span>
                 </div>
               )}
             </div>
-
-            <div className="flex flex-col gap-2.5">
+            
+             <div className="flex flex-col gap-2.5">
               <button
                 type="submit"
-                disabled={isSending || charCount === 0 || recipientCount === 0 || estimatedCost > (user?.sms_balance || 0)}
+                disabled={isSending || charCount === 0 || recipientCount === 0 || (!user?.is_postpay && estimatedCost > (user?.sms_balance || 0))}
                 className="clay-button-primary w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-semibold text-white transition-all duration-300 disabled:opacity-50 active:scale-[0.98]"
               >
                 {isSending ? (
@@ -1159,11 +1197,11 @@ export default function ComposeSMS() {
                   </>
                 )}
               </button>
-
+ 
               <button
                 type="button"
                 onClick={() => setShowScheduleModal(true)}
-                disabled={isSending || charCount === 0 || recipientCount === 0 || estimatedCost > (user?.sms_balance || 0)}
+                disabled={isSending || charCount === 0 || recipientCount === 0 || (!user?.is_postpay && estimatedCost > (user?.sms_balance || 0))}
                 className="clay-button-secondary w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-xs font-semibold text-slate-600 dark:text-gray-300 transition-all duration-300 disabled:opacity-50 active:scale-[0.98]"
               >
                 <Clock className="w-3.5 h-3.5" />
@@ -1190,7 +1228,7 @@ export default function ComposeSMS() {
             <button
               type="button"
               onClick={() => setShowScheduleModal(true)}
-              disabled={isSending || charCount === 0 || recipientCount === 0 || estimatedCost > (user?.sms_balance || 0)}
+              disabled={isSending || charCount === 0 || recipientCount === 0 || (!user?.is_postpay && estimatedCost > (user?.sms_balance || 0))}
               className="clay-button-secondary p-3 rounded-2xl text-slate-600 dark:text-gray-300 transition-all disabled:opacity-50"
               title="Schedule send"
             >
@@ -1198,7 +1236,7 @@ export default function ComposeSMS() {
             </button>
             <button
               type="submit"
-              disabled={isSending || charCount === 0 || recipientCount === 0 || estimatedCost > (user?.sms_balance || 0)}
+              disabled={isSending || charCount === 0 || recipientCount === 0 || (!user?.is_postpay && estimatedCost > (user?.sms_balance || 0))}
               className="clay-button-primary px-5 py-3 rounded-2xl text-sm font-semibold text-white flex items-center gap-2 transition-all disabled:opacity-50"
             >
               {isSending ? (
@@ -1217,7 +1255,7 @@ export default function ComposeSMS() {
       {/* Schedule Send Modal */}
       <AnimatePresence>
         {showScheduleModal && (
-          <GenieModal onClose={() => setShowScheduleModal(false)} className="p-6 space-y-5">
+          <GenieModal onClose={() => setShowScheduleModal(false)} className="p-6 space-y-5 overflow-visible">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-display font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <Clock className="w-5 h-5 text-brand-primary" /> Schedule Dispatch

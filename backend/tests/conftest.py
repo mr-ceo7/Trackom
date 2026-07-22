@@ -63,6 +63,17 @@ async def client():
 @pytest.fixture
 async def auth_client(client: AsyncClient):
     """Authenticated client with a pre-registered user."""
+    from datetime import datetime, timedelta
+    from app.models.email_verification import EmailVerification
+    async with TestSession() as session:
+        session.add(EmailVerification(
+            email="auth@test.com",
+            code="123456",
+            verified=True,
+            expires_at=datetime.utcnow() + timedelta(hours=1)
+        ))
+        await session.commit()
+
     resp = await client.post("/api/v1/auth/register", json={
         "full_name": "Auth User",
         "email": "auth@test.com",
@@ -90,6 +101,17 @@ async def auth_client(client: AsyncClient):
 @pytest.fixture
 async def admin_client(client: AsyncClient):
     """Authenticated client with a pre-registered admin user."""
+    from datetime import datetime, timedelta
+    from app.models.email_verification import EmailVerification
+    async with TestSession() as session:
+        session.add(EmailVerification(
+            email="admin@test.com",
+            code="123456",
+            verified=True,
+            expires_at=datetime.utcnow() + timedelta(hours=1)
+        ))
+        await session.commit()
+
     resp = await client.post("/api/v1/auth/register", json={
         "full_name": "Admin User",
         "email": "admin@test.com",

@@ -18,8 +18,15 @@ import ParticleCanvas from '../components/ParticleCanvas';
 import TrackomLogo from '../components/TrackomLogo';
 import SplashScreen from '../components/SplashScreen';
 import { Shield, CheckCircle2 } from 'lucide-react';
+import usePageTitle from '../hooks/usePageTitle';
 
 export default function LandingPage() {
+  usePageTitle({
+    title: 'Enterprise Bulk SMS & Communications API',
+    description: "Trackom is Kenya's leading enterprise bulk SMS, USSD, WhatsApp Business API, OTP verification, and communications platform. Send smarter, scale faster, deliver instantly.",
+    keywords: 'bulk SMS Kenya, SMS API, USSD services, WhatsApp Business API, OTP verification, airtime API, Trackom, enterprise SMS, SMS gateway Kenya'
+  });
+
   const [isAtBottom, setIsAtBottom] = useState(false);
   const [loading, setLoading] = useState(true);
 

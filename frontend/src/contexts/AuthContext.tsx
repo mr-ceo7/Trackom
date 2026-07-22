@@ -15,6 +15,7 @@ export interface User {
   plan: 'starter' | 'growth' | 'enterprise';
   sms_balance: number;
   credit_rate: number;
+  is_postpay: boolean;
   is_active: boolean;
   is_verified: boolean;
   is_superuser: boolean;

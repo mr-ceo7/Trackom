@@ -5,8 +5,15 @@ import TrackomLogo from '../../components/TrackomLogo';
 import Footer from '../../components/Footer';
 import ParticleCanvas from '../../components/ParticleCanvas';
 import { Briefcase, ArrowRight, ShieldCheck, CheckCircle2, TrendingUp, Key } from 'lucide-react';
+import usePageTitle from '../../hooks/usePageTitle';
 
 export default function ResellerPage() {
+  usePageTitle({
+    title: 'SMS Reseller Program & Whitelabel Platform',
+    description: 'Start your own bulk SMS business in Kenya. Launch a fully branded white-label SMS reseller portal with custom margins, wholesale pricing, and user management.',
+    keywords: 'bulk SMS reseller, white-label SMS portal, SMS business Kenya, resell bulk SMS, whitelabel SMS gateway'
+  });
+
   const [monthlyVolume, setMonthlyVolume] = useState(50000);
   const [markupPrice, setMarkupPrice] = useState(0.2); // KES markup per SMS
 
